@@ -51,12 +51,19 @@ uzudtevaluations/
 
 ## ⚙️ Methodology
 
-This system addresses the challenges of **agglutination** and **data scarcity** in Uzbek by employing a robust pipeline:
+This system addresses the challenges of **agglutination** and **data scarcity** in Uzbek by employing a robust end-to-end neural pipeline, as illustrated in **Figure 1** below.
 
-1. **Preprocessing:** Text normalization and Apertium-based morphological analysis to stabilize lemmas.
-2. **Contextual Embedding:** Uses **BERTbek** with a subword-to-word "super-token" fusion strategy to align BERT subwords with UD tokens.
-3. **Parsing:** A biaffine graph-based parser (DeepBiaffine) trained on the UzUDT treebank.
+<p align="center">
+  <img src="baseline_architecture.png" alt="Baseline Uzbek UD parsing framework architecture" width="85%">
+  <br>
+  <em><b>Figure 1:</b> Baseline Uzbek UD parsing framework. Raw Uzbek tokens are normalized with an improved Apertium-based morphology pipeline and encoded by the BERTbek Transformer. Subword representations are aggregated into word-level vectors ("super-token" fusion) aligned to UD tokens. The parser consumes these to predict dependency arcs and relations.</em>
+</p>
 
+The pipeline consists of three main integrated stages:
+
+1.  **Preprocessing & Normalization:** Text normalization and an improved Apertium-based morphological analysis layer to stabilize lemmas and reduce lexical sparsity.
+2.  **Contextual Embedding ("Super-token" Fusion):** Uses the monolingual **BERTbek** transformer. A subword-to-word fusion strategy aggregates BERT subwords to align precisely with UD word tokens.
+3.  **Joint Tagging & Parsing:** A biaffine graph-based parser (DeepBiaffine) trained on the UzUDT treebank to predict UPOS/XPOS tags, morphological features, and dependency relations simultaneously.
 ---
 
 ## 🧠 Setup Instructions
