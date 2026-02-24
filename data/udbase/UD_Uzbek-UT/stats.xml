@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<treebank>
+  <!-- tokens means "surface tokens", e.g. Spanish "vámonos" counts as one token
+       words means "syntactic words", e.g. Spanish "vámonos" is split to two words, "vamos" and "nos"
+       fused is the number of tokens that are split to two or more syntactic words
+       The words and fused elements can be omitted if no token is split to smaller syntactic words. -->
+  <size>
+    <total><sentences>500</sentences><tokens>5930</tokens><words>5930</words><fused>0</fused></total>
+    <train><sentences>0</sentences><tokens>0</tokens><words>0</words><fused>0</fused></train>
+    <dev><sentences>0</sentences><tokens>0</tokens><words>0</words><fused>0</fused></dev>
+    <test><sentences>500</sentences><tokens>5930</tokens><words>5930</words><fused>0</fused></test>
+  </size>
+  <lemmas unique="2278" /><!-- ., ,, -, bir, boʻl, qil, va, u, bilan, ber, ol, bu, kel, oʻz, uchun -->
+  <forms unique="3387" /><!-- ., ,, -, va, bir, bilan, uchun, ham, bu, edi, ?, boʻlib, yana, “, ” -->
+  <fusions unique="0" /><!--  -->
+  <!-- Statistics of universal POS tags. The comments show the most frequent lemmas. -->
+  <tags unique="17">
+    <tag name="ADJ">484</tag><!-- yoʻq, katta, yangi, yaxshi, bor, boshqa, koʻp, baland, keyingi, buyuk -->
+    <tag name="ADP">184</tag><!-- bilan, uchun, haqida, boʻyicha, keyin, qadar, qarshi, beri, kabi, nisbatan -->
+    <tag name="ADV">203</tag><!-- ham, yana, eng, juda, bugun, endi, hamisha, qanday, avval, hali -->
+    <tag name="AUX">79</tag><!-- edi, ekan, mumkin, boʻl, emas, kerak, lozim, yoʻq -->
+    <tag name="CCONJ">104</tag><!-- va, ammo, esa, yoki, na, bilan, lekin, hamda, balki, nafaqat -->
+    <tag name="DET">103</tag><!-- bu, shu, mazkur, ushbu, barcha, har, hech, oʻsha, shunday, bir -->
+    <tag name="INTJ">6</tag><!-- ha, yoʻq, salom -->
+    <tag name="NOUN">2152</tag><!-- kun, odam, yil, davlat, ish, hayot, kishi, nafar, bosh, koʻz -->
+    <tag name="NUM">214</tag><!-- bir, ikki, 12, 10, 4, mln, 1, 2020, uch, yetti -->
+    <tag name="PART">36</tag><!-- tashkil, axir, hal, halok, koʻm, sodir, voz, barpo, bunyod, duch -->
+    <tag name="PRON">193</tag><!-- u, oʻz, men, bu, biz, kim, nima, shu, sen, siz -->
+    <tag name="PROPN">308</tag><!-- Oʻzbekiston, Toshkent, Rossiya, Samarqand, Ukraina, Koreya, AQSH, AQSh, Buxoro, Erdoʻgʻan -->
+    <tag name="PUNCT">860</tag><!-- ., ,, -, ?, “, ”, …, !, –, — -->
+    <tag name="SCONJ">9</tag><!-- chunki, agar -->
+    <tag name="SYM">1</tag><!-- + -->
+    <tag name="VERB">987</tag><!-- qil, boʻl, ber, ol, kel, et, ket, bor, chiq, koʻr -->
+    <tag name="X">7</tag><!-- ta -->
+  </tags>
+  <!-- Statistics of features and values. The comments show the most frequent word forms. -->
+  <feats unique="47">
+    <feat name="Abbr" value="Yes" upos="NOUN,NUM,PROPN">20</feat><!-- mln, A., AJ, AQSH, AQSHdagi, AQSHga, AQSh, AQShga, BBC, IIBB -->
+    <feat name="Aspect" value="Prog" upos="VERB">42</feat><!-- bormoqda, etmoqda, oshirilmoqda, oʻtmoqda, qilmoqda, bormoqdaman, boʻlmoqda, chiyillar, choʻkmoqda, ettirmoqda -->
+    <feat name="Case" value="Abl" upos="ADV,NOUN,PRON,PROPN,VERB">106</feat><!-- tomonidan, oldidan, orasidan, undan, Agentlikdan, Olislardan, Oradan, Qipchoqdan, Shundan, Toshlardan -->
+    <feat name="Case" value="Acc" upos="AUX,NOUN,PRON,PROPN,VERB">208</feat><!-- seni, uni, meni, ekanini, ekanligini, faoliyatini, imkonini, joylarni, kitobini, oʻzini -->
+    <feat name="Case" value="Dat" upos="ADJ,ADV,AUX,NOUN,NUM,PRON,PROPN,VERB">274</feat><!-- unga, bunga, foizga, ishga, koʻzga, menga, oldiga, qarorga, Oʻzbekistonga, amalga -->
+    <feat name="Case" value="Gen" upos="NOUN,PRON,PROPN">223</feat><!-- uning, oʻz, Oʻzbekiston, bizning, ularning, dunyoning, yilning, Ukraina, bozorining, buning -->
+    <feat name="Case" value="Loc" upos="ADJ,ADV,NOUN,NUM,PRON,PROPN,VERB">273</feat><!-- doirasida, yerda, kunda, oqibatida, tumanida, Toshkentda, viloyatida, Oʻzbekistonda, Yigʻilishda, bagʻrida -->
+    <feat name="Case" value="Nom" upos="AUX,NOUN,PRON,PROPN,VERB">1550</feat><!-- men, kuni, nafar, odam, davlat, davom, prezidenti, yil, Oʻzbekiston, ota -->
+    <feat name="Degree" value="Cmp" upos="ADJ,ADV">5</feat><!-- Avvalroq, erkaroq, halokatliroq, keksaroq, pastroq -->
+    <feat name="ExtPos" value="ADJ" upos="ADJ">1</feat><!-- yarasha -->
+    <feat name="Foreign" value="Yes" upos="ADJ,NOUN,PROPN">12</feat><!-- Wi-Fi, Air, Apple, Bluetooth, Dream, France, Geographic, House, Mail.ru, National -->
+    <feat name="Mood" value="Cnd" upos="VERB">16</feat><!-- kelishsa, kelsa, aytsam, bersam, borsangiz, boshlasalar, boʻlsa, chiqsa, ekilsa, koʻrsatsa -->
+    <feat name="Mood" value="Imp" upos="VERB">7</feat><!-- Shoshmang, aylantirsin, berilsin, ketmasin, qilmang, qilsin, turaqol -->
+    <feat name="Mood" value="Ind" upos="VERB">439</feat><!-- berdi, qildi, boʻldi, qiladi, beradi, etdi, ketdi, boʻlgan, keldi, oldi -->
+    <feat name="Mood" value="Int" upos="VERB">10</feat><!-- borasanmi, boʻladimi, boʻlarmikinlar, egami, ketmayaptimi, koʻrdi, koʻrganmisiz, qilganmi, qilmadingiz, qilyaptiykin -->
+    <feat name="Mood" value="Opt" upos="VERB">1</feat><!-- beray -->
+    <feat name="Mood" value="Pot" upos="VERB">2</feat><!-- boʻlmaydi, ololmaydi -->
+    <feat name="Number" value="Plur" upos="ADJ,AUX,NOUN,PRON,PROPN,VERB">497</feat><!-- ular, ishlar, odamlar, bizning, ularning, biz, bolalar, davlatlar, kunlari, muzokaralar -->
+    <feat name="Number" value="Sing" upos="AUX,NOUN,PRON,PROPN,VERB">2200</feat><!-- men, oʻz, Oʻzbekiston, kuni, nafar, odam, uning, yil, davlat, oʻzi -->
+    <feat name="NumType" value="Card" upos="ADV,NUM">198</feat><!-- bir, biri, ikki, 12, 10, 4, mln, 1, 2020, 100 -->
+    <feat name="NumType" value="Frac" upos="NUM">1</feat><!-- 10,1 -->
+    <feat name="NumType" value="Ord" upos="NUM">6</feat><!-- birinchi, Ikkinchi -->
+    <feat name="NumType" value="Range" upos="NUM">4</feat><!-- milliardlab, sakkiz, yetti, yuzlab -->
+    <feat name="NumType" value="Sets" upos="NUM">2</feat><!-- ikkalasi, ikkovi -->
+    <feat name="Person" value="1" upos="ADJ,AUX,PRON,VERB">75</feat><!-- men, bizning, edim, meni, ekanman, menga, berdim, mening, Biz, Bizda -->
+    <feat name="Person" value="2" upos="PRON,VERB">15</feat><!-- seni, sizga, Sen, Shoshmang, borasanmi, borsangiz, eshitasiz, qolasiz, siz, tayyorladingiz -->
+    <feat name="Person" value="3" upos="AUX,PRON,VERB">461</feat><!-- oʻz, berdi, qildi, uning, boʻldi, oʻzi, u, ular, qiladi, beradi -->
+    <feat name="Polarity" value="Neg" upos="AUX,VERB">56</feat><!-- emas, boʻlmaydi, bilmagan, anglamadi, bermaganini, bilmay, bilolmaydi, chiqavermaydi, chiqmay, emasmi -->
+    <feat name="Poss" value="Yes" upos="NOUN,PRON,PROPN">230</feat><!-- uning, Oʻzbekiston, oʻz, ularning, bizning, dunyoning, yilning, Respublikasi, Ukraina, bozorining -->
+    <feat name="PronType" value="Dem" upos="ADV,DET,PRON">96</feat><!-- bu, shu, ushbu, mazkur, oʻsha, shunday, u, bunga, mana, Shundan -->
+    <feat name="PronType" value="Ind" upos="DET,PRON">5</feat><!-- bir, kimningdir -->
+    <feat name="PronType" value="Int" upos="ADV,PRON">31</feat><!-- kim, nima, qanday, Nega, ne, Qayerlardadir, kimdir, kimga, men, naqadar -->
+    <feat name="PronType" value="Neg" upos="DET">5</feat><!-- hech -->
+    <feat name="PronType" value="Prs" upos="PRON">118</feat><!-- oʻz, men, uning, oʻzi, u, ular, unga, bizning, meni, seni -->
+    <feat name="PronType" value="Rcp" upos="PRON">1</feat><!-- bir-biridan -->
+    <feat name="PronType" value="Rel" upos="ADV">2</feat><!-- qanday -->
+    <feat name="PronType" value="Tot" upos="DET,PRON">26</feat><!-- barcha, har, hamma, Butun, Hammasini, ayrim, barchalarimizga, barchamizning, bari, hammayoqni -->
+    <feat name="Reflex" value="Yes" upos="PRON">4</feat><!-- oʻzi, oʻziga -->
+    <feat name="Tense" value="Fut" upos="AUX,VERB">54</feat><!-- beradi, qiladi, boʻladi, oladi, aniqlaydi, aylantirsin, aytadilar, aytsam, beriladi, berilsin -->
+    <feat name="Tense" value="Past" upos="AUX,VERB">324</feat><!-- edi, berdi, qildi, boʻldi, boʻlgan, etdi, ketdi, keldi, oldi, qilindi -->
+    <feat name="Tense" value="Pres" upos="AUX,VERB">137</feat><!-- ega, qiladi, qilmoqda, qoladi, bildiradi, bormoqda, boʻlmaydi, etadi, etmoqda, hisoblanadi -->
+    <feat name="VerbForm" value="Conv" upos="VERB">192</feat><!-- boʻlib, olib, deb, qilib, borib, chiqib, kelib, kirib, ishlab, yetib -->
+    <feat name="VerbForm" value="Fin" upos="AUX,VERB">465</feat><!-- berdi, qildi, boʻldi, qiladi, boʻlgan, ega, etdi, ketdi, beradi, keldi -->
+    <feat name="VerbForm" value="Inf" upos="VERB">4</feat><!-- beradi, boshlasalar, boʻlsa, olmasalar -->
+    <feat name="VerbForm" value="Part" upos="VERB">144</feat><!-- ketgan, boʻlgan, kelayotgan, bergan, kelgan, qilgan, yurgan, berilgan, bilmagan, keladigan -->
+    <feat name="VerbForm" value="Vnoun" upos="VERB">121</feat><!-- qilish, berish, etish, etilishi, olish, oʻtish, qilishda, saqlash, aniqlash, aniqlashi -->
+    <feat name="Voice" value="Pass" upos="VERB">99</feat><!-- qilindi, berilgan, etildi, olingan, oʻtkazildi, qilingan, etiladi, kiritildi, oshirilmoqda, oʻtkaziladi -->
+  </feats>
+  <!-- Statistics of universal dependency relations. -->
+  <deps unique="33">
+    <dep name="acl">133</dep>
+    <dep name="advcl">106</dep>
+    <dep name="advmod">238</dep>
+    <dep name="amod">338</dep>
+    <dep name="appos">10</dep>
+    <dep name="aux">38</dep>
+    <dep name="case">212</dep>
+    <dep name="cc">109</dep>
+    <dep name="ccomp">33</dep>
+    <dep name="compound">290</dep>
+    <dep name="compound:lvc">215</dep>
+    <dep name="compound:redup">16</dep>
+    <dep name="compound:svc">138</dep>
+    <dep name="conj">208</dep>
+    <dep name="cop">40</dep>
+    <dep name="csubj">21</dep>
+    <dep name="det">90</dep>
+    <dep name="discourse">7</dep>
+    <dep name="expl">1</dep>
+    <dep name="flat">106</dep>
+    <dep name="iobj">69</dep>
+    <dep name="mark">8</dep>
+    <dep name="nmod">350</dep>
+    <dep name="nmod:poss">142</dep>
+    <dep name="nsubj">540</dep>
+    <dep name="nummod">160</dep>
+    <dep name="obj">251</dep>
+    <dep name="obl">602</dep>
+    <dep name="parataxis">36</dep>
+    <dep name="punct">860</dep>
+    <dep name="root">500</dep>
+    <dep name="vocative">5</dep>
+    <dep name="xcomp">58</dep>
+  </deps>
+</treebank>
