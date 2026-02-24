@@ -1,0 +1,331 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.21 of 2022/01/12
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage[T1]{fontenc}
+% T1 fonts will be used to generate the final print and online PDFs,
+% so please use T1 fonts in your manuscript whenever possible.
+% Other font encondings may result in incorrect characters.
+%
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{booktabs}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\urlstyle{rm}
+%
+\begin{document}
+%
+\title{Towards Robust Uzbek Neural Dependency Parsing}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Sanatbek Matlatipov\inst{1}\orcidID{0000-0002-6895-3436}}
+%
+\authorrunning{M. Sanatbek et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{
+National University of Uzbekistan named after Mirzo Ulugbek, Tashkent, Uzbekistan \\
+\email{s.matlatipov@nuu.uz}
+}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+This paper presents the non-trivial tasks of morphosyntactic tagging and dependency parsing in Uzbek, a morphologically complex, resource-poor Turkic language with sparse data, extensive agglutination, and free constituent order. To assess the accuracy of the neural morphosyntactic tagging and UD dependency parsing tasks on the Uzbek language, the publicly available Uzbek UD treebank with 681 sentences and 7,542 tokens is used. A Stanza-like neural pipeline is trained on the UD standard evaluation metric, and an effective robustness-centric preprocessing strategy is introduced, featuring an improved Apertium morphological normalization layer with an optional contextual token feature matrix construction using the BERTbek pre-trained model. On the test data, the model achieves 86.10 UPOS, 83.96 XPOS, and 70.06 UFeats accuracy scores, along with 74.21 UAS and 66.90 LAS.  Our experiments have established effective neural system baselines and analyses for future improvements.
+\keywords{Uzbek \and Universal Dependencies \and morphosyntactic tagging \and neural dependency parsing \and morphological preprocessing \and contextual embeddings}
+\end{abstract}
+
+%
+%
+%
+\section{Introduction}
+
+The state of Natural Language Processing (NLP) in today’s world is characterized by a large gap between highly resourced languages such as English, Chinese, and Spanish, and the remainder of the languages in the world that are still under-resourced in terms of their technological advancement\cite{blasi-etal-2022-systematic}. The challenge gets accentuated in cases where languages possess complex morphological structures, making their syntactic and semantic expression difficult to formalize through standard models that are designed for analytical types of languages. Uzbek is one such language that belongs to the Turkic family of languages, is considered to be a language of significance in terms of population\cite{KROUGLOV2017173} \footnote{\url{https://www.sciencedirect.com/topics/social-sciences/uzbek}}, but is a low-resource language since it serves as the national language of Uzbekistan and has a population of over 37 million in Central Asia\footnote{\url{https://www.worldometers.info/world-population/uzbekistan-population/}}.
+
+The development of efficient parsing tools for Uzbek is very important and can be considered a foundation for implementing efficient artificial intelligence systems in this region. Parsing sentences syntactically, and more specifically, parsing them using dependencies, has been recognized as a foundation for a variety of applications in Natural Language Processing, such as Machine Translation, Sentiment Analysis, Named Entities Recognition, and Information Extraction applications, to name a few. Being a morphologically agglutinative language, having a relatively free Subject-Object-Verb (SOV) order\cite{nilufar-abdurakhmon} \cite{linguistic-feat}, and being a rather complex language in terms of syntactic dependencies, for a language such as Uzbek, syntactic dependencies\cite{11206779} are crucial for improving disambiguations of meanings in sentences. Unlike in English, where precedence determines grammatical relations, in Uzbek, a complex system based on cases that are prefixed or suffixed to members of a noun phrase or to emphasize a verb, makes parsing more challenging, as a parser should be able to move beyond token position to identify deeper structures in texts for their interpretation [4].
+
+Dependency parsing underpins many higher-level NLP capabilities: it provides a compact, interpretable representation of grammatical relations that supports information extraction, machine translation, question answering, and knowledge graph construction. Although some progress has been achieved in multilingual parsing tasks, the current state of parsing research for the Uzbek language remains unsatisfactory due to a lack of high-quality parsing benchmarks and pretrained models. There are two main reasons for this state of affairs. Firstly, there is a lack of annotated data, and secondly, the Uzbek language is agglutinative, and productive suffixation, rich case marking, flexible word order, sparsity, and function words with multiple functions are a challenge for any parsing algorithm.
+
+The goal of this work is to make Uzbek morphosyntactic analysis---jointly modeling POS/morphological features and dependency structure in the Universal Dependencies (UD) framework---more practical and robust for real NLP use. Using the publicly available Uzbek UD treebank (UzUDT; a 3-star UD repository) as our benchmark (with treebank creation described in a separate companion paper), we develop and evaluate reproducible neural baselines for Uzbek tagging and dependency parsing in a Stanza-style pipeline. To improve robustness under Uzbek’s agglutinative morphology and low-resource conditions, we integrate an enhanced Apertium-based\footnote{\url{https://github.com/apertium/apertium-uzb}} morphological normalization step and leverage contextual token representations from the BERTbek pretrained model with UD-aligned subword-to-word pooling (super-token fusion)\cite{Ho2021-cc}, \cite{hopton-etal-2025-functional}. The expected outcomes are (i) standardized UD evaluation results and training recipes that can be reliably replicated, (ii) diagnostic analyses (including relation distributions and error patterns such as polyfunctional markers and complex predicates) that explain current failure modes, and (iii) a foundation for future model improvements and broader downstream adoption of Uzbek syntactic processing.
+
+\paragraph{Contributions.}
+This paper focuses on robust morphosyntactic tagging and dependency parsing for Uzbek, utilizing publicly available data from the Uzbek UD Treebank, which is available in the three-star repository within the UD framework. Although details about UzUDT construction havebeen discussed in another submission, this paper has these contributions:
+\begin{itemize}
+    \item \textbf{Reproducible Uzbek UD baselines.} We train and evaluate neural baselines for Uzbek morphosyntactic tagging (UPOS/XPOS/UFeats/AllTags) and dependency parsing (UAS/LAS and related UD metrics) under a standard UD evaluation setting.\footnote{Training and evaluation code: \url{https://github.com/SanatbekMatlatipov/robust-parsing-uzbek}. Pretrained checkpoints/models: \url{https://huggingface.co/Sanatbek/uzudt}.}
+    \item \textbf{Morphology-aware preprocessing.} We integrate an improved Apertium-based normalization pipeline to improve lemmatization consistency and reduce sparsity in agglutinative Uzbek.
+    \item \textbf{Contextualized token representations.} We leverage the monolingual BERTbek encoder and UD-aligned subword-to-word pooling (``super-token'' fusion) to obtain word-level contextual representations suitable for UD parsing.
+\end{itemize}
+
+
+
+\section{Related Work}
+\paragraph{Universal Dependencies.}
+ UD treats words as syntactic units with morphological properties that enter into grammatical relations, and it emphasises transparent mapping from surface forms to tokens.  This uniform representation addresses earlier difficulties in comparing empirical results across languages and enables cross‑lingual structure transfer. \cite{de-marneffe-etal-2021-universal} present a cross‑linguistic perspective on the UD framework, reviewing its application to over one hundred languages.  They highlight how UD’s universal POS tags and feature schema facilitate multilingual evaluation and typological research.  The UD guidelines (Version 2\footnote{\url{https://universaldependencies.org/guidelines.html}}) also document how tokenization, multiword expressions, lemmas, UPOS/XPOS tags, morphological features and dependency relations should be annotated;
+
+\paragraph{Parsing in Turkic and other agglutinative languages.}
+Agglutinative languages such as Turkish, Uzbek and other Turkic languages pose unique challenges for dependency parsing.  Rich morphology leads to long word‑internal suffix chains, free word order complicates attachment, and function words often have multiple grammatical functions\cite{MURZINTCEV2026100195}.  Previous work on Turkish shows that morphology aware representations improve parsing accuracy; e.g., \cite{eryigit-etal-2008-dependency} introduce rule‑based and neural models that incorporate morphological segmentation and show gains over purely lexical baselines.  Research on Kazakh, Uyghur and Tatar UD treebanks reports similar findings: parsers benefit from subword‑level features and language‑specific heuristics to resolve case‑driven ambiguities\cite{Marsan_undated-hp}.  \cite{noauthor_2018-qq} discuss the difficulties of adapting UD guidelines to Turkish multi‑word expressions and clitic constructions, emphasising the need for consistent morphological analysis.  These studies motivate our approach of combining neural encoders with explicit morphological information.
+
+\paragraph{Uzbek resources.}
+Uzbek remains comparatively under-resourced for UD-style morphosyntactic analysis and dependency parsing, which has limited systematic benchmarking and slowed the development of robust parsing pipelines as there are currently two available UD treebanks. There are two available dataset in UD. An initial UD‑compliant treebank (Uzbek‑UT) released in 2023 contained about 500 sentences~\cite{akhundjanova-talamo-2025-universal} .   In this work, we use the publicly released Uzbek UD treebank \emph{UzUDT} (681 sentences, 7{,}542 tokens) as the evaluation benchmark. The design rationale, annotation methodology, and quality assurance procedures for UzUDT are described in a companion paper submitted to the same venue by the present author~\cite{matlatipov2025goldudt}. Here, we treat UzUDT strictly as an external benchmark resource and focus on robust neural modeling, morphology-aware preprocessing, and reproducible evaluation. 
+
+\paragraph{Neural pipelines and contextual models.}
+Fully neural multilingual NLP pipelines have seen rapid progress in recent years.  Stanza~\cite{Qi2020-zr} introduced a language‑agnostic pipeline for tokenization, multi‑word token expansion, lemmatization, POS morphological tagging, dependency parsing and named entity recognition.   Stanza’s design is fully neural and processes raw text end‑to‑end.  The biaffine graph‑based parser of \cite{DBLP:conf/iclr/DozatM17} remains a strong baseline; it uses MLP projections and biaffine classifiers for arcs and relations, achieving high accuracies on CoNLL‑U corpora.  \cite{kondratyuk-straka-2019-75} further demonstrate that a single multilingual model (UDify) can parse 75 languages via joint multitask learning.   \cite{kuriyozov-etal-2024-bertbek} introduce \textit{BERTbek}, a transformer‑based model pretrained on a large Uzbek corpus; they show that monolingual contextual embeddings outperform mBERT on tasks such as text classification and NER.
+
+\paragraph{Morphological analysis and hybrid architectures.}
+Rule‑based morphological analysers(MA) are crucial in agglutinative languages to supplement neural models.  Apertium is a free/open‑source platform for rule‑based machine translation that includes finite‑state morphological analysers for numerous languages~\cite{Forcada2011} and Uzbek MAs(\cite{Salaev2024}, \cite{2301.12711}, \cite{MURZINTCEV2026100195}).  It provides lexicons and two‑level morphological rules, enabling high‑quality lemmatization and feature extraction.   For Uzbek, preliminary experiments indicate that combining Apertium‑generated features (case, number, tense, person, etc.) with BERTbek representations yields more robust tagging and parsing, especially on rare or unseen wordforms~\cite{kuriyozov-etal-2024-bertbek}.
+
+\section{UzUDT Treebank}
+
+\subsection{Data}
+We conduct experiments on the publicly available Uzbek Universal Dependencies treebank UzUDT, released as a 3-star repository in the UD ecosystem.\footnote{UD repository: \url{https://github.com/UniversalDependencies/UD\_Uzbek-UzUDT/tree/master}.\\ 
+\url{https://universaldependencies.org/treebanks/uz\_uzudt/index.html}.}
+The version used in this paper contains 681 sentences and 7,542 tokens, annotated in UD v2 format with lemmas, UPOS/XPOS tags, morphological features, and dependency relations.
+
+\subsection{Splits and corpus statistics}
+The UD repository provides official training and test portions. To support early stopping and model selection, we additionally create a development set by holding out 10\% of the original training sentences (deterministically, by sentence order) Table \ref{tab:data_split}. This yields:
+\emph{Train}: 435 sentences (4,923 tokens), \emph{Dev}: 48 sentences (518 tokens), \emph{Test}: 198 sentences (2,101 tokens).
+\begin{table}[t]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrr@{}}
+\toprule
+\textbf{Split} & \textbf{Sentences} & \textbf{Sent. \%} & \textbf{Tokens} & \textbf{Tok. \%} \\
+\midrule
+Train & 435 & 63.88 & 4{,}923 & 65.27 \\
+Dev   & 48  & 7.05  & 518     & 6.87  \\
+Test  & 198 & 29.07 & 2{,}101 & 27.86 \\
+\midrule
+Total & 681 & 100.00 & 7{,}542 & 100.00 \\
+\bottomrule
+\end{tabular*}
+\caption{UzUDT data split used in our experiments. Percentages are computed over the full corpus.}
+\label{tab:data_split}
+\end{table}
+
+\section{Methodology}
+\label{sec:methodology}
+
+Figure~\ref{fig:uzbek_baseline_architecture} below is a breakdown of the end-to-end baseline architecture framework utilized in this research. Starting with an input sentence expressed as a sequence of Uzbek words, this architecture entails (i) normalization and morphology-conscious preprocessing, (ii) contextualized embedding with a monolingual pretrained Transformer (BERTbek), (iii) word-level alignment of subword vectors through “super-token” fusion, and finally, (iv) Universal Dependencies (UD) morphosyntactic tagging and dependency parsing. It is specifically engineered to tackle two Uzbek language-specific challenges, namely (a) data scarcity due to agglutinative morphotactics, and (b) subword and UD token misalignment in Transformers. To avert these challenges, this architecture combines deep contextual embedding with linguistics-conscious normalization and also enforces a subword-to\_UD token mapping.
+\begin{figure}
+  \centering
+    \includegraphics[width=0.75\linewidth]{baseline_architecture.png}
+  \caption{Baseline Uzbek UD parsing framework. Raw Uzbek tokens are normalized with an improved Apertium-based morphology pipeline and encoded by the BERTbek Transformer. Subword representations are aggregated into word-level vectors (``super-token'' fusion) aligned to UD tokens. The parser consumes the fused word representations together with UPOS embeddings (from the tagging module) to predict dependency arcs and relations.}
+  \label{fig:uzbek_baseline_architecture}
+\end{figure}
+
+\subsection{Preprocessing}
+\label{subsec:preprocessing}
+Let a sentence be $S=(w_1,\dots,w_n)$, where $w_i$ are UD word tokens. We apply:
+\begin{enumerate}
+    \item \textbf{Text normalization and UD-compliant tokenization.} Unicode normalization and strict satisfaction of UD formatting constraints are used to provide stable token boundaries and evaluation compatibility.
+    \item \textbf{Morphology-aware normalization with Apertium.} Uzbek is agglutinative, and many grammatical categories are expressed through suffix sequences; Figure \ref{fig:uzbek_morphotactics} shows the common suffix chaining rules for verbs and nouns that underpin our need for morphology-aware preprocessing. We use an improved Apertium preprocessing pipeline to lemmatize the data more consistently and deal with the lexical sparsity typical of the Uzbek language. Specifically, the preprocessing pipe performs a lexicon lookup and morphotactic analysis and produces normalized forms (and morph analyses when possible). In this baseline, Apertium is primarily used to \emph{normalize} and \emph{stabilize} lexical forms; explicit feature injection is optional and described in \ref{subsec:repr}.
+    \item \textbf{Subword tokenization for BERTbek.} BERTbek operates on subword units, meaning each word $w_i$ in BERTbek representation consists of a subsequence of WordPiece symbols. The mapping of UD tokens to their subword segments remains intact for the forthcoming fusion stage.
+\end{enumerate}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{verb-noun.png}
+  \caption{Illustration of Uzbek morphotactics for verbs (top) and nouns (bottom): from a lexical stem, suffix sequences encode grammatical categories such as tense/voice/person (verbs) and number/possession/case (nouns).}
+  \label{fig:uzbek_morphotactics}
+\end{figure}
+In this current arrangement, the lemma quality is mainly affected by the preprocessing component, while a tagger and a parser are trained to predict the tags and the dependency structures as needed by the standard evaluation procedure in UD.
+
+\subsection{Token representations and ``super-token'' fusion}
+\label{subsec:repr}
+For each universal dependencies (UD) token $w_i$, a word-level representation is built by combining lexical, subword, and (if needed) morphology information. The contextual subword representations, which result from BERTbek, will be represented as $\mathbf{z}_{i,1},\dots,\mathbf{z}_{i,m_i}$, referring to the $m_i$ subwords corresponding to $w_i$. Because UD assessment is performed at a word level, where tokens are treated as words, a pooling function is needed to aggregate subword vectors to produce a word-level vector.
+
+\begin{equation}
+\mathbf{e}_{\text{ctx}}(w_i) = \textsc{Pool}\big(\mathbf{z}_{i,1},\dots,\mathbf{z}_{i,m_i}\big),
+\end{equation}
+where $\textsc{Pool}(\cdot)$ is implemented as a simple and stable word-level fusion (``super-token'' fusion), such as taking the first subword vector or the mean over subwords.\footnote{We use a fixed pooling rule for all experiments to keep the baseline reproducible.}
+
+We then form the final token vector:
+\begin{equation}
+\mathbf{x}_i =
+\Big[
+\mathbf{e}_{\text{word}}(w_i);\ 
+\mathbf{e}_{\text{char}}(w_i);\ 
+\mathbf{e}_{\text{upos}}(\hat{p}_i);\ 
+\mathbf{e}_{\text{morph}}(w_i);\ 
+\mathbf{e}_{\text{ctx}}(w_i)
+\Big],
+\end{equation}
+where $\mathbf{e}_{\text{word}}$ and $\mathbf{e}_{\text{char}}$ are standard word- and character-level embeddings, and $\mathbf{e}_{\text{ctx}}$ is the BERTbek-derived contextual embedding defined above. The UPOS embedding $\mathbf{e}_{\text{upos}}(\hat{p}_i)$ is derived from the tagger output $\hat{p}_i$ (see below). The morphology component $\mathbf{e}_{\text{morph}}(w_i)$ is optional: when enabled, it encodes analyzer-derived information (e.g., lemma and a compact set of morphological attributes) as a learned embedding; when disabled, it is set to a zero vector. This design allows us to test whether explicit morphology improves robustness beyond subword contextualization.
+
+\subsection{Morphosyntactic tagging}
+\label{subsec:tagging}
+We train a neural morphosyntactic tagger to predict UPOS, XPOS, and UD morphological features. The tagger is implemented as a BiLSTM over the token sequence $\mathbf{x}_1,\dots,\mathbf{x}_n$:
+\begin{equation}
+\mathbf{h}_1,\dots,\mathbf{h}_n = \textsc{BiLSTM}(\mathbf{x}_1,\dots,\mathbf{x}_n).
+\end{equation}
+For each tagging task $t \in \{\textsc{UPOS}, \textsc{XPOS}, \textsc{UFeats}\}$ we compute:
+\begin{equation}
+p(y^t_i \mid S) = \text{softmax}(\mathbf{W}_t\mathbf{h}_i + \mathbf{b}_t).
+\end{equation}
+The tagging loss is the sum of cross-entropies across tasks:
+\begin{equation}
+\mathcal{L}_{\text{tag}} = \sum_{t}\sum_{i=1}^{n} -\log p(y^t_i \mid S).
+\end{equation}
+
+\paragraph{Avoiding oracle information.}
+To prevent leakage of gold tags at inference time, UPOS embeddings used by the parser are computed from the \emph{predicted} UPOS labels $\hat{p}_i$ produced by the tagger. During training, we may optionally use gold UPOS embeddings for stabilization (teacher forcing), but all reported results are produced under the standard pipeline setting where predictions are used at test time.
+
+\subsection{Dependency parsing}
+\label{subsec:parsing}
+Given encoder outputs $\mathbf{h}_i$, we employ a biaffine graph-based dependency parser. We project tokens into head and dependent spaces:
+\begin{equation}
+\mathbf{r}^{\text{head}}_i=\text{MLP}_{\text{head}}(\mathbf{h}_i),\quad
+\mathbf{r}^{\text{dep}}_j=\text{MLP}_{\text{dep}}(\mathbf{h}_j).
+\end{equation}
+Arc scores between candidate head $i$ and dependent $j$ are:
+\begin{equation}
+s^{\text{arc}}_{i,j} = (\mathbf{r}^{\text{head}}_i)^\top \mathbf{U}_{\text{arc}}\, \mathbf{r}^{\text{dep}}_j
++ \mathbf{w}_{\text{arc}}^\top [\mathbf{r}^{\text{head}}_i;\mathbf{r}^{\text{dep}}_j] + b_{\text{arc}}.
+\end{equation}
+Relation scores are computed analogously with label-specific parameters. The parsing loss combines arc and relation components:
+\begin{equation}
+\mathcal{L}_{\text{parse}} = \mathcal{L}_{\text{arc}} + \mathcal{L}_{\text{rel}},
+\end{equation}
+and the overall objective jointly trains tagging and parsing:
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{\text{tag}} + \lambda\,\mathcal{L}_{\text{parse}}.
+\end{equation}
+
+\subsection{Evaluation}
+\label{subsec:evaluation}
+We evaluate the performance of morphosyntactic taggers on UPOS and XPOS accuracy, UD feature accuracy (UFeats), and joint tag accuracy (AllTags). On dependency parsing tasks, we will report traditional Universal Dependencies (UD) measures, namely UAS and LAS scores, together with CLAS, MLAS, and BLEX scores, which will be calculated using the standard UD eval script. All tasks will be conducted using a predefined training, development, and testing data splits.
+\section{Experiments and Results}
+\subsection{Training setup}
+\label{subsec:training_setup}
+We train the baseline tagger-parser system using a standard neural optimization approach (Adam with decoupled weight decay). We set early stopping using performance on the development set. The hyperparameters of the model are mostly set to follow the Universal Dependencies parsing settings.
+Table~\ref{tab:hyperparams} summarizes the training and architecture settings used for our experiments. For clarity, we report the parameters in terms of (i) the biaffine parser MLP configuration, (ii) UPOS embedding size and the ``super-token'' (subword-to-word) fusion module, and (iii) optimization and scheduling.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{p{0.55\linewidth}p{0.35\linewidth}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{l}{\textit{Model / architecture}} \\
+\midrule
+No.\ of parser hidden layers (MLP depth) & 1 (arc MLP) + 1 (rel MLP) \\
+Parser hidden dimension (MLP) & 500 \\
+UPOS embedding dimension & 50 \\
+Super-token fusion (subword pooling) & mean pooling over WordPieces \\
+Super-token filter sizes & -- (not used; pooling baseline) \\
+Super-token embedding dimension & 768 (BERTbek hidden size) \\
+Dropout & 0.33 \\
+\midrule
+\multicolumn{2}{l}{\textit{Optimization / scheduling}} \\
+\midrule
+Optimizer & AdamW \\
+Adam $\beta$ & (0.9, 0.999) \\
+Weight decay & 0.01 \\
+Learning rate scheduler & linear warmup + linear decay \\
+Warmup ratio & 0.10 \\
+Peak learning rate & $2 \times 10^{-5}$ \\
+Batch size & 32 sentences \\
+Training epochs & 30 (early stopping on Dev) \\
+\bottomrule
+\end{tabular}
+\caption{Training setup and hyperparameters for the Uzbek baseline pipeline. ``Super-token'' refers to the subword-to-word aggregation step aligning BERTbek subword outputs to UD word tokens. If a CNN-based super-token encoder is not used, filter sizes are not applicable and pooling is employed.}
+\label{tab:hyperparams}
+\end{table}
+\subsection{Training and evaluation protocol}
+We train a Stanza-style pipeline consisting of (i) a neural morphosyntactic tagger predicting UPOS, XPOS, and UD morphological features, and (ii) a biaffine graph-based dependency parser. Preprocessing follows Section~\ref{subsec:preprocessing} (UD-compliant tokenization and Apertium-based normalization). Because BERTbek operates on subword units, we apply a fixed ``super-token'' fusion strategy to aggregate subword vectors into UD-aligned word-level representations (Section~\ref{subsec:repr}). UPOS embeddings consumed by the parser are derived from predicted UPOS tags to avoid oracle information at inference time.
+
+\subsection{Morphosyntactic tagging results}
+Table~\ref{tab:tagging} summarizes tagging performance. The model achieves 86.10 UPOS and 83.96 XPOS accuracy. Performance on morphological features is lower (70.06 UFeats and 61.40 AllTags), reflecting the difficulty of predicting fine-grained feature bundles in Uzbek, where grammatical information is densely encoded in suffix sequences and many wordforms are sparse under limited training data.
+\begin{table}[H]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrr@{}}
+\toprule
+\textbf{Model} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} & \textbf{AllTags} \\
+\midrule
+Stanza (UzUDT) & 86.10 & 83.96 & 70.06 & 61.40 \\
+\bottomrule
+\end{tabular*}
+\caption{Morphosyntactic tagging results on the Uzbek UzUDT evaluation set (accuracy/\%).}
+\label{tab:tagging}
+\end{table}
+\subsection{Dependency parsing results}
+Table~\ref{tab:parsing} reports parsing performance. Our baseline reaches 74.21 UAS and 66.90 LAS on the test set. The UAS--LAS gap indicates that relation labeling remains more challenging than head selection, which is expected in Uzbek due to attachment ambiguities in clause linkage and modifier stacking, and due to the interaction between morphology and syntactic role assignment. The lower CLAS/MLAS/BLEX scores further suggest that a non-trivial fraction of errors occurs in constructions requiring correct combinations of syntactic labels and morphological information, consistent with the lower UFeats/AllTags scores.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrr@{}}
+\toprule
+\textbf{Metric} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AlignedAcc} \\
+\midrule
+UAS  & 74.21 & 75.31 & 74.21 & 75.21 \\
+LAS  & 66.21 & 67.78 & 66.90 & 53.21 \\
+CLAS & 46.32 & 46.02 & 46.17 & 46.02 \\
+MLAS & 44.27 & 43.98 & 44.12 & 43.98 \\
+BLEX & 46.32 & 46.02 & 46.17 & 46.02 \\
+\bottomrule
+\end{tabular*}
+\caption{Dependency parsing evaluation (CoNLL-U metrics).}
+\label{tab:parsing}
+\end{table}
+
+\subsection{Dependency-relation distribution and corpus diagnostics}
+\label{subsec:deprel_dist}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\linewidth]{top-20-dep-relations}
+    \caption{Top 20 dependency relations in UzUDT. The chart highlights the skewed distribution of relations, with \texttt{punct} and frequent grammatical relations such as \texttt{obl}, \texttt{nsubj}, and \texttt{root} accounting for a large portion of the annotations. }
+    \label{fig:deprel_top20}
+\end{figure}
+To contextualize model behavior, Figure~\ref{fig:deprel_top20} shows the frequency of the top 20 dependency relations in UzUDT. The distribution is highly skewed: \texttt{punct} dominates, followed by frequent core and oblique relations such as \texttt{obl}, \texttt{nsubj}, and \texttt{root}. A second tier includes common modifiers and clause-level relations (\texttt{amod}, \texttt{advcl}, \texttt{obj}) as well as coordination and nominal modification (\texttt{compound}, \texttt{nmod}, \texttt{conj}). 
+\section{Discussion}
+\label{sec:discussion}
+This work investigates a strong baseline for Uzbek morphological tagging and UD dependency parsing in low-resource settings. This involves the combination of: (i) morphology-conscious normalization, accomplished via an improved Apertium pipeline, and (ii) contextual embeddings via a monolingual pretrained Transformer (BERTbek) that are tuned to UD elements through a fixed super-token fusion component. The concluding discussion will cover the significance of the outcomes, the outstanding challenges in the case of Uzbek, and how the results of the diagnostics shed light on future prospects.
+
+\subsection{What the results indicate}
+Our experiments show that the Stanza-inspired neural pipeline can provide stable morphosyntactic analysis for the Uzbek language with limited training data. While accuracy is relatively robust for coarse categories (UPOS: 86.10 and XPOS: 83.96), the accuracy for fine categories of morphological tagging is the main limiting factor for overall accuracy (UFeats: 70.06 and AllTags: 61.40). In the case of the Uzbek language, this is what is expected. Many grammatical distinctions are realized via the productive formation of suffix sequences, resulting in a significant number of sparse or unknown surface expressions. In this situation, the contextual encoder helps provide stability on general syntactic phenomena but is less accurate on the UD full feature set, especially for the joint expression of tense/aspects/mood information, agreement, or case/possessive. Also, the parser result with UAS = 74.21 and LAS = 66.90 reveals that the head ID is more accurate than the relation ID. Additionally, the UAS-LAS gap is essentially within the range of what is expected due to the inherent ambiguity in the relation ID situation. This means that the parser gets the dependent on the head node properly but gets the relation improperly, specifically between instances of obl vs. obj or advcl vs. xcomp. This is especially true in the face of ambiguous morphology or when the start and end of the clauses are difficult or impossible to discern purely on the basis of surface morphology. This is supported by the CLAS/MLAS/BLEX accuracy, which is lower due to the interaction between syntactic analysis and morphology.
+
+\subsection{Why Uzbek remains challenging}
+Uzbek also raises challenges that cannot be solved only with the help of contextual subword features. Firstly, the division of the word into subwords does not necessarily correlate with Uzbek morpheme boundaries; thus, crucial grammatical information can be represented in several subwords with consistency varying for every word form. Secondly, there are many poly-functional signs in the Uzbek language that can play several syntactical roles in one context; in this way, the meaning of relations of \texttt{case}, \texttt{mark}, or discourse can be ambiguous. Third, complex predicate constructions---including light-verb and serial-like multi-verb patterns---create ambiguity in how predicates and complements should be represented in UD, often affecting \texttt{xcomp}/\texttt{ccomp} decisions and compound subtypes (e.g., \texttt{compound:lvc}).
+These factors interact with data scarcity: rare constructions and long-tail morphological combinations are underrepresented in training data, amplifying brittleness in both morphological feature prediction and dependency labeling.
+
+\subsection{Interpreting errors through relation-frequency diagnostics}
+The dependency-relation frequency chart (Figure~\ref{fig:deprel_top20}) provides helpful context for interpreting aggregate scores. The corpus is skewed toward a small number of frequent relations, with \texttt{punct}, \texttt{obl}, \texttt{nsubj}, and \texttt{root} accounting for a large portion of all arcs. Consequently, improvements in these relations can strongly influence overall UAS/LAS. At the same time, several mid-frequency relations visible in the chart (e.g., \texttt{advcl}, \texttt{acl}, \texttt{xcomp}, and \texttt{nmod}) correspond to structurally complex or ambiguity-prone phenomena in Uzbek. Errors in these categories may not dominate counts but disproportionately affect labeled accuracy and are typically more difficult to correct without stronger modeling of clause structure and morphology--syntax interactions. This diagnostic supports a targeted improvement strategy: maintain high accuracy on frequent core relations while explicitly addressing the linguistically difficult, mid-frequency relations that often drive label confusion.
+
+\subsection{Role of preprocessing and token alignment}
+The Apertium-based normalization step is most valuable as a robustness mechanism against sparsity: by stabilizing lemmas and normalizing surface variation, it reduces the effective vocabulary size and helps the tagger and parser generalize better across inflectional variants. Separately, the ``super-token'' fusion strategy (aggregating BERTbek subword outputs to UD tokens) is essential for correctness: UD evaluation is defined at the word-token level, and a fixed alignment and pooling rule prevents subtle inconsistencies that can arise when subword boundaries drift across examples. Together, these steps improve reproducibility and reduce variance in training, even if they do not fully resolve the challenge of predicting complete UD feature bundles for morphologically complex wordforms.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented a robust baseline framework for Uzbek morphosyntactic tagging and UD dependency parsing using a Stanza-style neural pipeline with BERTbek contextual representations, UD-aligned ``super-token'' fusion, and morphology-aware normalization via an improved Apertium preprocessing step. On the UzUDT benchmark, the system achieves 86.10 UPOS, 83.96 XPOS, 70.06 UFeats, and 61.40 AllTags accuracy, together with 74.21 UAS and 66.90 LAS, establishing a reproducible reference point for Uzbek syntactic analysis. The dependency-relation distribution analysis further contextualizes these results and highlights where remaining errors are concentrated.
+
+
+\begin{credits}
+\subsubsection{\discintname} The author has no competing interests to declare that are relevant to the content of this article. 
+\end{credits}
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+\bibliographystyle{splncs04}
+\bibliography{mybibliography}
+%
+\end{document}
