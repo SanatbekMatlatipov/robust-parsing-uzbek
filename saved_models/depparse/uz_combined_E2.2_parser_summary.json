@@ -1,0 +1,10 @@
+{
+  "experiment": "uz_combined_E2.2_parser.pt",
+  "total_steps": 6900,
+  "best_dev_score": 63.80728554641598,
+  "best_step": 900,
+  "final_uas": 70.27027027027027,
+  "final_las": 61.104582843713274,
+  "training_time_sec": 6211.368520736694,
+  "csv_log": "saved_models/depparse\\uz_combined_E2.2_parser_training_log.csv"
+}
