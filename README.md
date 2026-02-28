@@ -1,4 +1,4 @@
-﻿# Towards Robust Uzbek Neural Dependency Parsing
+# Towards Robust Uzbek Neural Dependency Parsing
 
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)](https://huggingface.co/Sanatbek/uzudt)
 [![License](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
@@ -271,6 +271,54 @@ python -m stanza.models.parser --mode train `
   --wandb
 ```
 
+#### E3.1: TahrirchiBERT + mean pooling — UzUDT
+
+```powershell
+python -m stanza.models.tagger --mode train `
+  --lang uz --shorthand uz_uzudt `
+  --train_file data/pos/uz_uzudt.train.in.conllu `
+  --eval_file data/pos/uz_uzudt.dev.in.conllu `
+  --bert_model tahrirchi/tahrirchi-bert-base `
+  --bert_pooling mean `
+  --no_pretrain `
+  --save_dir saved_models/pos --save_name uz_uzudt_E3.1_tagger.pt `
+  --wandb
+
+python -m stanza.models.parser --mode train `
+  --lang uz --shorthand uz_uzudt `
+  --train_file data/depparse/uz_uzudt.train.in.conllu `
+  --eval_file data/depparse/uz_uzudt.dev.in.conllu `
+  --bert_model tahrirchi/tahrirchi-bert-base `
+  --bert_pooling mean `
+  --no_pretrain `
+  --save_dir saved_models/depparse --save_name uz_uzudt_E3.1_parser.pt `
+  --wandb
+```
+
+#### E3.2: TahrirchiBERT + mean pooling — UzUDT+UT merged
+
+```powershell
+python -m stanza.models.tagger --mode train `
+  --lang uz --shorthand uz_combined `
+  --train_file data/pos/merged/uz_combined.train.in.conllu `
+  --eval_file data/pos/merged/uz_combined.dev.in.conllu `
+  --bert_model tahrirchi/tahrirchi-bert-base `
+  --bert_pooling mean `
+  --no_pretrain `
+  --save_dir saved_models/pos --save_name uz_combined_E3.2_tagger.pt `
+  --wandb
+
+python -m stanza.models.parser --mode train `
+  --lang uz --shorthand uz_combined `
+  --train_file data/depparse/merged/uz_combined.train.in.conllu `
+  --eval_file data/depparse/merged/uz_combined.dev.in.conllu `
+  --bert_model tahrirchi/tahrirchi-bert-base `
+  --bert_pooling mean `
+  --no_pretrain `
+  --save_dir saved_models/depparse --save_name uz_combined_E3.2_parser.pt `
+  --wandb
+```
+
 ### Evaluation
 
 ```powershell
@@ -334,20 +382,23 @@ python scripts/compare_experiments.py --mode summary `
 
 ## Results
 
-All 4 experiment runs are complete. See `RESEARCH_LOG.md` for detailed analysis and training curves.
+The table below summarizes the main experimental results; see `RESEARCH_LOG.md` for detailed analysis and experimental chronology.
 
-| Exp | Data | Embeddings | UPOS | XPOS | UFeats | UAS | LAS |
-|-----|------|------------|------|------|--------|-----|-----|
-| E1.1 | UzUDT | FastText | 79.19 | 79.81 | 66.61 | 69.57 | 51.24 |
-| E1.2 | UzUDT+UT | FastText | 80.26 | 83.20 | 66.98 | 72.27 | 62.40 |
-| E2.1 | UzUDT | TahrirchiBERT | 82.45 | 80.90 | 65.37 | 72.05 | 54.19 |
-| E2.2 | UzUDT+UT | TahrirchiBERT | **85.08** | **84.72** | **71.09** | **72.39** | **63.81** |
+| Exp | Data | Embeddings | Fusion | UPOS | XPOS | UFeats | UAS | LAS |
+|-----|------|------------|--------|------|------|--------|-----|-----|
+| E1.1 | UzUDT | FastText | N/A | 79.19 | 79.81 | 66.61 | 69.57 | 51.24 |
+| E1.2 | UzUDT+UT | FastText | N/A | 80.26 | 83.20 | 66.98 | 72.27 | 62.40 |
+| E2.1 | UzUDT | TahrirchiBERT | Last-sub | 82.45 | 80.90 | 65.37 | 72.05 | 54.19 |
+| E2.2 | UzUDT+UT | TahrirchiBERT | Last-sub | **85.08** | 84.72 | **71.09** | **72.39** | **63.81** |
+| E3.1 | UzUDT | TahrirchiBERT | Mean | 82.76 | 81.37 | 65.22 | 69.10 | 51.55 |
+| E3.2 | UzUDT+UT | TahrirchiBERT | Mean | 84.02 | **87.07** | 70.39 | 70.74 | 60.05 |
 
 ### Key Findings
 
 1. **TahrirchiBERT outperforms FastText on POS tagging.** The best BERT model (E2.2) achieves 85.08 UPOS vs 80.26 for the best FastText model (E1.2), a gain of **+4.82 points**.
-2. **Merging treebanks consistently helps.** Every `.2` run (UzUDT+UT) outperforms its `.1` counterpart (UzUDT-only), with LAS gains of +11.16 (E1) and +9.62 (E2).
-3. **Best system: E2.2** — TahrirchiBERT + UzUDT+UT merged data achieves the highest scores across all metrics (UPOS 85.08, LAS 63.81).
+2. **Merging treebanks consistently helps.** Every `.2` run outperforms its `.1` counterpart, with LAS gains of +11.16 (E1) and +9.62 (E2).
+3. **Fusion strategy is task-dependent.** Last-subword is clearly better for parsing (+2.95 UAS, +2.64 LAS on UzUDT). Mean pooling is better for XPOS (E3.2 reaches 87.07, the highest across all runs).
+4. **Best overall system: E2.2** — TahrirchiBERT + last-subword + UzUDT+UT merged data achieves the highest scores in UPOS, UFeats, UAS, and LAS.
 
 ---
 
@@ -355,10 +406,11 @@ All 4 experiment runs are complete. See `RESEARCH_LOG.md` for detailed analysis 
 
 The experiments are designed to answer two questions:
 
-1. **Does TahrirchiBERT improve over static FastText embeddings?** Compare E1 (FastText-only) vs E2 (TahrirchiBERT) — the answer is yes: +4.82 UPOS, +1.41 LAS on the merged data setting.
-2. **Does merging two Uzbek UD treebanks help?** Compare `.1` (UzUDT-only) vs `.2` (UzUDT+UT merged) — the answer is yes: the combined data consistently yields higher scores across all metrics, especially LAS (+11.16 for E1, +9.62 for E2).
+1. **Does TahrirchiBERT improve over static FastText embeddings?** Yes: +4.82 UPOS, +1.41 LAS on merged data.
+2. **Does merging two Uzbek UD treebanks help?** Yes: the combined data consistently yields higher scores, especially LAS (+11.16 for E1, +9.62 for E2).
+3. **Does fusion strategy matter?** It depends on the task: last-subword is better for parsing; mean pooling is competitive or better for some POS metrics (see `RESEARCH_LOG.md` §6.4 and §6.9).
 
-> **Future work:** Additional experiments with BERTbek, mean pooling, and BERT+FastText fusion are planned — see `future_research_log.md`.
+> **Future work:** Additional experiments with BERTbek and BERT+FastText fusion are planned — see `future_research_log.md`.
 
 ---
 
