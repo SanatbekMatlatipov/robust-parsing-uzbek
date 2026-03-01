@@ -1,0 +1,1 @@
+{"eval/mlas":54.89566613162119,"eval/las":61.57461809635723,"eval/uas":70.50528789659224,"_wandb":{"runtime":288},"_timestamp":1.7719575064055808e+09,"step":1420,"eval/blex":57.9454253611557,"eval/dev_score":61.57461809635723,"_step":84,"_runtime":288,"train/lr":0.003,"train/avg_loss":3.181640132367611,"train/step_loss":1.4733529090881348}
