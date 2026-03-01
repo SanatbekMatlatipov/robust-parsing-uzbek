@@ -8,7 +8,7 @@
 
 data/
 stanza_test/
-saved_models/
+saved_models/*
 logs/
 log/
 *_test_treebanks

@@ -219,7 +219,7 @@ def train(args):
 
     if os.path.exists(vocab_file):
         logger.info('Loading existing vocab file')
-        vocab = {'char': CharVocab.load_state_dict(torch.load(vocab_file, lambda storage, loc: storage))}
+        vocab = {'char': CharVocab.load_state_dict(torch.load(vocab_file, map_location=lambda storage, loc: storage, weights_only=False))}
     else:
         logger.info('Building and saving vocab')
         vocab = {'char': build_vocab(args['train_file'] if args['train_dir'] is None else args['train_dir'], cutoff=args['cutoff'])}

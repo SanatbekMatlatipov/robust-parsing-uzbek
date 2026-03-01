@@ -137,30 +137,25 @@ def extract_phobert_embeddings(model_name, tokenizer, model, data, device):
     # Each tensor holds the representation of a sentence extracted from phobert
     return processed
 
-def extract_bert_embeddings(model_name, tokenizer, model, data, device):
+def extract_bert_embeddings(model_name, tokenizer, model, data, device, pooling='last'):
     """
-    Extract transformer embeddings using a generic roberta extraction
+    Extract transformer embeddings using a generic extraction method.
     data: list of list of string (the text tokens)
+    pooling: 'last' uses the last wordpiece per token (default),
+             'mean' averages all wordpieces per token.
     """
     if model_name.startswith("vinai/phobert"):
         return extract_phobert_embeddings(model_name, tokenizer, model, data, device)
 
     #add add_prefix_space = True for RoBerTa-- error if not
     tokenized = tokenizer(data, padding="longest", is_split_into_words=True, return_offsets_mapping=False, return_attention_mask=False)
-    list_offsets = [[None] * (len(sentence)+2) for sentence in data]
+
+    # Check for sentences that exceed model max length
     for idx in range(len(data)):
         offsets = tokenized.word_ids(batch_index=idx)
-        for pos, offset in enumerate(offsets):
-            if offset is None:
-                continue
-            # this uses the last token piece for any offset by overwriting the previous value
-            list_offsets[idx][offset+1] = pos
-        list_offsets[idx][0] = 0
-        list_offsets[idx][-1] = -1
-
         if len(offsets) > tokenizer.model_max_length:
             logger.error("Invalid size, max size: %d, got %d %s", tokenizer.model_max_length, len(offsets), data[idx])
-            raise TextTooLongError(len(offsets), tokenizer.model_max_length, idx, " ".join(data[idx]))
+            raise ValueError("Sentence {} is too long for BERT model ({} > {})".format(idx, len(offsets), tokenizer.model_max_length))
 
     features = []
     for i in range(int(math.ceil(len(data)/128))):
@@ -171,11 +166,42 @@ def extract_bert_embeddings(model_name, tokenizer, model, data, device):
             features += feature.clone().detach()
 
     processed = []
-    #remove the bos and eos tokens
-    list_offsets = [ sent[1:-1] for sent in list_offsets]
-    #process the output
-    for feature, offsets in zip(features, list_offsets):
-        new_sent = feature[offsets]
-        processed.append(new_sent)
+    if pooling == 'mean':
+        # Average all wordpiece embeddings for each token
+        for idx in range(len(data)):
+            offsets = tokenized.word_ids(batch_index=idx)
+            feature = features[idx]
+            num_words = len(data[idx])
+            word_features = [[] for _ in range(num_words)]
+            for pos, offset in enumerate(offsets):
+                if offset is None:
+                    continue
+                word_features[offset].append(feature[pos])
+            sent_features = []
+            for wf in word_features:
+                if len(wf) > 0:
+                    sent_features.append(torch.stack(wf).mean(dim=0))
+                else:
+                    sent_features.append(torch.zeros(feature.size(-1), device=feature.device))
+            processed.append(torch.stack(sent_features))
+    else:
+        # 'last' pooling: use the last wordpiece for each token
+        list_offsets = [[None] * (len(sentence)+2) for sentence in data]
+        for idx in range(len(data)):
+            offsets = tokenized.word_ids(batch_index=idx)
+            for pos, offset in enumerate(offsets):
+                if offset is None:
+                    continue
+                # this uses the last token piece for any offset by overwriting the previous value
+                list_offsets[idx][offset+1] = pos
+            list_offsets[idx][0] = 0
+            list_offsets[idx][-1] = -1
+
+        #remove the bos and eos tokens
+        list_offsets = [ sent[1:-1] for sent in list_offsets]
+        #process the output
+        for feature, offsets in zip(features, list_offsets):
+            new_sent = feature[offsets]
+            processed.append(new_sent)
 
     return processed

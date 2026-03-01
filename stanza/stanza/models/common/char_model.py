@@ -132,7 +132,7 @@ class CharacterLanguageModel(nn.Module):
 
     @classmethod
     def load(cls, filename, finetune=False):
-        state = torch.load(filename, lambda storage, loc: storage)
+        state = torch.load(filename, map_location=lambda storage, loc: storage, weights_only=False)
         vocab = {'char': CharVocab.load_state_dict(state['vocab'])}
         model = cls(state['args'], vocab, state['pad'], state['is_forward_lm'])
         model.load_state_dict(state['state_dict'])
