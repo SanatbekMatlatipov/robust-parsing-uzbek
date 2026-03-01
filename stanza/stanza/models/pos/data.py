@@ -75,6 +75,7 @@ class DataLoader:
                 processed_sent += [pretrain_vocab.map([w[0].lower() for w in sent])]
             else:
                 processed_sent += [[PAD_ID] * len(sent)]
+            processed_sent += [[w[0] for w in sent]]  # raw text tokens for BERT
             processed.append(processed_sent)
         return processed
 
@@ -90,7 +91,7 @@ class DataLoader:
         batch = self.data[key]
         batch_size = len(batch)
         batch = list(zip(*batch))
-        assert len(batch) == 6
+        assert len(batch) == 7
 
         # sort sentences by lens for easy RNN operations
         lens = [len(x) for x in batch[0]]
@@ -115,7 +116,8 @@ class DataLoader:
         ufeats = get_long_tensor(batch[4], batch_size)
         pretrained = get_long_tensor(batch[5], batch_size)
         sentlens = [len(x) for x in batch[0]]
-        return words, words_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, orig_idx, word_orig_idx, sentlens, word_lens
+        text = batch[6]  # raw text tokens (list of list of str), sorted by sentlen
+        return words, words_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, orig_idx, word_orig_idx, sentlens, word_lens, text
 
     def __iter__(self):
         for i in range(self.__len__()):

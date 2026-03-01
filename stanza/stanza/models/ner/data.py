@@ -54,7 +54,7 @@ class DataLoader:
     def init_vocab(self, data):
         def from_model(model_filename):
             """ Try loading vocab from charLM model file. """
-            state_dict = torch.load(model_filename, lambda storage, loc: storage)
+            state_dict = torch.load(model_filename, map_location=lambda storage, loc: storage, weights_only=False)
             assert 'vocab' in state_dict, "Cannot find vocab in charLM model file."
             return state_dict['vocab']
 
