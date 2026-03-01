@@ -9,6 +9,7 @@ from torch import nn
 
 from stanza.models.common.trainer import Trainer as BaseTrainer
 from stanza.models.common import utils, loss
+from stanza.models.common.foundation_cache import load_bert
 from stanza.models.common.chuliu_edmonds import chuliu_edmonds_one_root
 from stanza.models.depparse.model import Parser
 from stanza.models.pos.vocab import MultiVocab
@@ -25,7 +26,8 @@ def unpack_batch(batch, use_cuda):
     word_orig_idx = batch[12]
     sentlens = batch[13]
     wordlens = batch[14]
-    return inputs, orig_idx, word_orig_idx, sentlens, wordlens
+    text = batch[15]  # raw text sentences for BERT (list of list of str, no ROOT)
+    return inputs, orig_idx, word_orig_idx, sentlens, wordlens, text
 
 class Trainer(BaseTrainer):
     """ A trainer for training models. """
@@ -38,7 +40,9 @@ class Trainer(BaseTrainer):
             # build model from scratch
             self.args = args
             self.vocab = vocab
-            self.model = Parser(args, vocab, emb_matrix=pretrain.emb if pretrain is not None else None)
+            self.bert_model, self.bert_tokenizer = load_bert(args.get('bert_model', None))
+            self.model = Parser(args, vocab, emb_matrix=pretrain.emb if pretrain is not None else None,
+                                bert_model=self.bert_model, bert_tokenizer=self.bert_tokenizer)
         self.parameters = [p for p in self.model.parameters() if p.requires_grad]
         if self.use_cuda:
             self.model.cuda()
@@ -47,7 +51,7 @@ class Trainer(BaseTrainer):
         self.optimizer = utils.get_optimizer(self.args['optim'], self.parameters, self.args['lr'], betas=(0.9, self.args['beta2']), eps=1e-6)
 
     def update(self, batch, eval=False):
-        inputs, orig_idx, word_orig_idx, sentlens, wordlens = unpack_batch(batch, self.use_cuda)
+        inputs, orig_idx, word_orig_idx, sentlens, wordlens, text = unpack_batch(batch, self.use_cuda)
         word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel = inputs
 
         if eval:
@@ -55,7 +59,7 @@ class Trainer(BaseTrainer):
         else:
             self.model.train()
             self.optimizer.zero_grad()
-        loss, _ = self.model(word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens)
+        loss, _ = self.model(word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens, sentences=text)
         loss_val = loss.data.item()
         if eval:
             return loss_val
@@ -66,12 +70,12 @@ class Trainer(BaseTrainer):
         return loss_val
 
     def predict(self, batch, unsort=True):
-        inputs, orig_idx, word_orig_idx, sentlens, wordlens = unpack_batch(batch, self.use_cuda)
+        inputs, orig_idx, word_orig_idx, sentlens, wordlens, text = unpack_batch(batch, self.use_cuda)
         word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel = inputs
 
         self.model.eval()
         batch_size = word.size(0)
-        _, preds = self.model(word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens)
+        _, preds = self.model(word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens, sentences=text)
         head_seqs = [chuliu_edmonds_one_root(adj[:l, :l])[1:] for adj, l in zip(preds[0], sentlens)] # remove attachment for the root
         deprel_seqs = [self.vocab['deprel'].unmap([preds[1][i][j+1][h] for j, h in enumerate(hs)]) for i, hs in enumerate(head_seqs)]
 
@@ -104,7 +108,7 @@ class Trainer(BaseTrainer):
         and the actual use of pretrain embeddings will depend on the boolean config "pretrain" in the loaded args.
         """
         try:
-            checkpoint = torch.load(filename, lambda storage, loc: storage)
+            checkpoint = torch.load(filename, map_location=lambda storage, loc: storage, weights_only=False)
         except BaseException:
             logger.error("Cannot load model from {}".format(filename))
             raise
@@ -114,6 +118,8 @@ class Trainer(BaseTrainer):
         emb_matrix = None
         if self.args['pretrain'] and pretrain is not None: # we use pretrain only if args['pretrain'] == True and pretrain is not None
             emb_matrix = pretrain.emb
-        self.model = Parser(self.args, self.vocab, emb_matrix=emb_matrix)
+        self.bert_model, self.bert_tokenizer = load_bert(self.args.get('bert_model', None))
+        self.model = Parser(self.args, self.vocab, emb_matrix=emb_matrix,
+                            bert_model=self.bert_model, bert_tokenizer=self.bert_tokenizer)
         self.model.load_state_dict(checkpoint['model'], strict=False)
 

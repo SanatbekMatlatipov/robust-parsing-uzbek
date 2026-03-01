@@ -122,6 +122,7 @@ lcode2lang = {
     "hsb": "Upper_Sorbian",
     "ur": "Urdu",
     "ug": "Uyghur",
+    "uz": "Uzbek",
     "vi": "Vietnamese",
     "wbp": "Warlpiri",
     "cy": "Welsh",

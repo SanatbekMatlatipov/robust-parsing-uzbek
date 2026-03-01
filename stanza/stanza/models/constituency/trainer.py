@@ -81,7 +81,7 @@ class Trainer:
             args = {}
 
         try:
-            checkpoint = torch.load(filename, lambda storage, loc: storage)
+            checkpoint = torch.load(filename, map_location=lambda storage, loc: storage, weights_only=False)
         except BaseException:
             logger.exception("Cannot load model from %s", filename)
             raise

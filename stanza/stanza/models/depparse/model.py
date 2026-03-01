@@ -2,16 +2,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence, pack_sequence, PackedSequence
+from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence, pack_sequence, PackedSequence, pad_sequence
 
 from stanza.models.common.biaffine import DeepBiaffineScorer
 from stanza.models.common.hlstm import HighwayLSTM
 from stanza.models.common.dropout import WordDropout
 from stanza.models.common.vocab import CompositeVocab
 from stanza.models.common.char_model import CharacterModel
+from stanza.models.common.bert_embedding import extract_bert_embeddings
 
 class Parser(nn.Module):
-    def __init__(self, args, vocab, emb_matrix=None, share_hid=False):
+    def __init__(self, args, vocab, emb_matrix=None, share_hid=False, bert_model=None, bert_tokenizer=None):
         super().__init__()
 
         self.vocab = vocab
@@ -22,6 +23,10 @@ class Parser(nn.Module):
         def add_unsaved_module(name, module):
             self.unsaved_modules += [name]
             setattr(self, name, module)
+
+        # BERT contextual embeddings (unsaved — loaded separately)
+        add_unsaved_module('bert_model', bert_model)
+        add_unsaved_module('bert_tokenizer', bert_tokenizer)
 
         # input layers
         input_size = 0
@@ -60,6 +65,9 @@ class Parser(nn.Module):
             self.trans_pretrained = nn.Linear(emb_matrix.shape[1], self.args['transformed_dim'], bias=False)
             input_size += self.args['transformed_dim']
 
+        if self.bert_model is not None:
+            input_size += self.bert_model.config.hidden_size
+
         # recurrent layers
         self.parserlstm = HighwayLSTM(input_size, self.args['hidden_dim'], self.args['num_layers'], batch_first=True, bidirectional=True, dropout=self.args['dropout'], rec_dropout=self.args['rec_dropout'], highway_func=torch.tanh)
         self.drop_replacement = nn.Parameter(torch.randn(input_size) / np.sqrt(input_size))
@@ -80,7 +88,7 @@ class Parser(nn.Module):
         self.drop = nn.Dropout(args['dropout'])
         self.worddrop = WordDropout(args['word_dropout'])
 
-    def forward(self, word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens):
+    def forward(self, word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, lemma, head, deprel, word_orig_idx, sentlens, wordlens, sentences=None):
         def pack(x):
             return pack_padded_sequence(x, sentlens, batch_first=True)
 
@@ -117,6 +125,21 @@ class Parser(nn.Module):
             feats_emb = pack(feats_emb)
 
             inputs += [pos_emb, feats_emb]
+
+        if self.bert_model is not None and sentences is not None:
+            device = next(self.parameters()).device
+            processed_bert = extract_bert_embeddings(
+                self.args['bert_model'], self.bert_tokenizer, self.bert_model,
+                sentences, device, pooling=self.args.get('bert_pooling', 'last'))
+            # Prepend zero vector for ROOT token in each sentence
+            processed_bert_with_root = []
+            for bert_emb in processed_bert:
+                root_emb = torch.zeros(1, bert_emb.size(-1), device=bert_emb.device)
+                processed_bert_with_root.append(torch.cat([root_emb, bert_emb], dim=0))
+            processed_bert = pad_sequence(processed_bert_with_root, batch_first=True)
+            if processed_bert.shape[1] < word.shape[1]:
+                processed_bert = F.pad(processed_bert, (0, 0, 0, word.shape[1] - processed_bert.shape[1]))
+            inputs += [pack(processed_bert)]
 
         if self.args['char'] and self.args['char_emb_dim'] > 0:
             char_reps = self.charmodel(wordchars, wordchars_mask, word_orig_idx, sentlens, wordlens)
