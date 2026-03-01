@@ -1,0 +1,11 @@
+{
+  "experiment": "uz_combined_E1.2_tagger.pt",
+  "total_steps": 6800,
+  "best_dev_score": 63.81,
+  "best_step": 800,
+  "final_upos": 80.26,
+  "final_xpos": 83.2,
+  "final_ufeats": 66.98,
+  "training_time_sec": 3752.8,
+  "csv_log": "saved_models/pos/uz_combined_E1.2_tagger_training_log.csv"
+}
