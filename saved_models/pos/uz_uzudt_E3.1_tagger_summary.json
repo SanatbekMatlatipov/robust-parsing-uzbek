@@ -1,0 +1,11 @@
+{
+  "experiment": "uz_uzudt_E3.1_tagger.pt",
+  "total_steps": 6800,
+  "best_dev_score": 57.608695652173914,
+  "best_step": 800,
+  "final_upos": 82.7639751552795,
+  "final_xpos": 81.36645962732919,
+  "final_ufeats": 65.21739130434783,
+  "training_time_sec": 7104.73500084877,
+  "csv_log": "saved_models/pos\\uz_uzudt_E3.1_tagger_training_log.csv"
+}
