@@ -1,0 +1,180 @@
+_wandb:
+    value:
+        cli_version: 0.25.0
+        e:
+            e5by7mxlqbp6cchc5np4aud3kfik97zv:
+                args:
+                    - --mode
+                    - train
+                    - --lang
+                    - uz
+                    - --shorthand
+                    - uz_uzudt
+                    - --train_file
+                    - data/pos/uz_uzudt.train.in.conllu
+                    - --eval_file
+                    - data/pos/uz_uzudt.dev.in.conllu
+                    - --wordvec_pretrain_file
+                    - wordvec/uz/pretrain/fasttext_cc_uz_300.pt
+                    - --save_dir
+                    - saved_models/pos
+                    - --save_name
+                    - uz_uzudt_E1_tagger.pt
+                    - --wandb
+                cpu_count: 32
+                cpu_count_logical: 64
+                cudaVersion: "12.8"
+                disk:
+                    /:
+                        total: "783639638016"
+                        used: "466931826688"
+                email: s.matlatipov@nuu.uz
+                executable: C:\Users\User\code\robust-parsing-uzbek\.venv\Scripts\python.exe
+                git:
+                    commit: bc64d08b650291cef1e9f1663fb6cfcc0672e7f2
+                    remote: https://github.com/SanatbekMatlatipov/robust-parsing-uzbek.git
+                gpu: NVIDIA RTX A6000
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA RTX A6000
+                      uuid: GPU-029e78fc-9141-1f23-dff3-45af218bd463
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA RTX A6000
+                      uuid: GPU-4ad88ff7-2389-99c0-2e44-0c2e3d5019cc
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA RTX A6000
+                      uuid: GPU-99d05cf1-1d7c-b6ed-17e6-12f3d2ef77ef
+                    - architecture: Ampere
+                      cudaCores: 10752
+                      memoryTotal: "48305799168"
+                      name: NVIDIA RTX A6000
+                      uuid: GPU-897832ed-6928-6e4f-fa7e-e8380a262537
+                host: DT-BIZON-W11
+                memory:
+                    total: "549584429056"
+                os: Windows-10-10.0.26200-SP0
+                program: -m stanza.models.tagger
+                python: CPython 3.11.9
+                root: C:\Users\User\code\robust-parsing-uzbek
+                startedAt: "2026-02-24T09:39:09.557424Z"
+                writerId: e5by7mxlqbp6cchc5np4aud3kfik97zv
+        m: []
+        python_version: 3.11.9
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 13
+                - 15
+                - 16
+            "4": 3.11.9
+            "5": 0.25.0
+            "8":
+                - 3
+            "12": 0.25.0
+            "13": windows-amd64
+adapt_eval_interval:
+    value: true
+augment_nopunct:
+    value: null
+batch_size:
+    value: 5000
+beta2:
+    value: 0.95
+char:
+    value: true
+char_emb_dim:
+    value: 100
+char_hidden_dim:
+    value: 400
+char_num_layers:
+    value: 1
+char_rec_dropout:
+    value: 0
+composite_deep_biaff_hidden_dim:
+    value: 100
+cpu:
+    value: false
+cuda:
+    value: false
+data_dir:
+    value: data/pos
+deep_biaff_hidden_dim:
+    value: 400
+dropout:
+    value: 0.5
+eval_file:
+    value: data/pos/uz_uzudt.dev.in.conllu
+eval_interval:
+    value: 100
+gold_file:
+    value: null
+hidden_dim:
+    value: 200
+lang:
+    value: uz
+log_step:
+    value: 20
+lr:
+    value: 0.003
+max_grad_norm:
+    value: 1
+max_steps:
+    value: 50000
+max_steps_before_stop:
+    value: 3000
+mode:
+    value: train
+num_layers:
+    value: 2
+optim:
+    value: adam
+output_file:
+    value: null
+pretrain:
+    value: true
+pretrain_max_vocab:
+    value: 250000
+rec_dropout:
+    value: 0
+sample_train:
+    value: 1
+save_dir:
+    value: saved_models/pos
+save_name:
+    value: uz_uzudt_E1_tagger.pt
+seed:
+    value: 1234
+share_hid:
+    value: false
+shorthand:
+    value: uz_uzudt
+tag_emb_dim:
+    value: 50
+train_file:
+    value: data/pos/uz_uzudt.train.in.conllu
+transformed_dim:
+    value: 125
+wandb:
+    value: true
+wandb_project:
+    value: uzbek-pos-tagger
+word_dropout:
+    value: 0.33
+word_emb_dim:
+    value: 75
+wordvec_dir:
+    value: extern_data/wordvec
+wordvec_file:
+    value: null
+wordvec_pretrain_file:
+    value: wordvec/uz/pretrain/fasttext_cc_uz_300.pt

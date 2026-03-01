@@ -1,0 +1,78 @@
+{
+  "os":  "Windows-10-10.0.26200-SP0",
+  "python":  "CPython 3.11.9",
+  "startedAt":  "2026-02-24T09:39:09.557424Z",
+  "args":  [
+    "--mode",
+    "train",
+    "--lang",
+    "uz",
+    "--shorthand",
+    "uz_uzudt",
+    "--train_file",
+    "data/pos/uz_uzudt.train.in.conllu",
+    "--eval_file",
+    "data/pos/uz_uzudt.dev.in.conllu",
+    "--wordvec_pretrain_file",
+    "wordvec/uz/pretrain/fasttext_cc_uz_300.pt",
+    "--save_dir",
+    "saved_models/pos",
+    "--save_name",
+    "uz_uzudt_E1_tagger.pt",
+    "--wandb"
+  ],
+  "program":  "-m stanza.models.tagger",
+  "git":  {
+    "remote":  "https://github.com/SanatbekMatlatipov/robust-parsing-uzbek.git",
+    "commit":  "bc64d08b650291cef1e9f1663fb6cfcc0672e7f2"
+  },
+  "email":  "s.matlatipov@nuu.uz",
+  "root":  "C:\\Users\\User\\code\\robust-parsing-uzbek",
+  "host":  "DT-BIZON-W11",
+  "executable":  "C:\\Users\\User\\code\\robust-parsing-uzbek\\.venv\\Scripts\\python.exe",
+  "cpu_count":  32,
+  "cpu_count_logical":  64,
+  "gpu":  "NVIDIA RTX A6000",
+  "gpu_count":  4,
+  "disk":  {
+    "/":  {
+      "total":  "783639638016",
+      "used":  "466931826688"
+    }
+  },
+  "memory":  {
+    "total":  "549584429056"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA RTX A6000",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-029e78fc-9141-1f23-dff3-45af218bd463"
+    },
+    {
+      "name":  "NVIDIA RTX A6000",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-4ad88ff7-2389-99c0-2e44-0c2e3d5019cc"
+    },
+    {
+      "name":  "NVIDIA RTX A6000",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-99d05cf1-1d7c-b6ed-17e6-12f3d2ef77ef"
+    },
+    {
+      "name":  "NVIDIA RTX A6000",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-897832ed-6928-6e4f-fa7e-e8380a262537"
+    }
+  ],
+  "cudaVersion":  "12.8",
+  "writerId":  "e5by7mxlqbp6cchc5np4aud3kfik97zv"
+}

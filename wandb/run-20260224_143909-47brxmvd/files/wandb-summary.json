@@ -1,0 +1,1 @@
+{"eval/upos_f1":79.34782608695652,"train/avg_loss":0.1918851796121453,"eval/dev_score":55.27950310559007,"train/step_loss":0.08792420476675034,"eval/ufeats_f1":65.21739130434783,"_timestamp":1.7719346818345766e+09,"_step":431,"eval/xpos_f1":78.41614906832298,"eval/alltags_f1":55.27950310559007,"train/lr":0.003,"_wandb":{"runtime":8727},"step":7200,"_runtime":8727}
