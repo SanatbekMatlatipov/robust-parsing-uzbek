@@ -1,0 +1,1 @@
+{"_timestamp":1.7719526431218693e+09,"step":7300,"eval/blex":45.83333333333333,"eval/las":51.24223602484472,"eval/mlas":42.70833333333333,"_wandb":{"runtime":2174},"train/avg_loss":4.866792483851314,"_step":437,"eval/dev_score":51.24223602484472,"_runtime":2174,"train/step_loss":3.486844539642334,"train/lr":0.003,"eval/uas":69.56521739130434}
