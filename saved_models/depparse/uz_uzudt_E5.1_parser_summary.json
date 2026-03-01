@@ -1,0 +1,10 @@
+{
+  "experiment": "uz_uzudt_E5.1_parser.pt",
+  "total_steps": 7500,
+  "best_dev_score": 60.55900621118012,
+  "best_step": 1500,
+  "final_uas": 73.6024844720497,
+  "final_las": 56.83229813664597,
+  "training_time_sec": 3549.6128191947937,
+  "csv_log": "saved_models/depparse\\uz_uzudt_E5.1_parser_training_log.csv"
+}
