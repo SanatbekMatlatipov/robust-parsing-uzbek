@@ -1,0 +1,36 @@
+{
+  "os":  "Windows-10-10.0.26200-SP0",
+  "python":  "CPython 3.11.9",
+  "startedAt":  "2026-02-24T16:56:13.639339Z",
+  "args":  [
+    "--mode",
+    "train",
+    "--lang",
+    "uz",
+    "--shorthand",
+    "uz_combined",
+    "--train_file",
+    "data/pos/merged/uz_combined.train.in.conllu",
+    "--eval_file",
+    "data/pos/merged/uz_combined.dev.in.conllu",
+    "--wordvec_pretrain_file",
+    "wordvec/uz/pretrain/fasttext_cc_uz_300.pt",
+    "--wordvec_file",
+    "wordvec/uz/fasttext/cc.uz.300.vec",
+    "--save_dir",
+    "saved_models/pos",
+    "--save_name",
+    "uz_combined_E1.2_tagger.pt",
+    "--wandb"
+  ],
+  "program":  "-m stanza.models.tagger",
+  "git":  {
+    "remote":  "https://github.com/SanatbekMatlatipov/robust-parsing-uzbek.git",
+    "commit":  "bc64d08b650291cef1e9f1663fb6cfcc0672e7f2"
+  },
+  "email":  "s.matlatipov@nuu.uz",
+  "root":  "C:\\Users\\User\\code\\robust-parsing-uzbek",
+  "host":  "DT-BIZON-W11",
+  "executable":  "C:\\Users\\User\\code\\robust-parsing-uzbek\\.venv\\Scripts\\python.exe",
+  "writerId":  "btkkag1jqm038rx6vfcpkp9sxah57d62"
+}
