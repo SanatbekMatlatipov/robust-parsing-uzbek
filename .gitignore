@@ -208,6 +208,7 @@ __marimo__/
 # Project-specific: Large model files
 saved_models/**/*.pt
 saved_models/**/*.bin
+saved_models/spacy/
 wordvec/uz/pretrain/fasttext_cc_uz_300.pt
 wordvec/uz/fasttext/cc.uz.300.vec.gz
 wordvec/uz/fasttext/cc.uz.300.vec
