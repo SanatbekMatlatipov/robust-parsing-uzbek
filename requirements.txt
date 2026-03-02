@@ -7,3 +7,13 @@ transformers
 emoji
 wandb
 matplotlib
+
+# spaCy pipeline (Uzbek tagger + parser)
+spacy>=3.5.0
+spacy-transformers>=1.2.0
+spacy-loggers>=1.0.5
+
+# GPU acceleration for spaCy (CUDA 12.x)
+# WARNING: do NOT upgrade to cupy>=14.x — DLPack incompatibility with PyTorch 2.6
+# (RuntimeError: from_dlpack received an invalid capsule)
+cupy-cuda12x==13.6.0

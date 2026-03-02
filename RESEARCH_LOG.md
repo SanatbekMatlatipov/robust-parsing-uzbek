@@ -780,10 +780,229 @@ All models also hosted on HuggingFace: [`Sanatbek/uzudt`](https://huggingface.co
 
 ---
 
-## 10.Changelog
+## 10. spaCy Transition-Based Pipeline Experiments
+
+### 10.1 Motivation
+
+The primary experiments (E1–E3) use a Stanza-based **BiLSTM + DeepBiaffine** architecture — a graph-based parser that scores all possible head–dependent pairs independently. To assess whether an alternative architectural paradigm produces different results on the same Uzbek data, we additionally train a **spaCy transition-based pipeline**. This comparison is motivated by three factors:
+
+1. **Architecture diversity.** Transition-based parsers build trees incrementally via shift–reduce actions, which may handle long-distance dependencies and complex predicate structures differently from graph-based parsers.
+2. **Integrated transformer support.** spaCy's `spacy-transformers` package provides a native, well-maintained integration with HuggingFace models — in contrast to the custom BERT integration we implemented in Stanza (§5.5), reducing the risk of implementation-specific artifacts.
+3. **Production readiness.** spaCy models can be packaged as installable Python wheels (`spacy package`), enabling direct deployment without the research-oriented Stanza infrastructure.
+
+### 10.2 Custom Uzbek Language Support
+
+spaCy does not natively support Uzbek. We created a custom Uzbek language class (`spacy_uzbek/lang/uz/`) registered via the `spacy_languages` entry point, enabling `spacy.blank("uz")` to work without patching spaCy source code. The package includes:
+
+- Uzbek stop words and tokenizer exceptions (abbreviations, contractions)
+- A CoNLL-U → spaCy `DocBin` converter preserving UPOS, XPOS, morphological features, lemmas, and dependency annotations
+- Three training configurations (transformer, static, FastText)
+
+All data conversion reuses the same UD treebank splits from §2.3. Total converted: 2,365 sentences / ~26,984 tokens across 9 `.spacy` files.
+
+### 10.3 Pipeline Architecture
+
+The spaCy pipeline is a joint model with four components trained end-to-end:
+
+```
+Input text → Tokenizer → Transformer (TahrirchiBERT) → Tagger (XPOS) → Morphologizer (UPOS + UFeats) → Parser (UAS/LAS)
+```
+
+| Component | Architecture | Details |
+|-----------|-------------|---------|
+| **Transformer** | `spacy-transformers.TransformerModel.v3` | `tahrirchi/tahrirchi-bert-base`, strided spans (window=128, stride=96) |
+| **Tagger** | `spacy.Tagger.v2` + `TransformerListener.v1` | XPOS tag prediction, reduce_mean pooling |
+| **Morphologizer** | `spacy.Tagger.v2` + `TransformerListener.v1` | Joint UPOS + morphological feature prediction |
+| **Parser** | `spacy.TransitionBasedParser.v2` | Transition-based (arc-eager), hidden_width=128, maxout_pieces=3 |
+
+Key architectural differences from Stanza (E1–E3):
+
+| Aspect | Stanza (E1–E3) | spaCy (this section) |
+|--------|----------------|----------------------|
+| Parser type | **Graph-based** (DeepBiaffine) | **Transition-based** (arc-eager) |
+| Subword fusion | Last-subword or mean pooling | reduce_mean (mean pooling via listener) |
+| Training | Two-stage (POS → re-tag → parser) | **Joint end-to-end** (all components trained simultaneously) |
+| Loss weighting | Separate per-task training | Weighted score: tag_acc=0.15, pos_acc=0.15, morph_acc=0.10, dep_uas=0.25, dep_las=0.25, sents_f=0.10 |
+| Max steps | 50,000 | 20,000 |
+| Batch strategy | Fixed batch size | Compounding (100 → 1,000 words) |
+
+### 10.4 Training Configuration
+
+All spaCy experiments use the following hyperparameters:
+
+| Parameter | Value |
+|-----------|-------|
+| Optimizer | Adam (β₁=0.9, β₂=0.999) |
+| Learning rate schedule | Warmup linear (250 warmup steps → linear decay over 20,000 total steps) |
+| Initial learning rate | 5 × 10⁻⁵ |
+| Dropout | 0.1 |
+| Gradient accumulation | 3 |
+| Gradient clipping | 1.0 |
+| L2 weight decay | 0.01 |
+| Max training steps | 20,000 |
+| Patience (early stopping) | 1,600 steps |
+| Evaluation frequency | Every 200 steps |
+| Seed | 42 |
+| GPU allocator | PyTorch |
+| Batch size | Compounding 100 → 1,000 (by words) |
+| Mixed precision | Disabled (stability on RTX A6000 with CuPy 13.6.0) |
+
+### 10.5 Environment & GPU Notes
+
+- **GPU:** NVIDIA RTX A6000 (CUDA 12.4)
+- **CuPy:** Pinned to `cupy-cuda12x==13.6.0`. CuPy ≥ 14.x causes `RuntimeError: from_dlpack received an invalid capsule` during backpropagation due to a DLPack protocol incompatibility with PyTorch 2.6.0+cu124.
+- **spaCy:** 3.8.11 with `spacy-transformers==1.3.9`, `thinc==8.3.10`
+- **Logging:** `spacy.WandbLogger.v3` — metrics logged to W&B project `spacy-uzbek`
+
+### 10.6 Experiment Matrix
+
+We ran 2 experiments matching the Stanza data settings:
+
+| Run | Config | Data | Train Sents | Dev Sents | W&B run name |
+|-----|--------|------|-------------|-----------|-------------|
+| S1.1 | Transformer (TahrirchiBERT) | UzUDT only | 435 | 48 | `transformer_uzudt` |
+| S1.2 | Transformer (TahrirchiBERT) | UzUDT+UT merged | 781 | 78 | `transformer_combined` |
+
+> **Naming convention:** spaCy experiments use the **S** prefix (S1, S2, …) to distinguish from Stanza experiments (E1, E2, E3).
+
+### 10.7 Results — Test Set
+
+The `model-best` checkpoint is selected by the weighted combination score (tag_acc × 0.15 + pos_acc × 0.15 + morph_acc × 0.10 + dep_uas × 0.25 + dep_las × 0.25 + sents_f × 0.10). Scores below are from `spacy evaluate` on the held-out test sets (`results/spacy_s1.1_test.json`, `results/spacy_s1.2_test.json`).
+
+#### Table 10: spaCy Test Set Results
+
+| Run | Data | Test Sents | XPOS | UPOS | Morph Acc | UAS | LAS | Sent F |
+|-----|------|------------|------|------|-----------|-----|-----|--------|
+| S1.1 | UzUDT | 198 | 86.72 | 86.50 | 50.55 | 67.72 | 45.35 | 96.76 |
+| **S1.2** | **UzUDT+UT** | **325** | **88.24** | **89.18** | **65.48** | **66.81** | **47.11** | **96.21** |
+
+### 10.8 Results — Per-Relation LAS Breakdown
+
+#### Table 11: Dependency Relation F1 Scores (Test Set, spaCy S1.2 — UzUDT+UT)
+
+| Relation | P | R | F1 | Notes |
+|----------|---|---|----|-------|
+| nummod | 75.0 | 86.5 | 80.4 | Strongest relation |
+| root | 72.9 | 74.5 | 73.7 | |
+| case | 84.4 | 58.1 | 68.8 | High precision, recall gap |
+| flat | 66.7 | 44.4 | 53.3 | |
+| cop | 73.7 | 48.3 | 58.3 | |
+| obj | 58.6 | 65.1 | 61.7 | |
+| det | 63.0 | 59.0 | 60.9 | |
+| amod | 57.7 | 55.9 | 56.8 | |
+| advmod | 50.4 | 50.4 | 50.4 | |
+| advcl | 45.3 | 45.9 | 45.6 | |
+| acl | 49.2 | 48.4 | 48.8 | |
+| nsubj | 47.0 | 47.3 | 47.2 | |
+| obl | 47.6 | 46.7 | 47.1 | |
+| compound:lvc | 36.7 | 54.6 | 43.9 | Light-verb constructions |
+| cc | 43.2 | 35.6 | 39.0 | |
+| nmod:poss | 23.0 | 81.3 | 35.9 | Low precision — over-predicted |
+| nmod | 27.0 | 34.2 | 30.2 | |
+| xcomp | 24.5 | 31.7 | 27.7 | |
+| conj | 25.8 | 14.9 | 18.9 | |
+| compound | 27.3 | 25.3 | 26.2 | |
+| compound:svc | 26.1 | 24.5 | 25.3 | |
+| iobj | 57.1 | 16.7 | 25.8 | Rare, very low recall |
+| aux | 14.3 | 30.0 | 19.4 | Auxiliaries poorly predicted |
+| ccomp | 32.3 | 30.3 | 31.3 | |
+| parataxis | 14.3 | 4.4 | 6.7 | |
+| compound:redup | 4.4 | 11.1 | 6.3 | |
+
+**Relations with F1 = 0 on test set:** `appos`, `csubj`, `dep`, `mark`, `vocative` — all rare or underrepresented in test split.
+
+### 10.9 Morphological Feature Analysis (S1.2, UzUDT+UT merged)
+
+#### Table 12: Per-Feature Morphology Scores (Test Set, S1.2)
+
+| Feature | P | R | F1 | Notes |
+|---------|---|---|----|-------|
+| Poss | 88.9 | 88.9 | 88.9 | Possessive marking |
+| PronType | 93.3 | 83.0 | 87.9 | Strong |
+| Case | 92.0 | 83.7 | 87.6 | Strong — suffix-marked |
+| Number | 91.5 | 83.4 | 87.3 | Strong — binary Sing/Plur |
+| Reflex | 66.7 | 100.0 | 80.0 | Small count |
+| Mood | 80.0 | 70.5 | 74.9 | |
+| Person | 84.8 | 73.8 | 78.9 | |
+| VerbForm | 83.3 | 72.0 | 77.2 | |
+| Tense | 74.6 | 58.3 | 65.5 | High precision, recall gap |
+| Aspect | 60.5 | 68.1 | 64.1 | |
+| Voice | 77.8 | 50.0 | 60.9 | |
+| NumType | 77.1 | 67.5 | 72.0 | |
+| Person[psor] | 79.8 | 56.4 | 66.1 | Cross-treebank gap |
+| Number[psor] | 50.0 | 38.8 | 43.7 | Low recall — UzUDT-only |  
+| Polarity | 76.9 | 28.6 | 41.7 | High precision, low recall |
+| **Evident** | **0.0** | **0.0** | **0.0** | **Never predicted — UzUDT-only, very rare** |
+| **ExtPos** | **0.0** | **0.0** | **0.0** | **Never predicted** |
+| **Degree** | **0.0** | **0.0** | **0.0** | **Never predicted — UT-only** |
+
+**Key observation:** UzUDT-specific features (`Number[psor]`, `Person[psor]`, `Evident`) show low recall because they appear only in one treebank's annotation convention. When trained on merged data, the model must handle the union of both feature inventories, leading to systematic under-prediction of features present in only one source (cf. §2.4.4). `Polarity` has high precision (76.9%) but very low recall (28.6%), indicating the model is conservative in predicting negation.
+
+### 10.10 Comparative Analysis: spaCy vs. Stanza
+
+#### Table 13: Architecture Comparison (TahrirchiBERT, UzUDT+UT Merged — Both on Test Set)
+
+| Metric | Stanza E2.2 (test) | spaCy S1.2 (test) | Δ (spaCy − Stanza) | Notes |
+|--------|-------------------|--------------------|--------------------|-------|
+| UPOS | 85.08 | **89.18** | **+4.10** | spaCy higher for basic POS |
+| XPOS | 84.72 | **88.24** | **+3.52** | spaCy higher for XPOS |
+| Morph Acc | **71.09** | 65.48 | −5.61 | Stanza better for morphology |
+| UAS | **72.39** | 66.81 | −5.58 | Stanza graph-based parser wins |
+| LAS | **63.81** | 47.11 | −16.70 | Stanza substantially better for labeled parsing |
+
+**Interpretation:** spaCy's transition-based pipeline outperforms Stanza on basic POS tagging (UPOS +4.10, XPOS +3.52), likely because its joint end-to-end training objective reinforces tagging signals through the parser loss. However, the graph-based DeepBiaffine parser in Stanza substantially outperforms spaCy's arc-eager parser for labeled dependency parsing (LAS −16.70), consistent with prior findings that exhaustive-search graph parsers excel on morphologically rich languages with non-projective dependencies. The morphology gap (−5.61) reflects Stanza's dedicated morphological analyzer stage versus spaCy's joint morphologizer.
+
+#### Table 14: Data Augmentation Effect (spaCy, UzUDT → UzUDT+UT — Test Set)
+
+| Metric | S1.1 test (UzUDT) | S1.2 test (UzUDT+UT) | Δ | Stanza Δ (E2.1→E2.2) |
+|--------|-------------------|----------------------|---|----------------------|
+| UPOS | 86.50 | **89.18** | **+2.68** | +2.63 |
+| XPOS | 86.72 | **88.24** | +1.52 | +3.82 |
+| Morph Acc | 50.55 | **65.48** | **+14.93** | +5.72 |
+| UAS | **67.72** | 66.81 | −0.91 | +0.34 |
+| LAS | 45.35 | **47.11** | +1.76 | +9.62 |
+
+**Key finding:** Data augmentation improves UPOS and Morph Acc for spaCy consistent with Stanza, but the LAS gain is substantially smaller (+1.76 vs. +9.62 for Stanza). The Morph Acc jump of **+14.93 points** is more than double the Stanza UFeats improvement (+5.72), confirming that spaCy's joint end-to-end training amplifies the benefit of additional data for morphological features — the morphologizer receives gradients from both the tagger and parser objectives simultaneously.
+
+The negligible UAS gain (−0.91) for spaCy contrasts with Stanza's positive trend, suggesting the arc-eager parser may be closer to a data ceiling at this training size, while the graph-based parser still benefits.
+
+### 10.11 Training Losses at Best Checkpoint
+
+| Run | Transformer Loss | Tagger Loss | Morphologizer Loss | Parser Loss |
+|-----|-----------------|-------------|-------------------|-------------|
+| S1.1 | 337.8 | 13.0 | 3.6 | 50.7 |
+| S1.2 | 12,285.8 | 678.7 | 4,440.5 | 7,249.1 |
+
+The substantially higher losses for S1.2 reflect the larger training corpus (781 vs. 435 sentences), not worse convergence — checkpoints are summed over more examples. The model-best (early-stopped) checkpoint was selected at an earlier stage of training relative to model-last.
+
+### 10.12 Saved Models
+
+| Run | Best Model | Last Model |
+|-----|-----------|-----------|
+| S1.1 | `saved_models/spacy/transformer_uzudt/model-best/` | `saved_models/spacy/transformer_uzudt/model-last/` |
+| S1.2 | `saved_models/spacy/transformer_combined/model-best/` | `saved_models/spacy/transformer_combined/model-last/` |
+
+W&B runs logged to project **`spacy-uzbek`**:
+- S1.1: `transformer_uzudt` (run `run-20260301_125212-127ydh2y`)
+- S1.2: `transformer_combined` (earlier run on 2026-03-01)
+
+### 10.13 Conclusions
+
+1. **Graph-based parsing substantially outperforms transition-based on LAS.** Stanza's DeepBiaffine parser achieves LAS 63.81 vs. spaCy arc-eager 47.11 on the merged test set (−16.70). This is consistent with the general finding in the parsing literature that graph-based parsers handle non-projective and long-distance dependencies better — a relevant property for Uzbek's SOV structure with frequent center-embedding.
+2. **spaCy's transition-based pipeline outperforms Stanza on POS tagging.** UPOS 89.18 vs. 85.08 (+4.10) and XPOS 88.24 vs. 84.72 (+3.52) on the merged test set, likely due to the joint end-to-end training objective reinforcing tagging through parser loss gradients.
+3. **Stanza's staged pipeline is superior for morphological feature prediction.** Morph Acc 71.09 (Stanza) vs. 65.48 (spaCy) — the dedicated morphological analysis stage in Stanza vs. the joint morphologizer in spaCy gives Stanza a consistent edge on fine-grained feature bundles.
+4. **Data augmentation is architecture-agnostic for POS and morphology.** Both Stanza and spaCy show consistent gains from merging treebanks for UPOS (+2.63/+2.68) and Morph (+5.72/+14.93). spaCy's larger morph gain (+14.93 vs. +5.72) reflects joint training amplifying the benefit of additional labeled data.
+5. **Data augmentation drives LAS in Stanza but not spaCy.** Stanza LAS gains +9.62 from merging; spaCy gains only +1.76, suggesting the arc-eager parser is near a capacity ceiling for this corpus size or that its transition oracle does not exploit the additional structural diversity as effectively as the graph-based model.
+
+---
+
+## 11. Changelog
 
 | Date | Action |
 |------|--------|
+| 2026-03-01 | **spaCy test-set evaluation complete:** Ran `spacy evaluate` on held-out test sets for S1.1 and S1.2; updated §10 Tables 10–14 with actual test scores; proper like-for-like comparison with Stanza now available — spaCy outperforms on UPOS (+4.10) but Stanza wins on LAS (+16.70); saved to `results/spacy_s1.1_test.json`, `results/spacy_s1.2_test.json` |
+| 2026-03-01 | **spaCy experiments S1.1, S1.2 complete:** Added §10 with spaCy transition-based pipeline results; TahrirchiBERT joint training on UzUDT (S1.1) and UzUDT+UT merged (S1.2); cross-architecture comparison with Stanza; per-relation and per-feature analysis; data augmentation effect confirmed architecture-agnostic |
+| 2026-03-01 | Created custom `spacy_uzbek/` package: Uzbek language class, CoNLL-U → DocBin converter, 3 training configs (transformer/static/fasttext), WandbLogger integration; fixed CuPy 14.x DLPack crash by pinning to 13.6.0 |
 | 2026-02-28 | **E3.1 complete:** Added mean-pooling results (UzUDT only) — POS UPOS=82.76, Parser LAS=51.55; populated Tables 1–4, 6, 8, 9; updated §6.4 fusion comparison with preliminary analysis, §7.1 RQ2 answer with task-dependent findings; E3.2 in progress |
 | 2026-02-28 | Elevated subword fusion to RQ2; restructured all 3 RQs for low-resource efficient methods focus; added E3 (mean pooling) to experiment matrix with placeholders; expanded §5.2 with linguistic examples and hypothesis; renumbered tables |
 | 2026-02-28 | Added §2.4 Treebank Linguistic Statistics from UD tools: UD quality scores, corpus-level stats, UPOS distribution comparison, morphological feature inventory diff, dependency relation inventory (top-20 comparative), complementarity analysis; updated §7.3/§7.4 with cross-references |

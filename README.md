@@ -21,6 +21,20 @@ robust-parsing-uzbek/
 │       ├── depparse/               # Depparse model, trainer, data, scorer
 │       └── common/
 │           └── bert_embedding.py   # BERT extraction with pooling strategies
+├── spacy_uzbek/                    # spaCy Uzbek language support (NEW)
+│   ├── setup.py                    # Package installer (pip install -e spacy_uzbek/)
+│   ├── lang/uz/                    # Custom Uzbek Language class for spaCy
+│   │   ├── __init__.py             # Language class + registry entry point
+│   │   ├── stop_words.py           # Uzbek stop words
+│   │   └── tokenizer_exceptions.py # Abbreviation & MWT handling
+│   ├── configs/
+│   │   ├── config_transformer.cfg  # TahrirchiBERT transformer pipeline
+│   │   ├── config_static.cfg       # Hash embeddings (no pretrained vectors)
+│   │   └── config_fasttext.cfg     # FastText static vectors pipeline
+│   ├── convert_conllu.py           # CoNLL-U → spaCy DocBin converter
+│   ├── train.py                    # End-to-end training orchestrator
+│   ├── evaluate.py                 # Evaluation & per-tag metrics
+│   └── data/                       # Converted .spacy binary files
 ├── scripts/
 │   ├── eval.py                     # CoNLL 2018 shared task evaluation
 │   ├── eval_pos.py                 # POS accuracy evaluation
@@ -45,7 +59,8 @@ robust-parsing-uzbek/
 ├── wordvec/uz/                     # FastText cc.uz.300.vec (static embeddings)
 ├── saved_models/
 │   ├── pos/                        # Trained POS tagger checkpoints
-│   └── depparse/                   # Trained parser checkpoints
+│   ├── depparse/                   # Trained parser checkpoints
+│   └── spacy/                      # Trained spaCy pipeline models (NEW)
 ├── logs/                           # Training logs
 ├── RESEARCH_LOG.md                 # Detailed research log and findings
 ├── future_research_log.md          # Planned future experiments (E3-E7)
@@ -411,6 +426,241 @@ The experiments are designed to answer two questions:
 3. **Does fusion strategy matter?** It depends on the task: last-subword is better for parsing; mean pooling is competitive or better for some POS metrics (see `RESEARCH_LOG.md` §6.4 and §6.9).
 
 > **Future work:** Additional experiments with BERTbek and BERT+FastText fusion are planned — see `future_research_log.md`.
+
+---
+
+## spaCy Pipeline for Uzbek
+
+Since spaCy does not natively support Uzbek, this project includes a **custom spaCy language module** (`spacy_uzbek/`) that enables training spaCy-based POS taggers, morphologizers, and dependency parsers for Uzbek using the same UD treebank data.
+
+### Why spaCy?
+
+| Feature | Stanza (primary) | spaCy (new) |
+|---------|-------------------|-------------|
+| Architecture | BiLSTM + DeepBiaffine | Transition-based + Tok2Vec |
+| Transformer | HuggingFace BERT (custom integration) | `spacy-transformers` (native) |
+| Inference speed | Moderate | Fast (Cython optimized) |
+| Packaging | Research-oriented | Production-ready (`spacy package`) |
+| Language support | Uzbek via custom scripts | Uzbek via `spacy_uzbek/` entry point |
+
+### Resources Required
+
+The spaCy pipeline reuses the same UD treebank data already in this repository:
+
+| Resource | Location | Notes |
+|----------|----------|-------|
+| UD_Uzbek-UzUDT | `data/udbase/UD_Uzbek-UzUDT/` | 684 sentences |
+| UD_Uzbek-UT | `data/udbase/UD_Uzbek-UT/` | 500 sentences |
+| Processed POS files | `data/pos/`, `data/pos/merged/` | CoNLL-U for both treebanks |
+| FastText vectors | `wordvec/uz/fasttext/cc.uz.300.vec` | Optional, for static configs |
+| TahrirchiBERT | `tahrirchi/tahrirchi-bert-base` | HuggingFace, for transformer config |
+| spaCy ≥ 3.5 | `pip install spacy` | Core framework |
+| spacy-transformers ≥ 1.2 | `pip install spacy-transformers` | For BERT-based training |
+
+### Setup
+
+#### 1. Install spaCy + Uzbek language support
+
+```powershell
+# Install spaCy and transformer support
+pip install spacy spacy-transformers spacy-loggers
+
+# Install the custom Uzbek language package (editable mode)
+pip install -e spacy_uzbek/
+```
+
+Verify:
+
+```powershell
+python -c "import spacy; nlp = spacy.blank('uz'); print(nlp.lang)"
+# Output: uz
+```
+
+#### 2. GPU support (CUDA 12.x)
+
+For GPU-accelerated training, install CuPy. **Pin to `13.6.0`** — CuPy ≥ 14.x breaks DLPack interoperability with PyTorch 2.6 and causes a `RuntimeError: from_dlpack received an invalid capsule` crash during backprop:
+
+```powershell
+pip install cupy-cuda12x==13.6.0
+```
+
+Verify GPU is accessible:
+
+```powershell
+python -c "import spacy; spacy.require_gpu(0); print('GPU OK')"
+```
+
+#### 3. Convert CoNLL-U data to spaCy format
+
+```bash
+# Convert all available splits (UzUDT, UT, merged)
+python spacy_uzbek/convert_conllu.py --convert-all
+
+# Or convert a single file
+python spacy_uzbek/convert_conllu.py \
+    --input data/pos/uz_uzudt.train.in.conllu \
+    --output spacy_uzbek/data/uz_uzudt.train.spacy
+```
+
+This produces `.spacy` (DocBin) files in `spacy_uzbek/data/` with UPOS, XPOS, morphological features, lemmas, and dependency annotations preserved.
+
+#### 4. (Optional) Convert FastText vectors for spaCy
+
+```bash
+python -m spacy init vectors uz \
+    wordvec/uz/fasttext/cc.uz.300.vec \
+    wordvec/uz/spacy_vectors \
+    --truncate 50000 --name uz_fasttext_vectors
+```
+
+### Training Configs
+
+Three configurations are provided in `spacy_uzbek/configs/`:
+
+| Config | File | Embeddings | GPU Required | W&B run name |
+|--------|------|------------|--------------|-------------|
+| **Transformer** | `config_transformer.cfg` | TahrirchiBERT (768-dim) | Recommended | `transformer_combined` |
+| **Static** | `config_static.cfg` | Hash embeddings only | No | `static_combined` |
+| **FastText** | `config_fasttext.cfg` | FastText (300-dim) | No | `fasttext_combined` |
+
+Each config trains a joint pipeline: **tagger** (UPOS) + **morphologizer** (UFeats) + **parser** (UAS/LAS).
+
+### Logging & Checkpoints
+
+All three configs use `spacy.WandbLogger.v3` (project: **`spacy-uzbek`**), which streams metrics to W&B and also prints the progress table to the terminal. Make sure you have logged in once:
+
+```powershell
+wandb login
+```
+
+Every training run saves two checkpoints to the `--output` directory:
+
+| Path | Contents |
+|------|----------|
+| `model-best/` | Weights at the epoch with the highest combined dev score |
+| `model-last/` | Weights at the final training step |
+
+Override the W&B run name per experiment with `--training.logger.run_name <name>` on the CLI (see examples below).
+
+### Training Commands
+
+> **PowerShell note:** Use backtick (`` ` ``) for line continuation. Bash-style backslash (`\`) does **not** work in PowerShell. To avoid issues, you can also paste all arguments on one line.
+
+#### Transformer pipeline (TahrirchiBERT) — recommended
+
+```powershell
+# Merged treebanks (UzUDT + UT)
+python -m spacy train spacy_uzbek/configs/config_transformer.cfg `
+    --output saved_models/spacy/transformer_combined `
+    --paths.train spacy_uzbek/data/uz_combined.train.spacy `
+    --paths.dev spacy_uzbek/data/uz_combined.dev.spacy `
+    --training.logger.run_name transformer_combined `
+    --gpu-id 0
+
+# UzUDT only
+python -m spacy train spacy_uzbek/configs/config_transformer.cfg `
+    --output saved_models/spacy/transformer_uzudt `
+    --paths.train spacy_uzbek/data/uz_uzudt.train.spacy `
+    --paths.dev spacy_uzbek/data/uz_uzudt.dev.spacy `
+    --training.logger.run_name transformer_uzudt `
+    --gpu-id 0
+```
+
+One-liner equivalents (no continuation characters):
+
+```powershell
+python -m spacy train spacy_uzbek/configs/config_transformer.cfg --output saved_models/spacy/transformer_combined --paths.train spacy_uzbek/data/uz_combined.train.spacy --paths.dev spacy_uzbek/data/uz_combined.dev.spacy --training.logger.run_name transformer_combined --gpu-id 0
+```
+
+#### Static baseline (CPU)
+
+```powershell
+python -m spacy train spacy_uzbek/configs/config_static.cfg `
+    --output saved_models/spacy/static_combined `
+    --paths.train spacy_uzbek/data/uz_combined.train.spacy `
+    --paths.dev spacy_uzbek/data/uz_combined.dev.spacy `
+    --training.logger.run_name static_combined
+```
+
+#### FastText vectors
+
+```powershell
+# First convert vectors (one-time):
+python -m spacy init vectors uz `
+    wordvec/uz/fasttext/cc.uz.300.vec `
+    wordvec/uz/spacy_vectors `
+    --truncate 50000 --name uz_fasttext_vectors
+
+# Then train:
+python -m spacy train spacy_uzbek/configs/config_fasttext.cfg `
+    --output saved_models/spacy/fasttext_combined `
+    --paths.train spacy_uzbek/data/uz_combined.train.spacy `
+    --paths.dev spacy_uzbek/data/uz_combined.dev.spacy `
+    --paths.vectors wordvec/uz/spacy_vectors `
+    --training.logger.run_name fasttext_combined
+```
+
+### Evaluation
+
+> **Windows note:** Always use `.venv\Scripts\python.exe` explicitly for `spacy evaluate` — the system `python` does not have CuPy installed and will fail with `ValueError: Cannot use GPU, CuPy is not installed`.
+
+```powershell
+# Create results directory (one-time)
+New-Item -ItemType Directory -Force -Path results | Out-Null
+
+# S1.1 — UzUDT model on UzUDT test set
+.venv\Scripts\python.exe -m spacy evaluate `
+    saved_models/spacy/transformer_uzudt/model-best `
+    spacy_uzbek/data/uz_uzudt.test.spacy `
+    --output results/spacy_s1.1_test.json --gpu-id 0
+
+# S1.2 — Combined model on combined test set
+.venv\Scripts\python.exe -m spacy evaluate `
+    saved_models/spacy/transformer_combined/model-best `
+    spacy_uzbek/data/uz_combined.test.spacy `
+    --output results/spacy_s1.2_test.json --gpu-id 0
+```
+
+One-liner equivalents:
+
+```powershell
+.venv\Scripts\python.exe -m spacy evaluate saved_models/spacy/transformer_uzudt/model-best spacy_uzbek/data/uz_uzudt.test.spacy --output results/spacy_s1.1_test.json --gpu-id 0
+.venv\Scripts\python.exe -m spacy evaluate saved_models/spacy/transformer_combined/model-best spacy_uzbek/data/uz_combined.test.spacy --output results/spacy_s1.2_test.json --gpu-id 0
+```
+
+### Using the Trained Model
+
+```python
+import spacy
+
+# Load trained model
+nlp = spacy.load("saved_models/spacy/transformer_combined/model-best")
+
+# Process Uzbek text
+doc = nlp("Men kitob o'qiyapman.")
+
+for token in doc:
+    print(f"{token.text:20s}  POS={token.pos_:8s}  DEP={token.dep_:12s}  HEAD={token.head.text}")
+
+# Visualize dependency tree
+from spacy import displacy
+displacy.serve(doc, style="dep")
+```
+
+### Packaging for Distribution
+
+```bash
+# Package the trained model for distribution
+python -m spacy package saved_models/spacy/transformer_combined/model-best \
+    packages/ --name uz_pipeline --version 0.1.0
+
+# Install the packaged model
+pip install packages/uz_pipeline-0.1.0/dist/*.whl
+
+# Use it anywhere
+import spacy
+nlp = spacy.load("uz_pipeline")
+```
 
 ---
 
