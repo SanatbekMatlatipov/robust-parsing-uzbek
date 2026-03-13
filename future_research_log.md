@@ -165,12 +165,12 @@ python -m stanza.models.parser --mode train `
 ```powershell
 python -m stanza.models.tagger --mode train `
   --lang uz --shorthand uz_ut `
-  --train_file data/pos/uz_uzudt.train.in.conllu `
-  --eval_file data/pos/uz_uzudt.dev.in.conllu `
+  --train_file data/pos/uz_ut-ud-train.in.conllu `
+  --eval_file data/pos/uz_ut-ud-dev.in.conllu `
   --bert_model elmurod1202/bertbek-news-big-cased `
   --bert_pooling mean `
   --no_pretrain `
-  --save_dir saved_models/pos --save_name uz_uzudt_E5.1_tagger.pt `
+  --save_dir saved_models/pos --save_name uz_uzudt_E5.1.1_tagger.pt `
   --wandb
 
 python -m stanza.models.parser --mode train `
