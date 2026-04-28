@@ -1,0 +1,22 @@
+% Stand-alone preview of the SUCCESS parsing example used in main_paper.tex (§5.5).
+% Compile with: pdflatex parse_success_tikz.tex
+\documentclass{standalone}
+\usepackage{tikz-dependency}
+\begin{document}
+\begin{dependency}[theme=simple]
+  \begin{deptext}[column sep=0.45cm]
+    bu \& bo'limdagi \& asarlar \& bizga \& bu \& xazinaning \& eshigini \& ochib \& beradi \& . \\
+    PRON \& ADJ \& NOUN \& PRON \& PRON \& NOUN \& NOUN \& VERB \& VERB \& PUNCT \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{3}{2}{amod}
+  \depedge{9}{3}{nsubj}
+  \depedge{9}{4}{obl}
+  \depedge{6}{5}{det}
+  \depedge{7}{6}{nmod:poss}
+  \depedge{8}{7}{obj}
+  \depedge{9}{8}{xcomp}
+  \deproot{9}{root}
+  \depedge{9}{10}{punct}
+\end{dependency}
+\end{document}

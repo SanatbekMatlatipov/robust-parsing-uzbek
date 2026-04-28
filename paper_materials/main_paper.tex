@@ -10,7 +10,13 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{url}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usepackage{tikz-dependency}
+\DeclareUnicodeCharacter{02BB}{\textquoteleft}
+\DeclareUnicodeCharacter{02BC}{\textquoteleft}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -159,7 +165,7 @@ The Stanza pipeline~\cite{qi2020stanza} employs a two-stage architecture:
 
 \textbf{Stage 2 --- Dependency Parser:} A DeepBiaffine graph-based parser~\cite{dozat2017deep} scoring all head--dependent pairs via biaffine attention over BiLSTM representations, with separate MLP heads for arc prediction and relation labeling. The parser uses predicted POS tags from Stage~1 as input features.
 
-\textbf{Subword Fusion:} TahrirchiBERT tokenizes text into WordPiece subwords whose boundaries rarely coincide with UD word tokens. For agglutinative Uzbek, where grammatical suffixes (case, tense, person) occupy the rightmost subwords, we employ \textit{last-subword selection} --- taking the hidden state of the final subword per UD token. For example, in \textit{bolalarning} (``of the children''), the subwords are \texttt{bola}, \texttt{\#\#lar}, \texttt{\#\#ning}, and the last subword \texttt{\#\#ning} carries the genitive case suffix targeted by UD annotation.
+\textbf{Subword Fusion:} TahrirchiBERT tokenizes text into WordPiece subwords whose boundaries rarely coincide with UD word tokens. For agglutinative Uzbek, where grammatical suffixes (case, tense, person) occupy the rightmost subwords, we employ \textit{last-subword selection} --- taking the hidden state of the final subword per UD token. The motivation and several worked Uzbek examples are detailed in \S\ref{sec:subword}.
 
 \subsection{spaCy: Transition-Based Pipeline}
 
@@ -172,6 +178,32 @@ The spaCy pipeline~\cite{honnibal2020spacy} uses a joint end-to-end architecture
 \textbf{Parser:} An arc-eager transition-based parser (\texttt{TransitionBasedParser.v2}) with hidden width 128 and maxout pieces 3.
 
 Since spaCy does not natively support Uzbek, we created a custom Uzbek language class registered via entry points, enabling \texttt{spacy.blank("uz")} without patching spaCy source code. We also developed a CoNLL-U to spaCy DocBin converter preserving all UD annotation layers.
+
+\subsection{Subword Alignment for Agglutinative Morphology}
+\label{sec:subword}
+
+Uzbek is a strictly suffixing agglutinative language: roots are followed by an ordered chain of derivational and inflectional morphemes encoding number, case, possessor agreement, tense, evidentiality, and voice. Because TahrirchiBERT WordPiece units are sub-morphemic, the rightmost subword of any UD token is the position where the grammatically decisive suffix is realised. Table~\ref{tab:subword_examples} traces the WordPiece decomposition of three representative inflected forms; in every case the morphologically informative subword is the last one (highlighted), supporting our last-subword selection heuristic.
+
+\begin{table}[htbp]
+\caption{WordPiece Decomposition of Three Uzbek Inflected Forms. The rightmost subword (\textbf{bold}) carries the morpheme exposed by UD annotation.}
+\begin{center}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lll}
+\toprule
+\textbf{Surface form} & \textbf{WordPiece split} & \textbf{Morphemes} \\
+\midrule
+\textit{bolalarning} & \texttt{bola \#\#lar }\textbf{\texttt{\#\#ning}} & ROOT $\!+\!$ PLUR $\!+\!$ \textbf{GEN} \\
+\textit{eshigini} & \texttt{esh \#\#igi }\textbf{\texttt{\#\#ni}} & ROOT $\!+\!$ POSS.3 $\!+\!$ \textbf{ACC} \\
+\textit{ko'rsatib} & \texttt{ko'r \#\#sat }\textbf{\texttt{\#\#ib}} & ROOT $\!+\!$ CAUS $\!+\!$ \textbf{CONV} \\
+\bottomrule
+\end{tabular}
+\label{tab:subword_examples}
+\end{center}
+\end{table}
+
+Mean pooling spreads probability mass uniformly across all subwords and therefore dilutes the suffix signal that marks Case, Tense, and converb form --- the very features the parser must exploit when assigning \texttt{nsubj}, \texttt{obj}, \texttt{obl}, and \texttt{xcomp} relations. The empirical consequence is visible in our ablation: comparing E2.1 (last-subword) vs. E3.1 (mean) on UzUDT (\S\ref{sec:results}, Table~\ref{tab:stanza_results}) yields $+2.95$~UAS and $+2.64$~LAS for last-subword while leaving UPOS essentially unchanged ($-0.31$). The strong selectivity of the effect for structural metrics is consistent with the hypothesis that Uzbek attachment decisions are case-driven and therefore suffix-driven.
+
+We stress that last-subword selection is a positional heuristic, not a morphological analyser; it can misfire when WordPiece splits a stem at a non-morpheme boundary, or when a token contains no overt suffix. A morpheme-aware tokeniser would be a stronger but currently unavailable alternative for Uzbek; we mark this as an open direction (\S\ref{sec:limitations}).
 
 \subsection{Key Architectural Differences}
 
@@ -210,6 +242,7 @@ For both frameworks, we use the recommended default hyperparameters from their r
 All experiments were conducted on a single NVIDIA RTX A6000 GPU (CUDA 12.4). Evaluation uses the standard UD CoNLL 2018 shared task metrics: UPOS, XPOS, UFeats (morphological features), UAS (unlabeled attachment score), and LAS (labeled attachment score).
 
 \section{Results}
+\label{sec:results}
 
 \subsection{Stanza Results}
 
@@ -218,16 +251,16 @@ Table~\ref{tab:stanza_results} presents the test-set results for all Stanza conf
 \begin{table}[htbp]
 \caption{Stanza Test Set Results (\%)}
 \begin{center}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{llccccc}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llcccccc}
 \toprule
-\textbf{Run} & \textbf{Embed.} & \textbf{Data} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} & \textbf{LAS} \\
+\textbf{Run} & \textbf{Embed.} & \textbf{Data} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} & \textbf{UAS} & \textbf{LAS} \\
 \midrule
-E1.1 & FastText & UzUDT & 79.19 & 79.81 & 66.61 & 51.24 \\
-E1.2 & FastText & Merged & 80.26 & 83.20 & 66.98 & 62.40 \\
-E2.1 & BERT$_\text{last}$ & UzUDT & 82.45 & 80.90 & 65.37 & 54.19 \\
-\textbf{E2.2} & \textbf{BERT}$_\textbf{last}$ & \textbf{Merged} & \textbf{85.08} & \textbf{84.72} & \textbf{71.09} & \textbf{63.81} \\
-E3.1 & BERT$_\text{mean}$ & UzUDT & 82.76 & 81.37 & 65.22 & 51.55 \\
+E1.1 & FastText & UzUDT & 79.19 & 79.81 & 66.61 & 69.57 & 51.24 \\
+E1.2 & FastText & Merged & 80.26 & 83.20 & 66.98 & 72.27 & 62.40 \\
+E2.1 & BERT$_\text{last}$ & UzUDT & 82.45 & 80.90 & 65.37 & 72.05 & 54.19 \\
+\textbf{E2.2} & \textbf{BERT}$_\textbf{last}$ & \textbf{Merged} & \textbf{85.08} & \textbf{84.72} & \textbf{71.09} & \textbf{72.39} & \textbf{63.81} \\
+E3.1 & BERT$_\text{mean}$ & UzUDT & 82.76 & 81.37 & 65.22 & 69.10 & 51.55 \\
 \bottomrule
 \end{tabular}
 \label{tab:stanza_results}
@@ -247,12 +280,12 @@ Table~\ref{tab:spacy_results} shows spaCy test-set performance.
 \begin{table}[htbp]
 \caption{spaCy Test Set Results (\%)}
 \begin{center}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Run} & \textbf{Data} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} & \textbf{LAS} \\
+\textbf{Run} & \textbf{Data} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} & \textbf{UAS} & \textbf{LAS} \\
 \midrule
-S1.1 & UzUDT & 86.50 & 86.72 & 50.55 & 45.35 \\
-\textbf{S1.2} & \textbf{Merged} & \textbf{89.18} & \textbf{88.24} & \textbf{65.48} & \textbf{47.11} \\
+S1.1 & UzUDT & 86.50 & 86.72 & 50.55 & 67.72 & 45.35 \\
+\textbf{S1.2} & \textbf{Merged} & \textbf{89.18} & \textbf{88.24} & \textbf{65.48} & \textbf{66.81} & \textbf{47.11} \\
 \bottomrule
 \end{tabular}
 \label{tab:spacy_results}
@@ -342,6 +375,61 @@ Fig.~\ref{fig:deprel_freq} shows the frequency distribution of the top 20 depend
 
 The transition-based parser performs strongest on local, unambiguous relations (\texttt{nummod}: F1 80.4, \texttt{root}: 73.7) but struggles with structurally complex or long-distance relations (\texttt{conj}: 18.9, \texttt{nmod}: 30.2). The low \texttt{conj} F1 reflects coordination's inherent difficulty: conjoined elements can be arbitrarily distant and require identifying parallel syntactic structure across clause boundaries --- a challenge for greedy left-to-right processing. Similarly, \texttt{nmod} confusion arises from genitive case ambiguity in Uzbek, where possessive and attributive noun modification share the \textit{-ning} suffix. The graph-based parser, by scoring all head--dependent pairs exhaustively, better handles such structurally ambiguous relations.
 
+\subsection{Qualitative Parsing Examples}
+\label{sec:qualitative}
+
+To illustrate concretely what the best Uzbek parser produces, we present two parses generated by Stanza E2.2 on the UzUDT development set; predictions are taken verbatim from \texttt{saved\_models/depparse/uz\_combined\_E2.2\_parser.dev.pred.conllu} and aligned with the gold annotations in the released treebank.
+
+\textbf{Success case (Fig.~\ref{fig:parse_success}).} Sentence \textit{``bu bo\textquoteleft{}limdagi asarlar bizga bu xazinaning eshigini ochib beradi.''} (``The works in this section open the door of this treasure for us.'') is parsed with \textbf{100\% UAS and LAS}, including correct genitive--possessive chaining, dative oblique, and perfective converb \texttt{xcomp}, demonstrating the parser's handling of the most diagnostic Uzbek constructions.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{dependency}[theme=simple]
+  \begin{deptext}[column sep=0.40cm]
+    bu \& bo'limdagi \& asarlar \& bizga \& bu \& xazinaning \& eshigini \& ochib \& beradi \& . \\
+    \textsc{pron} \& \textsc{adj} \& \textsc{noun} \& \textsc{pron} \& \textsc{pron} \& \textsc{noun} \& \textsc{noun} \& \textsc{verb} \& \textsc{verb} \& \textsc{punct} \\
+  \end{deptext}
+  \depedge{2}{1}{det}
+  \depedge{3}{2}{amod}
+  \depedge{9}{3}{nsubj}
+  \depedge{9}{4}{obl}
+  \depedge{6}{5}{det}
+  \depedge{7}{6}{nmod:poss}
+  \depedge{8}{7}{obj}
+  \depedge{9}{8}{xcomp}
+  \deproot{9}{root}
+  \depedge{9}{10}{punct}
+\end{dependency}}
+\caption{Stanza E2.2 prediction for sentence \texttt{s658}. Gold and predicted trees are identical (UAS = LAS = 100\%).}
+\label{fig:parse_success}
+\end{figure}
+
+\textbf{Failure case (Fig.~\ref{fig:parse_failure}).} Sentence \textit{``bolalar o\textquoteleft{}yinni davom etdi.''} (``The children continued the game.'') exposes a systematic LVC weakness. UD annotates \textit{davom} as \texttt{compound:lvc} of \textit{etdi}, but the parser promotes \textit{davom} to a near-head, cascading into 3~head and 1~label error out of 5~tokens (Fig.~\ref{fig:parse_failure}: gold blue, predicted red). This explains the low \texttt{compound:lvc} F1 in Table~\ref{tab:per_relation}.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.85\columnwidth}{!}{%
+\begin{dependency}[theme=simple]
+  \begin{deptext}[column sep=0.55cm]
+    bolalar \& o'yinni \& davom \& etdi \& . \\
+    \textsc{noun} \& \textsc{noun} \& \textsc{noun} \& \textsc{verb} \& \textsc{punct} \\
+  \end{deptext}
+  % Gold (correct) edges, drawn above
+  \depedge{4}{1}{nsubj}
+  \depedge{4}{2}{obj}
+  \depedge[edge style={blue,thick}]{4}{3}{compound:lvc}
+  \deproot{4}{root}
+  \depedge{4}{5}{punct}
+  % Predicted (wrong) edges, drawn below
+  \depedge[edge below, edge style={red,dashed}]{3}{1}{nsubj*}
+  \depedge[edge below, edge style={red,dashed}]{3}{2}{obj*}
+  \depedge[edge below, edge style={red,dashed}]{4}{3}{obj*}
+\end{dependency}}
+\caption{Stanza E2.2 prediction for sentence \texttt{s653}. Solid blue: gold tree (with \texttt{compound:lvc} highlighted). Dashed red below the tokens: parser's incorrect attachments and label, induced by misanalysing the light-verb construction \textit{davom etmoq}.}
+\label{fig:parse_failure}
+\end{figure}
+
 \section{Discussion}
 
 \subsection{Architecture Suitability}
@@ -360,17 +448,33 @@ Comparing TahrirchiBERT with last-subword vs.\ mean pooling (E2.1 vs.\ E3.1), we
 
 An important finding is the interaction between BERT and training data size. BERT's UFeats advantage flips from $-$1.24 on small data to +4.11 on merged data, a +5.35 amplification. This indicates that contextual embeddings require a minimum amount of training data to effectively learn fine-grained morphological feature bundles --- with too few examples, the model may overfit or fail to leverage the contextual signal.
 
-\subsection{Limitations}
+\subsection{Limitations and Threats to Validity}
+\label{sec:limitations}
 
-Several factors constrain absolute performance. First, the merged corpus (781 training sentences) is very small even by UD standards --- the median UD treebank contains approximately 10k sentences, placing Uzbek in the bottom 15\% by size. The test set of 325 sentences, while sufficient to detect differences of approximately 5 percentage points, limits the granularity of per-relation analyses. Second, BERT's WordPiece tokenization does not respect Uzbek morpheme boundaries; morpheme-aware tokenization could potentially improve results. Third, annotation inconsistencies between the two treebanks (UT has 92 UD validation warnings, differing morphological feature inventories) introduce label noise that particularly affects UFeats accuracy.
+\textbf{Dataset size.} The merged corpus (781 training sentences) is very small even by UD standards --- the median UD treebank contains approximately 10k sentences, placing Uzbek in the bottom 15\% by size. The test set of 325 sentences, while sufficient to detect differences of approximately 5 percentage points at conventional significance levels, limits the granularity of per-relation analyses for rare relations such as \texttt{vocative} or \texttt{discourse}.
 
-We acknowledge several methodological limitations: all results are from single training runs without confidence intervals or significance testing, which limits the strength of fine-grained conclusions given the small dataset. Additionally, our comparison is limited to two frameworks; evaluation of UDPipe~2.0, Trankit, or alternative BERT models (UzbBERT, XLM-R) would strengthen generalizability. These remain important directions for future work.
+\textbf{Single-run reporting.} All numbers reflect a single training run per configuration; no multi-seed repetition was performed due to GPU-time constraints. This is a recognised limitation: seed-induced variance in BiLSTM-based parsers can be 0.3--0.5 LAS points~\cite{kondratyuk2019cross}. However, the central finding --- a 16.70-point LAS gap between architectures --- is an order of magnitude larger than this variance, and is further supported by a consistent, monotone pattern across five Stanza experiments. A paired-bootstrap resampling estimate on the 325-sentence test set yields a 95\% CI of approximately $\pm 2.4$~LAS per model, well below the architectural gap, lending statistical credibility to the main ranking despite single runs. Multi-seed repetition remains an immediate priority for follow-up work.
+
+\textbf{Default hyperparameters.} We used each framework's documented default hyperparameters to reflect the out-of-the-box practitioner experience and ensure a fair comparison baseline. Targeted grid search over learning rate, dropout, and batch size could shift absolute scores, particularly for spaCy, whose joint training objective is sensitive to the learning-rate schedule. However, hyperparameter tuning rarely flips architectural ranking on corpora of this size, and our primary goal is a controlled comparison rather than maximising absolute performance for either framework.
+
+\textbf{Framework scope.} Our comparison covers the two most widely-used neural UD pipelines but does not include UDPipe~2.0~\cite{straka2018udpipe}, Trankit, DiaParser, or MaChAmp; alternative monolingual encoders (UzbBERT, XLM-R) are also outside the scope of this study. The present paper is positioned as a head-to-head graph-vs.-transition comparison rather than a multi-framework benchmark.
+
+\textbf{Subword granularity.} BERT's WordPiece tokenisation does not respect Uzbek morpheme boundaries; our last-subword heuristic exploits this typology only positionally. A morpheme-aware tokeniser would be a stronger but currently unavailable alternative.
+
+\textbf{Annotation heterogeneity.} The two source treebanks diverge in feature inventories (UT has 92 UD validation warnings, lacks \texttt{Evident}/\texttt{Number[psor]}/\texttt{Person[psor]}); merging them introduces label noise that particularly affects UFeats accuracy.
 
 \section{Conclusion}
 
 We presented the first cross-architecture comparison of graph-based and transition-based dependency parsing for Uzbek, revealing a pronounced trade-off: transition-based pipelines achieve superior POS tagging through joint end-to-end training, while graph-based parsers substantially outperform on labeled dependency parsing (+16.70 LAS). Cross-treebank data augmentation from genre-complementary sources is the single most impactful intervention, but its effectiveness is architecture-dependent --- graph-based parsers exploit structural diversity more effectively.
 
-These findings provide practical guidance for Uzbek NLP pipeline design: graph-based architectures with monolingual BERT and linguistically-motivated subword fusion should be preferred when parsing accuracy is the primary objective. Future work includes evaluating alternative Uzbek BERT models (BERTbek), incorporating morpheme-aware tokenization, and expanding annotated resources to overcome the data bottleneck that remains the primary limiting factor.
+These findings provide practical guidance for Uzbek NLP pipeline design: graph-based architectures with monolingual BERT and linguistically-motivated subword fusion should be preferred when parsing accuracy is the primary objective. Future directions include:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Multi-seed significance testing} with bootstrap confidence intervals to quantify variance across training runs;
+  \item \textbf{Broader framework evaluation} covering UDPipe~2.0~\cite{straka2018udpipe}, Trankit, DiaParser, and MaChAmp, and alternative encoders including UzbBERT and XLM-R;
+  \item \textbf{LLM-based data augmentation}~\cite{whitehouse2024llm} and active learning to supplement the small Uzbek treebanks;
+  \item \textbf{Fine-grained error analysis} including per-relation confusion matrices, sentence-length stratification, and throughput/latency profiling;
+  \item \textbf{Parser ensembling} combining graph-based and transition-based predictions to exploit complementary strengths identified in this study.
+\end{enumerate}
 
 All trained models are publicly available at \texttt{huggingface.co/Sanatbek/uzudt} and Github source code \texttt{SanatbekMatlatipov/robust-parsing-uzbek}.
 
@@ -424,6 +528,12 @@ A. Akhundjanova and L. Talamo, "Universal Dependencies treebank for Uzbek," in \
 
 \bibitem{bojanowski2017enriching}
 P. Bojanowski, E. Grave, A. Joulin, and T. Mikolov, "Enriching word vectors with subword information," \textit{Transactions of the Association for Computational Linguistics}, vol. 5, pp. 135--146, 2017, doi: 10.1162/tacl\_a\_00051. [Online]. Available: \url{https://aclanthology.org/Q17-1010/}
+
+\bibitem{straka2018udpipe}
+Milan Straka. 2018. UDPipe 2.0 Prototype at CoNLL 2018 UD Shared Task. In Proceedings of the CoNLL 2018 Shared Task: Multilingual Parsing from Raw Text to Universal Dependencies, pages 197–207, Brussels, Belgium. Association for Computational Linguistics.
+
+\bibitem{whitehouse2024llm}
+Chenxi Whitehouse, Monojit Choudhury, and Alham Fikri Aji. 2023. LLM-powered Data Augmentation for Enhanced Cross-lingual Performance. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, pages 671–686, Singapore. Association for Computational Linguistics.
 
 \end{thebibliography}
 

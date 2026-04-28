@@ -1,0 +1,18 @@
+# Parsing example — FAILURE case (Stanza E2.2, light-verb construction)
+# sent_id = s653
+# text  = bolalar oʻyinni davom etdi .
+# gloss = "The children continued the game."
+# Source: data/udbase/UD_Uzbek-UzUDT/uz_uzudt-ud-dev.conllu (gold)
+#         saved_models/depparse/uz_combined_E2.2_parser.dev.pred.conllu (pred)
+# Errors: 3 attachment / 1 label error caused by misanalysis of the light-verb
+#         construction "davom etmoq" (lit. continuation make → "to continue").
+#         Gold treats davom-etdi as a compound:lvc unit headed by etdi;
+#         the parser instead promotes "davom" to a near-head and labels the
+#         LVC element as a plain "obj".
+#
+# Layout: ID  TOKEN     GOLD_HEAD  GOLD_DEPREL    PRED_HEAD  PRED_DEPREL  ERR
+1   bolalar       4  nsubj          3  nsubj         HEAD-WRONG
+2   oʻyinni       4  obj            3  obj           HEAD-WRONG
+3   davom         4  compound:lvc   4  obj           LABEL-WRONG
+4   etdi          0  root           0  root          OK
+5   .             4  punct          4  punct         OK

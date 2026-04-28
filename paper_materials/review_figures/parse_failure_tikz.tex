@@ -1,0 +1,23 @@
+% Stand-alone preview of the FAILURE parsing example used in main_paper.tex (§5.5).
+% Compile with: pdflatex parse_failure_tikz.tex
+% Solid edges = gold; dashed red edges = Stanza E2.2 prediction error.
+\documentclass{standalone}
+\usepackage{tikz-dependency}
+\begin{document}
+\begin{dependency}[theme=simple]
+  \begin{deptext}[column sep=0.5cm]
+    bolalar \& o'yinni \& davom \& etdi \& . \\
+    NOUN \& NOUN \& NOUN \& VERB \& PUNCT \\
+  \end{deptext}
+  % Gold (correct) edges
+  \depedge{4}{1}{nsubj}
+  \depedge{4}{2}{obj}
+  \depedge[edge style={blue}]{4}{3}{compound:lvc}
+  \deproot{4}{root}
+  \depedge{4}{5}{punct}
+  % Predicted (wrong) edges — drawn below
+  \depedge[edge below, edge style={red,dashed}]{3}{1}{nsubj*}
+  \depedge[edge below, edge style={red,dashed}]{3}{2}{obj*}
+  \depedge[edge below, edge style={red,dashed}]{4}{3}{obj*}
+\end{dependency}
+\end{document}
