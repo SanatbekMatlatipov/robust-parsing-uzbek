@@ -43,6 +43,17 @@ Source code & training scripts: https://github.com/Sanatbek/robust-parsing-uzbek
 |------|-------------|
 | `saved_models/tokenize/uz_uzudt_tokenizer.pt` | Uzbek tokenizer trained on UzUDT |
 
+### spaCy Pipelines (`saved_models/spacy/`)
+
+These are full **spaCy pipeline models** (directory format) trained with TahrirchiBERT (`tahrirchi/tahrirchi-bert-base`). Each pipeline jointly performs UPOS tagging, morphological analysis, and dependency parsing.
+
+| Directory | Experiment | Data | Embeddings |
+|-----------|------------|------|------------|
+| `saved_models/spacy/transformer_uzudt/model-best/` | S1.1 | UzUDT | TahrirchiBERT |
+| `saved_models/spacy/transformer_combined/model-best/` | S1.2 | UzUDT+UT | TahrirchiBERT |
+
+> `model-best` = checkpoint with the highest combined dev score during training.
+
 ### POS Taggers (`saved_models/pos/`)
 
 | File | Experiment | Data | Embeddings | Fusion |
@@ -84,6 +95,18 @@ Source code & training scripts: https://github.com/Sanatbek/robust-parsing-uzbek
 | E3.2 | UzUDT+UT | TahrirchiBERT | mean | 84.02 | **87.07** | 70.39 | 70.74 | 60.05 |
 
 **Best overall system: E2.2** — TahrirchiBERT + last-subword + merged data.
+
+### spaCy Pipeline Results (Test Set)
+
+These models use spaCy's transformer pipeline with TahrirchiBERT and jointly predict UPOS, morphological features, and dependency structure.
+
+| Exp | Data | UPOS | XPOS | Morph Acc | UAS | LAS |
+|-----|------|------|------|-----------|-----|-----|
+| S1.1 | UzUDT | 86.50 | 86.72 | 50.55 | 67.72 | 45.35 |
+| **S1.2** | **UzUDT+UT** | **89.18** | **88.24** | **65.48** | **66.81** | **47.11** |
+
+> Results from `spacy evaluate` on the respective test sets.  
+> Morph Acc = full morphological feature bundle accuracy.
 
 ---
 
@@ -190,6 +213,100 @@ python scripts/eval_pos.py \
 
 ---
 
+## spaCy Pipeline Usage
+
+The spaCy models are **ready-to-use directory-based pipelines** — no custom code needed beyond installing spaCy and the Uzbek language module.
+
+### Install dependencies
+
+```bash
+pip install spacy spacy-transformers
+pip install -e spacy_uzbek/   # custom Uzbek language class
+```
+
+For GPU (recommended for transformer):
+
+```bash
+pip install cupy-cuda12x==13.6.0
+```
+
+### Download spaCy models from HuggingFace
+
+```python
+from huggingface_hub import snapshot_download
+
+# Download both spaCy models (preserves directory structure)
+snapshot_download(
+    repo_id="Sanatbek/uzudt",
+    repo_type="model",
+    local_dir=".",
+    allow_patterns=["saved_models/spacy/**"]
+)
+```
+
+Or download a single model:
+
+```python
+from huggingface_hub import hf_hub_download
+
+# S1.2 — best spaCy model (UzUDT+UT)
+hf_hub_download(
+    repo_id="Sanatbek/uzudt",
+    filename="saved_models/spacy/transformer_combined/model-best/meta.json",
+    local_dir="."
+)
+# Repeat for all files in the directory, or use snapshot_download with allow_patterns
+```
+
+### Run inference
+
+```python
+import spacy
+
+# Load best spaCy model (S1.2 — trained on UzUDT+UT merged data)
+nlp = spacy.load("saved_models/spacy/transformer_combined/model-best")
+
+# Process Uzbek text
+doc = nlp("Men kitob o'qiyapman.")
+
+for token in doc:
+    print(f"{token.text:20s}  POS={token.pos_:8s}  MORPH={str(token.morph):40s}  DEP={token.dep_:12s}  HEAD={token.head.text}")
+```
+
+Example output:
+```
+Men                   POS=PRON      MORPH=Case=Nom|Number=Sing|Person=1|PronType=Prs  DEP=nsubj       HEAD=o'qiyapman
+kitob                 POS=NOUN      MORPH=POS=NOUN                                    DEP=obj         HEAD=o'qiyapman
+o'qiyapman            POS=VERB      MORPH=Aspect=Prog|Mood=Ind|Number=Sing|Person=1    DEP=root        HEAD=o'qiyapman
+.                     POS=PUNCT     MORPH=POS=PUNCT                                   DEP=punct       HEAD=o'qiyapman
+```
+
+### Visualize dependency tree
+
+```python
+from spacy import displacy
+
+doc = nlp("Men kitob o'qiyapman.")
+displacy.serve(doc, style="dep")   # opens browser at http://localhost:5000
+```
+
+### Evaluate on test set
+
+```bash
+# Requires spacy_uzbek/data/uz_uzudt.test.spacy — convert first if needed:
+python spacy_uzbek/convert_conllu.py \
+  --input data/pos/uz_uzudt.test.in.conllu \
+  --output spacy_uzbek/data/uz_uzudt.test.spacy
+
+# Evaluate (GPU recommended)
+python -m spacy evaluate \
+  saved_models/spacy/transformer_combined/model-best \
+  spacy_uzbek/data/uz_combined.test.spacy \
+  --output results/spacy_s1.2_test.json --gpu-id 0
+```
+
+---
+
 ## Dependencies
 
 | Package | Version | Purpose |
@@ -197,7 +314,9 @@ python scripts/eval_pos.py \
 | Python | >= 3.9 | Runtime |
 | PyTorch | >= 2.0 | Model inference |
 | transformers | >= 4.35 | TahrirchiBERT loading |
-| stanza | local (editable) | NLP pipeline |
+| stanza | local (editable) | Stanza NLP pipeline |
+| spacy | >= 3.8 | spaCy NLP pipeline |
+| spacy-transformers | >= 1.2 | spaCy BERT integration |
 | huggingface_hub | >= 0.20 | Model download |
 
 ---
