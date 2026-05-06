@@ -1,14 +1,11 @@
-Weaknesses:
-- no single example of the output of parsing any sentence in Uzbek 
-- the subword analysis should have a more thorough discussion, especially given the agglutinative nature of the language. Indeed there is an example of it, but this is an inherent feature of the language and a challenge you aim to solve, it needs more attention
-- no mention of UAS results in the experiments, although the improvement is mentioned in the augmentation part - maybe you need an additional column for UAS in each experiments table
-- Despite the solid experimental setup, the study remains limited in scope. Only two frameworks (Stanza and spaCy) are evaluated, which restricts the general applicability of the conclusions. 
-- The dataset is very small, raising concerns about the robustness and generalizability of the results. Additionally, all experiments are based on single runs without statistical significance testing, making it difficult to assess the reliability of the reported improvements. Some methodological choices, such as relying on default hyperparameters for both frameworks, may not ensure a fully fair or optimized comparison.
-
-Possible ideas to explore:
-In addition to your ideas for future work, maybe you can consider the following:
-- you can check methods of using LLMs to augment data, for example: https://arxiv.org/pdf/2403.02990
-- for LAS relation analysis, maybe it can be useful to include confusion matrix 
-- it's possible to explore the parsing performance on longer and shorter sentences, and check the effect of long-distance dependencies
-- it can be useful to explore the time and processing requirements for both parsers, because it's possible that Stanza is a lot slower than spaCy
-- you can check the possibility of having an ensemble of more than one parser
+1)Authors should elaborate on how well a model trained on UzUDT might generalize to more "noisy" domains like social media or technical documentation.
+2)Authors mention that this resource can support Uzbek sentiment analysis. Could Authors provide a specific example or a hypothetical use case of how dependency relations directly improve the accuracy of sentiment models compared to simple bag-of-words approaches?
+3)Authors should indicate a baseline experiment that offers a benchmark score for the community?
+4)The manuscript notes high agreement (0.90–0.95) during the calibration phase. Was the Inter-Annotator Agreement (IAA) measured again for the full 681-sentence corpus before adjudication to assess the difficulty of the entire dataset?
+5)Authors stated that the dataset passed validation with "warnings recorded in eval.log." Could Authors specify the nature of these warnings? Are they related to rare Uzbek-specific structures or technical formatting issues?
+6)Authors indicated that the split was "stratified across the main source domains." Could Authors provide the exact count of sentences from each domain (literary vs. educational vs. fairy tales) in both the training and test sets to ensure perfect replicability?
+7)While authors stated that the fairy tales are in the public domain, the fiction stories "Maqar" (2023) and "Kun shundan boshlanadi" (2020) are relatively recent. Authors must confirm that the use of these texts for a public dataset complies with Uzbek copyright law or that explicit permission was obtained from the publishers.
+8)Authors stated that Gemini Pro was used to improve "language, readability, and academic coherence." could the authors specify which sections underwent the most significant AI-assisted revision?
+9)In the "Sample of the annotated CoNLL-U format" (Table 1), some entries appear truncated or merged or unclear, and it is difficult to place any text in a specific column. Authors should present code snippets or algorithms or annotations using a better medium.
+10)The text mentions "Table 3" provides a breakdown of POS, morphological features, and dependencies. However, the provided Table 3 only lists morphological features and values.
+11)Authors refer to "morphological feature bundles" and "feature-value pairs" interchangeably. For clarity, authors should stick to one term throughout the "Methodology" section.
