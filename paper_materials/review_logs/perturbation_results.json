@@ -1,0 +1,68 @@
+[
+  {
+    "Tokens": 100.0,
+    "UPOS": 87.91,
+    "XPOS": 86.91,
+    "UFeats": 77.06,
+    "Lemmas": 100.0,
+    "UAS": 71.06,
+    "LAS": 54.07,
+    "perturbation": "clean",
+    "tokens_modified_or_dropped": 0
+  },
+  {
+    "Tokens": 100.0,
+    "UPOS": 87.1,
+    "XPOS": 85.86,
+    "UFeats": 75.39,
+    "Lemmas": 100.0,
+    "UAS": 70.63,
+    "LAS": 52.93,
+    "perturbation": "drop_diacritics",
+    "tokens_modified_or_dropped": 183
+  },
+  {
+    "Tokens": 100.0,
+    "UPOS": 84.37,
+    "XPOS": 83.3,
+    "UFeats": 71.7,
+    "Lemmas": 100.0,
+    "UAS": 67.44,
+    "LAS": 45.94,
+    "perturbation": "lowercase_drop_punct",
+    "tokens_modified_or_dropped": 413
+  },
+  {
+    "Tokens": 100.0,
+    "UPOS": 84.48,
+    "XPOS": 84.67,
+    "UFeats": 73.92,
+    "Lemmas": 100.0,
+    "UAS": 69.06,
+    "LAS": 51.55,
+    "perturbation": "random_caps",
+    "tokens_modified_or_dropped": 1120
+  },
+  {
+    "Tokens": 100.0,
+    "UPOS": 87.72,
+    "XPOS": 86.82,
+    "UFeats": 77.01,
+    "Lemmas": 100.0,
+    "UAS": 71.06,
+    "LAS": 53.93,
+    "perturbation": "codeswitch_ru",
+    "tokens_modified_or_dropped": 5
+  },
+  {
+    "Tokens": 100.0,
+    "UPOS": 84.31,
+    "XPOS": 83.3,
+    "UFeats": 71.76,
+    "Lemmas": 100.0,
+    "UAS": 67.32,
+    "LAS": 45.77,
+    "perturbation": "drop_punct_only",
+    "tokens_modified_or_dropped": 412
+  }
+]
