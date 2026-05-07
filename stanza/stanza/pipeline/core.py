@@ -204,6 +204,7 @@ class Pipeline:
             lang_name = resources[lang]['lang_name'] if 'lang_name' in resources[lang] else ''
         else:
             logger.warning(f'Unsupported language: {lang}.')
+            lang_name = ''
 
         # Maintain load list
         if (not kwargs.get("tokenize_pretokenized")
