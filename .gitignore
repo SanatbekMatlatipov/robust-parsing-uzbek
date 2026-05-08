@@ -212,3 +212,4 @@ saved_models/spacy/
 wordvec/uz/pretrain/fasttext_cc_uz_300.pt
 wordvec/uz/fasttext/cc.uz.300.vec.gz
 wordvec/uz/fasttext/cc.uz.300.vec
+paper_materials/UzUDT_DiB_Revised_Clean.docx
