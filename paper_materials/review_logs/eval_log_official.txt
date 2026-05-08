@@ -1,0 +1,47 @@
+Source: https://github.com/UniversalDependencies/UD_Uzbek-UzUDT/blob/master/eval.log
+Run by: Dan Zeman, UD release pipeline (commit b39dc4111bb13658bc0c204b48bb78b492e45d2b)
+Date: 2026-05-05
+UD_Uzbek-UzUDT commit: 4320c938100d50bd4550ec50f3b9374a445dddf4
+
+------------------------------------------------------------
+Running the following version of UD tools:
+commit b39dc4111bb13658bc0c204b48bb78b492e45d2b
+Author: Dan Zeman <zeman@ufal.mff.cuni.cz>
+Date:   Tue May 5 17:01:41 2026 +0200
+Evaluating the following revision of UD_Uzbek-UzUDT:
+commit 4320c938100d50bd4550ec50f3b9374a445dddf4
+Merge: 92b12a0 170a1b3
+Author: Dan Zeman <zeman@ufal.mff.cuni.cz>
+CoNLL-U data file regular expression = '(.+)-ud-(train|dev|test)\.conllu'
+Language-treebank code (from CoNLL-U file name) = 'uz_uzudt'
+Language code (from CoNLL-U file name) = 'uz'
+Found the following data files: uz_uzudt-ud-test.conllu, uz_uzudt-ud-train.conllu
+Size: counted 7582 of 7582 words (nodes).
+Size: min(0, log((N/1000)**2)) = 4.05155403418829.
+Size: maximum value 13.815511 is for 1000000 words or more.
+Split: Did not find more than 10000 training words.
+Split: Did not find at least 10000 development words.
+Split: Did not find at least 10000 test words.
+Lemmas: source of annotation (from README) factor is 1.
+Universal POS tags: 16 out of 17 found in the corpus.
+Universal POS tags: source of annotation (from README) factor is 1.
+Features: 3544 out of 7582 total words have one or more features.
+Features: source of annotation (from README) factor is 1.
+Universal relations: 32 out of 37 found in the corpus.
+Universal relations: source of annotation (from README) factor is 1.
+Genres: found 2 out of 18 known.
+/net/work/people/zeman/unidep/tools/validate.py --lang uz --max-err=10 UD_Uzbek-UzUDT/uz_uzudt-ud-test.conllu
+*** PASSED ***
+/net/work/people/zeman/unidep/tools/validate.py --lang uz --max-err=10 UD_Uzbek-UzUDT/uz_uzudt-ud-train.conllu
+*** PASSED ***
+Validity: 1
+(weight=0.111111111111111) * (score{features}=0.5) = 0.0555555555555556
+(weight=0.111111111111111) * (score{genres}=0.111111111111111) = 0.0123456790123457
+(weight=0.111111111111111) * (score{lemmas}=1) = 0.111111111111111
+(weight=0.37037037037037) * (score{size}=0.293261260030139) = 0.108615281492644
+(weight=0.0740740740740741) * (score{split}=0.01) = 0.000740740740740741
+(weight=0.111111111111111) * (score{tags}=0.941176470588235) = 0.104575163398693
+(weight=0.111111111111111) * (score{udeprels}=0.864864864864865) = 0.0960960960960961
+(TOTAL score=0.489039627407186) * (availability=1) * (validity=1) = 0.489039627407186
+STARS = 2.5
+UD_Uzbek-UzUDT	0.489039627407186	2.5
