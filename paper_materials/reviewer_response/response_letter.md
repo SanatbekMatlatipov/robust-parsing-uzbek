@@ -333,32 +333,34 @@ The full eval.log file is also released alongside the treebank as
 
 ---
 
-## 6. Per-domain sentence counts in train/test splits
+  ## 6. Per-domain sentence counts in train/test splits
 
-> *Reviewer:* "Could authors provide the exact count of sentences from
-> each domain (literary vs. educational vs. fairy tales) in both the
-> training and test sets to ensure perfect replicability?"
+  > *Reviewer:* "Could authors provide the exact count of sentences from
+  > each domain (literary vs. educational vs. fairy tales) in both the
+  > training and test sets to ensure perfect replicability?"
 
-**Response.** We agree this information is essential for replicability
-and have added **Table 6** to the manuscript with the exact per-domain
-sentence counts. The split was stratified at the sentence level so that
-each of the two source domains appears in both train and test in
-approximately its corpus-level proportion. The values are reproduced
-below for the reviewer's convenience:
+  **Response.** We agree this information is essential for replicability
+  and have added **Table 6** to the manuscript with the exact per-source
+  sentence counts. The split was stratified at the sentence level so that
+  each of the three source texts appears in both train and test in
+  approximately its corpus-level proportion. The values are reproduced
+  below for the reviewer's convenience:
 
-| Domain                                                | Train   | Test    | Total   |
-|-------------------------------------------------------|--------:|--------:|--------:|
-| Literary fiction ("Maqar", "Kun shundan boshlanadi")  | 300     | 120     | 420     |
-| Educational fairy tales (ertak.uz)                    | 183     | 78      | 261     |
-| **Total**                                             | **483** | **198** | **681** |
+  | Source                                        | Train   | Test    | Total   |
+  |-----------------------------------------------|--------:|--------:|--------:|
+  | *Kun shundan boshlanadi* (literary fiction)   | 290     | 119     | 409     |
+  | *Maqar* (literary fiction)                    | 145     | 59      | 204     |
+  | ertak.uz fairy tales (educational)            | 48      | 20      | 68      |
+  | **Total**                                     | **483** | **198** | **681** |
 
-The educational/pedagogical material in the corpus consists of fairy
-tales sourced from `ertak.uz`, which serve a dual literary and
-educational function in Uzbek primary-school reading curricula; we
-therefore report them as a single domain rather than splitting them
-further. Row totals (483 / 198 / 681) match the released CoNLL-U files.
+  The two literary fiction sources (*Kun shundan boshlanadi* and *Maqar*)
+  are both authored by Shuhrat Matkarim and constitute 613 sentences
+  (89.9 % of the corpus). The educational material from `ertak.uz`
+  (fairy tales used in Uzbek primary-school reading curricula) contributes
+  the remaining 68 sentences. Row totals (483 / 198 / 681) match the
+  released CoNLL-U files.
 
----
+  ---
 
 ## 7. Copyright / permission for "Maqar" (2023) and "Kun shundan boshlanadi" (2020)
 
@@ -465,20 +467,74 @@ no AI-assisted rewriting beyond minor grammatical correction.
 
 > *Reviewer:* "In the 'Sample of the annotated CoNLL-U format' (Table 1),
 > some entries appear truncated or merged or unclear, and it is difficult
-> to place any text in a specific column."
+> to place any text in a specific column. Authors should present code
+> snippets or algorithms or annotations using a better medium."
 
 **Response.** The original Table 1 was rendered as plain space-separated
-text, which collapsed when typeset. In the revised manuscript we present
-the same example in two complementary forms:
+text, which collapsed when typeset. The CoNLL-U format itself is the
+**official interchange format mandated by the Universal Dependencies
+project** for all v2 treebank releases (de Marneffe et al., 2021,
+*Computational Linguistics*); every column shown — `ID`, `FORM`, `LEMMA`,
+`UPOS`, `XPOS`, `FEATS`, `HEAD`, `DEPREL`, `DEPS`, `MISC` — is defined
+by the UD v2 specification, so its retention in Table 1 also demonstrates
+UzUDT's compliance with the standard and its interoperability with any
+UD-compatible toolchain. To make the table legible and actionable, we now
+present the same example sentence (`s207`) in **four complementary forms**
+in the revised manuscript:
 
-1. A properly formatted **table** with one column per CoNLL-U field
-   (ID, FORM, LEMMA, UPOS, XPOS, FEATS, HEAD, DEPREL, DEPS, MISC), so
-   that the reader can read each annotation field directly.
-2. A **monospaced code block** containing the raw, tab-separated CoNLL-U
-   record (with `# sent_id` and `# text` comment lines), so that the
-   example can be copy-pasted into UD tooling without reformatting.
+1. A properly formatted **10-column Word table** with one column per
+   CoNLL-U field, clearly labelled in the header row, so that each
+   annotation can be read at a glance.
+2. A **raw CoNLL-U code block** in monospaced font containing the
+   verbatim tab-separated record (with `# sent_id` and `# text`
+   comment lines), so that the example can be copy-pasted directly
+   into any UD-compatible tool (e.g. `UDPipe`, `spaCy`, `Stanza`)
+   without reformatting.
+3. A **dependency-tree visualisation** (Figure 1b) rendered with
+   `tikz-dependency` from the gold CoNLL-U record. Core grammatical
+   arcs (`root`, `nsubj`, `obj`) are colour-highlighted; peripheral
+   dependents (`nmod`, `obl`) and `punct` use subdued styling,
+   making the `HEAD`/`DEPREL` columns of the table visually concrete.
+4. A **runnable Python code snippet** (Listing 1) that loads the
+   released CoNLL-U file with the standard `conllu` library, retrieves
+   sentence `s207`, and prints its dependency arcs — directly
+   addressing the reviewer's explicit request for "code snippets" and
+   providing a reproducible entry point for practitioners who wish to
+   work with the data:
 
-Both renderings appear in §**Data Description** of the revised manuscript.
+```python
+# pip install conllu
+from conllu import parse_incr
+
+with open("uz_uzudt-ud-train.conllu", encoding="utf-8") as f:
+    for sent in parse_incr(f):
+        if sent.metadata.get("sent_id") == "s207":
+            print(sent.metadata["text"])
+            for tok in sent:
+                head_form = (sent[tok["head"] - 1]["form"]
+                             if tok["head"] else "ROOT")
+                print(f"  {tok['form']:<16} --{tok['deprel']:<7}--> {head_form}")
+            break
+```
+
+Running this snippet against the released `uz_uzudt-ud-train.conllu`
+produces the following deterministic output, which can be verified
+against Table 1 and Figure 1b:
+
+```
+qirgʻoqdagi manzaralar odamni cheksiz zavqlantiradi .
+  qirgʻoqdagi      --nmod  --> manzaralar
+  manzaralar       --nsubj --> zavqlantiradi
+  odamni           --obj   --> zavqlantiradi
+  cheksiz          --obl   --> zavqlantiradi
+  zavqlantiradi    --root  --> ROOT
+  .                --punct --> zavqlantiradi
+```
+
+All four renderings appear in §**Data Description** and cross-reference
+each other. They collectively turn the static CoNLL-U sample from a
+typographically ambiguous table into a multi-modal, reproducible
+illustration of the annotation standard.
 
 ---
 
@@ -535,10 +591,10 @@ term.
 | 3 | Baseline benchmark | New **Baseline Benchmark** section + Table 7 | New |
 | 4 | Full-corpus IAA wording | Annotation Workflow, step 3 | Clarified |
 | 5 | Nature of `eval.log` warnings | Technical Validation and Partitioning | Expanded |
-| 6 | Per-domain split counts | Technical Validation and Partitioning + Table 6 | New (counts populated: 300/120 literary, 183/78 ertak.uz) |
+| 6 | Per-domain split counts | Technical Validation and Partitioning + Table 6 | New (three source rows: *Kun shundan boshlanadi* 290/119/409, *Maqar* 145/59/204, ertak.uz 48/20/68) |
 | 7 | Copyright / permission | (response letter only) | Permission obtained from author S. Matkarim; agreement linked |
 | 8 | AI-assisted sections | (response letter only) | Confirmed: Value of the Data, Data Description, Methods, Limitations |
-| 9 | Table 1 readability | Data Description (Table 1 + code block) | Reformatted |
+| 9 | Table 1 readability | Data Description: Table 1 reformatted (10-col Word table) + raw CoNLL-U code block + Figure 1b dependency tree + Listing 1 Python snippet | Reformatted + 2 new items |
 | 10 | Table 3 layer coverage | Tables 3, 4, 5 | Split into three |
 | 11 | Terminology consistency | Data Description + Annotation Workflow | Standardised |
 
