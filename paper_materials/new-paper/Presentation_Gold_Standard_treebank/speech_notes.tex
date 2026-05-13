@@ -1,0 +1,476 @@
+% ============================================================
+%  TurkLang 2026 — Speech notes for the 14-minute talk
+%  Paper: A Gold-Standard Dependency Treebank for the Uzbek Language
+%  Authors: S. Matlatipov, M. Kurbanova
+%
+%  Optimised for printing on a black & white printer:
+%    - 12pt serif body, 1.4 line spacing
+%    - bold cues only (no colours), clear slide separators
+%    - generous left margin for handwritten annotations
+%    - timing budget printed next to each slide
+%
+%  Build with:  pdflatex speech_notes.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm,left=3.2cm,right=2.2cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xcolor}      % only for \textbf weighting; everything renders in black
+\usepackage{microtype}
+\usepackage{parskip}
+
+\setstretch{1.40}
+\setlist[itemize]{leftmargin=1.3em,topsep=2pt,itemsep=2pt}
+
+% --- Slide section style: big, easy to spot when flipping through pages ---
+\titleformat{\section}
+   {\normalfont\Large\bfseries\filright}
+   {Slide \thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.4em}
+
+% --- Header & footer with running timing ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small TurkLang 2026 — Speech notes (14 min)}
+\fancyhead[R]{\small Matlatipov \& Kurbanova}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Small helper: timing tag at the start of a slide section
+\newcommand{\timing}[2]{%
+   \par\noindent\textbf{\small [#1\,$\to$\,#2\,min]}\par\vspace{0.2em}}
+
+% Highlight cue: a phrase to read with emphasis (rendered as bold only — print-safe)
+\newcommand{\say}[1]{\textbf{#1}}
+
+% Pause / breathe marker
+\newcommand{\pause}{\par\vspace{0.4em}\textbf{[pause]}\par}
+
+\begin{document}
+
+% ------------------------------------------------------------
+%  COVER PAGE
+% ------------------------------------------------------------
+\begin{center}
+   {\LARGE\bfseries Speech notes — 14 minutes}\\[0.6em]
+   {\large A Gold-Standard Dependency Treebank\\ for the Uzbek Language}\\[0.4em]
+   {\normalsize XIV International Conference on Computer Processing of Turkic Languages}\\
+   {\normalsize \textbf{TurkLang 2026}}\\[1.2em]
+   \textit{Sanatbek Matlatipov \quad \& \quad Mukhabbat Kurbanova}\\
+   National University of Uzbekistan, Tashkent
+\end{center}
+
+\vspace{1em}
+\noindent\textbf{How to use these notes.}
+Each section corresponds to one slide. The bracketed times
+\textbf{[start\,$\to$\,end]} are the cumulative running time. Phrases in
+\textbf{bold} are the ones to emphasise; \textbf{[pause]} marks a short
+breath. Plain text is the spoken script — read naturally, not word-for-word.
+
+\vspace{0.5em}
+\noindent\textbf{Total budget:} 14 minutes of speech + $\approx$1 minute buffer
+for transitions and applause. Aim for roughly 0:50--1:10 per slide.
+
+\vfill\hrule\vspace{0.5em}
+\noindent\textit{Print double-sided on A4. Left margin is wide for handwritten cues.}
+
+\newpage
+
+% ------------------------------------------------------------
+%  SLIDE 1 — Title
+% ------------------------------------------------------------
+\section*{Slide 1 — Title}
+\timing{0:00}{0:30}
+
+Good morning / afternoon, and thank you to the TurkLang organisers for the
+opportunity to present.
+
+My name is \say{Sanatbek Matlatipov}, from the National University of
+Uzbekistan, and this is joint work with \say{Mukhabbat Kurbanova}. Today I will
+talk about \say{a new gold-standard dependency treebank for Uzbek}.
+
+\pause
+
+The talk will focus on the \say{resource itself and how we evaluate it}, rather
+than on parser internals — those are well documented in the paper.
+
+% ------------------------------------------------------------
+%  SLIDE 2 — Outline
+% ------------------------------------------------------------
+\section*{Slide 2 — Outline}
+\timing{0:30}{1:00}
+
+I will walk you through the talk in three parts:
+
+\begin{itemize}
+   \item First, \textbf{why} a new Uzbek treebank was needed.
+   \item Second, \textbf{how} we collected, annotated, and quality-controlled the data.
+   \item Third, \textbf{what we learn} from a comparative evaluation with three parsers.
+\end{itemize}
+
+\noindent
+I will close with conclusions and a short outlook.
+
+% ------------------------------------------------------------
+%  SLIDE 3 — Motivation
+% ------------------------------------------------------------
+\section*{Slide 3 — Why a new Uzbek treebank?}
+\timing{1:00}{2:00}
+
+Uzbek is a \say{Turkic, agglutinative, SOV language} with roughly
+35 million speakers. Its rich nominal and verbal morphology means that
+\say{a single word can carry many grammatical features at once} — case,
+possession, tense, mood, person, number.
+
+Until now the Universal Dependencies community had \say{exactly one}
+Uzbek treebank: Uzbek-UT, released in 2021 by Akhundjanova and Talamo. It
+contains 500 sentences from news and fiction, and was an important first
+step.
+
+\pause
+
+Our research question is simple: \say{would a larger, multi-genre,
+double-annotated gold treebank meaningfully change parser performance for
+Uzbek?}
+
+% ------------------------------------------------------------
+%  SLIDE 4 — Related work
+% ------------------------------------------------------------
+\section*{Slide 4 — Where this fits in Uzbek NLP}
+\timing{2:00}{2:45}
+
+Uzbek NLP is a young but active field. On the morphology side, there is
+the Prolog analyser from 2009, the rule-based UzbekTagger by
+Sharipov and colleagues, and more recent analysers by Salaev and
+Abdurakhmonova. On the downstream side, we have sentiment and aspect-based
+sentiment analysis work.
+
+\say{What was missing} was an \say{independent, multi-domain, double-annotated}
+gold treebank with published inter-annotator agreement. That is the gap we
+address.
+
+% ------------------------------------------------------------
+%  SLIDE 5 — Contributions
+% ------------------------------------------------------------
+\section*{Slide 5 — Contributions}
+\timing{2:45}{3:30}
+
+In one sentence: we deliver a new gold treebank, with measured
+quality, and a head-to-head evaluation of three popular parsers on it.
+
+Concretely:
+
+\begin{itemize}
+   \item \textbf{681 sentences, roughly 7\,950 tokens, 4\,800 unique word forms}.
+   \item Annotated by \textbf{six annotators} — four linguists and two NLP engineers — fully \textbf{double-annotated} in INCEpTION, with adjudication.
+   \item We report inter-annotator agreement using both \textbf{Cohen's kappa} and \textbf{Krippendorff's alpha}.
+   \item We benchmark \textbf{UDPipe, Stanza, and spaCy} under an identical protocol.
+   \item And the treebank is released publicly in CoNLL-U format.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 6 — Data sources
+% ------------------------------------------------------------
+\section*{Slide 6 — Data sources}
+\timing{3:30}{4:20}
+
+The data comes from three Latin-script sources:
+
+\begin{itemize}
+   \item the contemporary fiction novel \textit{Maqar},
+   \item the educational / literary work \textit{Kun shundan boshlanadi}, and
+   \item a collection of publicly available Uzbek \textbf{fairy tales}.
+\end{itemize}
+
+Sentences are short on average — about \textbf{12 tokens} — which is realistic
+for literary Uzbek. The final split is \textbf{481 training sentences and 200
+test sentences}, roughly a 70/30 division.
+
+% ------------------------------------------------------------
+%  SLIDE 7 — Annotation workflow
+% ------------------------------------------------------------
+\section*{Slide 7 — Annotation workflow}
+\timing{4:20}{5:30}
+
+The annotation pipeline had five stages:
+
+\begin{itemize}
+   \item Pre-tokenisation following UD version 2 conventions.
+   \item A \textbf{pilot training round} on a shared seed set, so that all annotators converged on the guidelines.
+   \item \textbf{Double independent annotation} of every sentence in INCEpTION.
+   \item \textbf{Disagreement adjudication}: majority vote first, escalated to a senior linguist when needed.
+   \item Export to CoNLL-U.
+\end{itemize}
+
+\noindent
+We made a few \say{Uzbek-specific decisions} worth flagging: case suffixes are
+treated as features rather than separate tokens; \say{postpositions are kept as
+separate tokens} and attached with the \texttt{case} relation; and we follow
+the UD convention of using \say{no explicit copula node} when Uzbek would
+normally drop it.
+
+% ------------------------------------------------------------
+%  SLIDE 8 — Annotated example
+% ------------------------------------------------------------
+\section*{Slide 8 — A real annotated sentence}
+\timing{5:30}{7:00}
+
+Let me show you one real example from the treebank — sentence
+\texttt{s2}. The English translation is:
+
+\begin{quote}
+\textit{`Until now, in studies on dialects, the more differences from the
+literary language are shown, the more positively they are evaluated.'}
+\end{quote}
+
+\noindent
+Three things to notice — these are the \textbf{coloured edges} on the slide:
+
+\begin{itemize}
+   \item The postposition \say{\textit{bo'yicha}} — meaning \textit{about / on} —
+         is a \textbf{separate token} and attaches to \textit{shevalar} with the
+         \texttt{case} relation. This is the recurrent Uzbek
+         postposition pattern.
+   \item The locative suffix \textit{-da} on \textit{bizda} and \textit{tadqiqotlarda}
+         drives two \texttt{obl} (oblique) attachments to the verb.
+   \item And the conditional clause headed by \say{\textit{ko'rsatilsa}} attaches
+         to the main verb \textit{baholanib} through an \texttt{advcl} edge —
+         this is a classic \textit{the more X, the more Y} construction in Uzbek.
+\end{itemize}
+
+\pause
+
+I show this example because \textbf{these three relations also drive the
+errors we see later} in the evaluation section.
+
+% ------------------------------------------------------------
+%  SLIDE 9 — Inter-annotator agreement
+% ------------------------------------------------------------
+\section*{Slide 9 — Inter-annotator agreement}
+\timing{7:00}{8:00}
+
+Quality control. We computed agreement across all six annotators on the
+doubly annotated pool.
+
+\begin{itemize}
+   \item \textbf{Lemmatisation:} Cohen's kappa of \textbf{95.2\%}, Krippendorff's alpha of 94.6\%.
+   \item \textbf{POS tagging (UPOS):} 93.7\% and 94.1\%.
+   \item \textbf{Morphological features:} 90.8\% and 89.9\%.
+\end{itemize}
+
+\noindent
+Two short comments: first, \textbf{lemma and POS are above 93\%} on both
+metrics, which is strong agreement on the closed-class layers. Second,
+\textbf{morphology is slightly lower}, and this is expected — the
+ambiguity in Uzbek derivational suffixes is real, and even trained
+linguists sometimes disagree.
+
+% ------------------------------------------------------------
+%  SLIDE 10 — Treebank statistics
+% ------------------------------------------------------------
+\section*{Slide 10 — Treebank statistics}
+\timing{8:00}{8:45}
+
+How does the new resource compare to Uzbek-UT in size and coverage?
+
+\begin{itemize}
+   \item \textbf{681} sentences versus 500 — about a 36\% increase.
+   \item \textbf{$\approx$ 7\,950} tokens versus 5\,850.
+   \item \textbf{4\,800} unique surface forms versus 3\,523.
+   \item All \textbf{17 UD parts of speech} are covered.
+   \item \textbf{45 morphological feature values} (up from 42).
+   \item \textbf{34 dependency labels} (up from 32) — we add
+         \texttt{discourse}, \texttt{parataxis}, \texttt{vocative}, and
+         \texttt{ccomp}, all driven by literary dialogue.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 11 — Linguistic profile
+% ------------------------------------------------------------
+\section*{Slide 11 — Linguistic profile}
+\timing{8:45}{9:30}
+
+A quick linguistic profile so you can compare the two treebanks at a
+glance:
+
+\begin{itemize}
+   \item NOUN dominates at around \textbf{30\%}, VERB at 20\%, ADJ at 15\%.
+   \item Proper nouns are higher than in Uzbek-UT — \textbf{8\% versus 5\%} — because of named characters in the fairy tales.
+   \item Numerals are also slightly elevated, reflecting the educational source.
+   \item About \textbf{52\% of tokens carry morphological features}, consistent with the agglutinative profile.
+   \item The most frequent relations are \texttt{nsubj}, \texttt{case},
+         \texttt{obl}, and \texttt{obj} — again \say{case-marked obliques are everywhere}.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 12 — Experimental setup
+% ------------------------------------------------------------
+\section*{Slide 12 — Experimental setup}
+\timing{9:30}{10:15}
+
+For the evaluation we deliberately keep things simple and reproducible.
+We pick three widely used UD parsers and \textbf{treat them as black boxes}:
+
+\begin{itemize}
+   \item \textbf{UDPipe} — a classical pipeline baseline.
+   \item \textbf{Stanza} — a neural pipeline with a character-level CNN.
+   \item \textbf{spaCy} — a transition-based parser with tok2vec embeddings.
+\end{itemize}
+
+\noindent
+We train each parser on \textbf{both treebanks separately} using the same
+protocol: gold tokenisation, default hyperparameters, and the same
+training / test split. The metrics are the standard UD ones:
+\textbf{LAS, UAS, and UPOS accuracy}.
+
+% ------------------------------------------------------------
+%  SLIDE 13 — Results
+% ------------------------------------------------------------
+\section*{Slide 13 — Parsing results across both treebanks}
+\timing{10:15}{11:30}
+
+This is the main results table. \say{Same protocol, same parsers — only the
+training treebank changes.} I want to read it carefully so we are honest
+about what the numbers mean.
+
+\begin{itemize}
+   \item On \textbf{Uzbek-UT}, the parsers reach \textbf{52 / 60 / 62 LAS} for UDPipe, spaCy and Stanza. That is a \textbf{strong baseline} — every parser already crosses 50 LAS.
+   \item On our \textbf{literary / fairy-tale treebank}, the same parsers reach \textbf{55 / 61 / 66 LAS}.
+   \item \textbf{Stanza is the best on both treebanks}, which is expected — the character-level features are a natural fit for Uzbek morphology.
+\end{itemize}
+
+\pause
+
+\say{I would not call this a competition between the two resources.} They
+cover \textbf{different domains}, and they have \textbf{different annotation
+protocols} — ours adds double annotation and published IAA. The two
+treebanks are \textbf{complementary, not competitive}, and the natural next
+step is to combine them.
+
+% ------------------------------------------------------------
+%  SLIDE 13b — Training curve
+% ------------------------------------------------------------
+\section*{Slide 13b — How the Stanza parser learns Uzbek}
+\timing{11:30}{12:15}
+
+This plot shows the Stanza parser's \textbf{dev UAS and LAS curves} when
+trained on the two treebanks combined. Two observations:
+
+\begin{itemize}
+   \item UAS climbs to around \textbf{72} and LAS to around \textbf{63} \say{within the first thousand training steps}.
+   \item Both curves \textbf{plateau early} — the model is \say{not under-trained, it is data-limited}.
+\end{itemize}
+
+\noindent
+This is the clearest evidence we have that the bottleneck for Uzbek
+parsing is not the architecture — it is \textbf{annotated data}.
+
+% ------------------------------------------------------------
+%  SLIDE 14 — Error analysis
+% ------------------------------------------------------------
+\section*{Slide 14 — Error analysis}
+\timing{12:15}{13:00}
+
+Where do the parsers still fail? Three recurring confusions, common to
+all three parsers:
+
+\begin{itemize}
+   \item \textbf{\texttt{advcl} clause boundaries} — exactly the kind of conditional clause we saw in the example sentence.
+   \item \textbf{Coordination} attachment in long nominal phrases.
+   \item Confusion between \texttt{nmod} and \texttt{obl} for case-marked nominals.
+\end{itemize}
+
+\noindent
+The driver behind all of these is Uzbek's \textbf{flexible word order} on
+top of a basic SOV pattern. The natural direction forward is
+\textbf{contextual embeddings} — multilingual BERT, XLM-R, or Turkic-specific
+models like TURNA.
+
+% ------------------------------------------------------------
+%  SLIDE 15 — Conclusion
+% ------------------------------------------------------------
+\section*{Slide 15 — Conclusion}
+\timing{13:00}{13:45}
+
+To summarise:
+
+\begin{itemize}
+   \item We deliver a new \textbf{gold-standard Uzbek UD treebank} — 681 sentences, eight thousand tokens, fully double-annotated.
+   \item Inter-annotator agreement is \textbf{above 90\%} on every layer and above 95\% on lemma.
+   \item All three parsers — \textbf{UDPipe, spaCy and Stanza} — produce consistent results across both treebanks.
+   \item Stanza reaches \textbf{66 LAS and 97 UPOS} on the new data, a real step up for Uzbek parsing.
+\end{itemize}
+
+\noindent
+The natural future work is to \textbf{extend} the treebank to conversational
+and scholarly genres, to plug in \textbf{transformer-based parsers}, and to
+explore \textbf{cross-lingual transfer} from Turkish, Kazakh, and Kyrgyz.
+
+% ------------------------------------------------------------
+%  SLIDE 16 — Thank you
+% ------------------------------------------------------------
+\section*{Slide 16 — Thank you}
+\timing{13:45}{14:00}
+
+That brings me to the end. I would like to thank \textbf{E.~Kuriyozov} for the
+evaluation review, \textbf{K.~Madinabonu} and \textbf{M.~Shaydo} for the annotation
+work, and \textbf{R.~Hulkaroy} for the morphological feature guidelines.
+
+\say{The treebank is released in CoNLL-U format} — the URL is on the slide
+and in the paper.
+
+\pause
+
+Thank you very much — I am happy to take your questions.
+
+% ------------------------------------------------------------
+%  Q & A prep — printed as a back page for the speaker only
+% ------------------------------------------------------------
+\newpage
+\section*{Likely Q\&A — quick cues}
+
+\noindent\textbf{Q. Why not just enlarge Uzbek-UT instead of building a new treebank?}\\
+We considered it. The two efforts have \textbf{different annotation protocols}
+and different licences. A separate, independent resource gives the
+community a second reference point and makes \textbf{cross-checking and IAA
+analysis possible}.
+
+\vspace{0.4em}
+\noindent\textbf{Q. The LAS gains are modest — only 3 to 4 points. Is that significant?}\\
+Yes, with the same protocol and small test sets (200 / 100 sentences), a
+\textbf{3--4 LAS gap is well outside seed variance}. We also see consistent
+gains across \textbf{three independent parsers}, which is the stronger
+evidence.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why no transformer baseline?}\\
+We deliberately chose three \textbf{lightweight, reproducible} parsers so any
+group can re-run the experiment. Transformer baselines are listed as
+future work.
+
+\vspace{0.4em}
+\noindent\textbf{Q. How did you measure morphological feature IAA?}\\
+We compute kappa and alpha \textbf{per token, per feature}, then aggregate.
+The lower number (90.8\%) reflects ambiguity in derivational
+suffixes, especially \textbf{verbal participles}.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Is the treebank Cyrillic or Latin?}\\
+\textbf{Latin script} only. All three source materials are in Latin.
+
+\vspace{0.4em}
+\noindent\textbf{Q. How are postpositions handled?}\\
+As \textbf{separate tokens} attached with the \texttt{case} relation.
+We follow the standard UD convention for Turkic languages.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Will the data be on the official UD repository?}\\
+Yes — we are preparing the submission for the next UD release cycle.
+
+\end{document}
