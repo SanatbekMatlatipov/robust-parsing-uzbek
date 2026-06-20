@@ -1,0 +1,609 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.21 of 2022/01/12
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage[T1]{fontenc}
+% T1 fonts will be used to generate the final print and online PDFs,
+% so please use T1 fonts in your manuscript whenever possible.
+% Other font encondings may result in incorrect characters.
+%
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{rotating} 
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\urlstyle{rm}
+%
+\begin{document}
+%
+\title{Towards Robust Uzbek Neural Dependency Parsing: Cross-Treebank Training}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Sanatbek Matlatipov\inst{1}\orcidID{0000-0002-6895-3436}}
+%
+\authorrunning{Sanatbek et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{
+National University of Uzbekistan named after Mirzo Ulugbek, Tashkent, Uzbekistan \\
+\email{s.matlatipov@nuu.uz}
+}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+Efficient low-resource dependency parsing requires extracting maximal
+syntactic signal from limited supervision with minimal additional
+machinery. We introduce \textsc{UzUDT}, a newly created gold-standard Universal Dependencies treebank for Uzbek, manually annotated in
+\textsc{INCEpTION} by six annotators with full adjudication
+(684~sentences, \mbox{$\sim$7.8k}~tokens); \textsc{UzUDT} is
+currently the largest publicly available Uzbek UD treebank.
+We then study two complementary robustness strategies that remain
+lightweight in practice:
+(i)~\emph{linguistically-motivated last-subword fusion}, a positional
+heuristic for aggregating BERT WordPieces into UD token
+representations, and
+(ii)~\emph{cross-treebank training} by merging genre-complementary
+Uzbek UD resources.
+Using a Stanza-based BiLSTM tagger and biaffine parser augmented with monolingual contextual embeddings (TahrirchiBERT), we conduct a
+controlled factorial comparison across three embedding\slash fusion
+configurations and two data settings. Cross-treebank training yields the largest gains, improving LAS by 9.62--11.16~points while nearly doubling the training set (451~$\rightarrow$~781~sentences).
+The best configuration (\textit{TahrirchiBERT} with last-subword
+fusion on merged data) achieves 85.08~UPOS, 72.39~UAS, and
+63.81~LAS.
+\keywords{Uzbek \and Universal Dependencies \and Low-resource NLP
+\and Dependency Parsing \and Cross-treebank Training \and Subword
+Fusion}
+\end{abstract}
+
+%
+%
+%
+\section{Introduction}
+\label{sec:introduction}
+Dependency parsing is a central task in NLP, providing structured syntactic representations that support downstream applications such as information extraction, machine translation, and question answering.
+The Universal Dependencies (UD) framework has enabled cross-linguistic
+consistency in syntactic annotation and facilitated multilingual
+research~\cite{nivre-etal-2016-universal}.
+Modern neural parsers, particularly graph-based models with biaffine
+attention~\cite{DBLP:conf/iclr/DozatM17}, achieve strong performance
+when sufficient annotated data are available and are widely adopted in
+toolkits such as Stanza~\cite{qi-etal-2020-stanza}.
+However, their success remains heavily dependent on training data size
+and quality.
+
+For low-resource and morphologically rich languages, data scarcity
+becomes the primary bottleneck.
+Uzbek, an agglutinative Turkic language, exhibits rich suffixation,
+flexible word order, and significant genre variation, all of which
+increase the complexity of morphosyntactic tagging and dependency
+parsing.
+Despite the existence of Uzbek UD resources within the UD
+ecosystem~\cite{de-marneffe-etal-2021-universal}, available treebanks
+remain relatively small, limiting robust neural modelling.
+To address this gap, we introduce
+\textsc{UzUDT},\footnote{\url{https://github.com/UniversalDependencies/UD_Uzbek-UzUDT/tree/dev}}
+a newly created gold-standard Uzbek UD treebank (684~sentences,
+${\sim}$7.8k~tokens), manually annotated in
+\textsc{INCEpTION}~\cite{klie-etal-2018-inception} by six annotators
+with full adjudication.
+To the best of our knowledge, \textsc{UzUDT} is currently the largest
+publicly available Uzbek UD treebank.
+
+Beyond resource creation, this work is positioned within the broader
+agenda of \emph{efficient low-resource dependency parsing}.
+Rather than relying on heavy architectural modifications, we
+investigate two lightweight strategies that can be applied with
+minimal additional parameters.
+First, we propose a \emph{linguistically-motivated last-subword
+fusion} strategy for aligning contextualised WordPiece
+representations to UD tokens when using BERT-style
+encoders~\cite{devlin-etal-2019-bert}.
+Subword-to-token alignment is non-trivial for agglutinative
+languages, where suffix chains frequently encode syntactic and
+morphological information.
+Our approach adopts a positional heuristic selecting the final
+subword representation for each token motivated by the fact that
+grammatical features in Uzbek are predominantly realised in suffixes.
+This method is computationally cheap and avoids introducing additional
+attention or pooling layers.
+
+Second, we explore \emph{cross-treebank training} as a data-centric
+robustness strategy.
+Multi-treebank and multilingual training have previously shown
+that expanding structural coverage can substantially improve parsing
+performance~\cite{1602.01925,zeman-etal-2018-conll}.
+In the context of Uzbek, we merge genre-complementary UD resources to
+nearly double the training data size and broaden syntactic coverage.
+We systematically evaluate this strategy in combination with two
+representation choices: static FastText
+embeddings~\cite{bojanowski-etal-2017-enriching} and a monolingual
+contextual encoder
+(\textit{TahrirchiBERT}~\cite{Mamasaidov2023TahrirchiBERT}).
+
+Our contributions are fourfold:
+\begin{enumerate}
+    \item We release \textsc{UzUDT}, the largest Uzbek UD treebank to
+      date, strengthening the empirical foundation for Uzbek syntactic
+      research.
+    \item We train and evaluate neural baselines for Uzbek
+      morphosyntactic tagging (UPOS, XPOS, UFeats) and dependency
+      parsing (UAS, LAS) under a standard UD evaluation protocol.
+    \item We introduce a linguistically-motivated last-subword fusion
+      heuristic for efficient contextual token alignment in
+      agglutinative settings.
+    \item Through a controlled factorial comparison across three
+      embedding\slash fusion configurations and two data settings, we
+      demonstrate that cross-treebank training provides the largest
+      LAS gains, while contextual embeddings and last-subword fusion
+      offer complementary improvements, particularly for tagging and
+      parsing respectively.
+\end{enumerate}
+\section{Related Work}
+\paragraph{Universal Dependencies.}
+ UD treats words as syntactic units with morphological properties that enter into grammatical relations, and it emphasises transparent mapping from surface forms to tokens.  This uniform representation addresses earlier difficulties in comparing empirical results across languages and enables cross‑lingual structure transfer. \cite{de-marneffe-etal-2021-universal} present a cross‑linguistic perspective on the UD framework, reviewing its application to over one hundred languages.  They highlight how UD’s universal POS tags and feature schema facilitate multilingual evaluation and typological research.  The UD guidelines (Version 2\footnote{\url{https://universaldependencies.org/guidelines.html}}) also document how tokenization, multiword expressions, lemmas, UPOS/XPOS tags, morphological features and dependency relations should be annotated;
+
+\paragraph{Parsing in Turkic and other agglutinative languages.}
+Agglutinative languages such as Turkish, Uzbek and other Turkic languages pose unique challenges for dependency parsing.  Rich morphology leads to long word‑internal suffix chains, free word order complicates attachment, and function words often have multiple grammatical functions\cite{MURZINTCEV2026100195}.  Previous work on Turkish shows that morphology aware representations improve parsing accuracy; e.g., \cite{eryigit-etal-2008-dependency} introduce rule‑based and neural models that incorporate morphological segmentation and show gains over purely lexical baselines.  Research on Kazakh, Uyghur and Tatar UD treebanks reports similar findings: parsers benefit from subword‑level features and language‑specific heuristics to resolve case‑driven ambiguities\cite{Marsan_undated-hp}.  \cite{noauthor_2018-qq} discuss the difficulties of adapting UD guidelines to Turkish multi‑word expressions and clitic constructions, emphasising the need for consistent morphological analysis.  These studies motivate our approach of combining neural encoders with explicit morphological information.
+
+\paragraph{Uzbek resources.}
+Uzbek remains comparatively under-resourced for UD-style morphosyntactic analysis and dependency parsing, which has limited systematic benchmarking and slowed the development of robust parsing pipelines as there are currently two available UD treebanks. There are two available dataset in UD. An initial UD‑compliant treebank (Uzbek‑UT) released in 2023 contained about 500 sentences~\cite{akhundjanova-talamo-2025-universal} .   In this work, we use the publicly released Uzbek UD treebank \emph{UzUDT} (681 sentences, 7{,}542 tokens) as the evaluation benchmark. The design rationale, annotation methodology, and quality assurance procedures for UzUDT are described in a companion paper submitted to the same venue by the present author~\cite{matlatipov2025goldudt}. Here, we treat UzUDT strictly as an external benchmark resource and focus on robust neural modeling, morphology-aware preprocessing, and reproducible evaluation. 
+
+\paragraph{Neural pipelines and contextual models.}
+Fully neural multilingual NLP pipelines have seen rapid progress in recent years.  Stanza~\cite{Qi2020-zr} introduced a language‑agnostic pipeline for tokenization, multi‑word token expansion, lemmatization, POS morphological tagging, dependency parsing and named entity recognition.   Stanza’s design is fully neural and processes raw text end‑to‑end.  The biaffine graph‑based parser of \cite{DBLP:conf/iclr/DozatM17} remains a strong baseline; it uses MLP projections and biaffine classifiers for arcs and relations, achieving high accuracies on CoNLL‑U corpora.  \cite{kondratyuk-straka-2019-75} further demonstrate that a single multilingual model (UDify) can parse 75 languages via joint multitask learning.   \cite{kuriyozov-etal-2024-bertbek} introduce \textit{BERTbek}, a transformer‑based model pretrained on a large Uzbek corpus; they show that monolingual contextual embeddings outperform mBERT on tasks such as text classification and NER.
+
+\paragraph{Morphological analysis and hybrid architectures.}
+Rule‑based morphological analysers(MA) are crucial in agglutinative languages to supplement neural models.  Apertium is a free/open‑source platform for rule‑based machine translation that includes finite‑state morphological analysers for numerous languages~\cite{Forcada2011} and Uzbek MAs(\cite{Salaev2024}, \cite{2301.12711}, \cite{MURZINTCEV2026100195}).  It provides lexicons and two‑level morphological rules, enabling high‑quality lemmatization and feature extraction.   For Uzbek, preliminary experiments indicate that combining Apertium‑generated features (case, number, tense, person, etc.) with BERTbek representations yields more robust tagging and parsing, especially on rare or unseen wordforms~\cite{kuriyozov-etal-2024-bertbek}.
+
+\section{Dataset}
+\label{sec:dataset}
+We use two Uzbek Universal Dependencies treebanks.
+
+\paragraph{UD\_Uzbek-UzUDT (UzUDT).}
+A newly created resource of 684~sentences (${\approx}$7{,}800 tokens) from Uzbek \emph{fiction} (the story \textit{Maqar}, the book \textit{Kun shundan boshlanadi}, and publicly available fairy tales\footnote{\url{https://ertak.uz/}}) and \emph{academic/educational} writing.
+Sentences are in the officially standardized Uzbek Latin script, with an average length of ${\approx}$12 tokens.
+All annotation---UPOS, XPOS, lemma, morphological features, and dependency relations---follows UD~v2 guidelines~\cite{de-marneffe-etal-2021-universal} and was produced in the INCEpTION platform~\cite{klie-etal-2018-inception}.
+Six annotators (four Uzbek linguists and two NLP engineers) independently double-annotated every sentence after a calibration phase on shared pilot data.
+Inter-annotator agreement is high (Table~\ref{tab:inter-annotator}): $>$95\% on lemmas, ${\approx}$95\% on UPOS, and $>$90\% on morphological features.
+All conflicts were resolved through adjudication meetings with majority vote or consensus referral to UD guidelines and Uzbek reference grammars.
+Figure~\ref{fig:ud_annotation} shows an annotated example.\footnote{I also contributed Uzbek-specific morphological feature and POS documentation to the UD project (e.g., \url{https://universaldependencies.org/uz/feat/PronType.html}).}
+
+\paragraph{UD\_Uzbek-UT (UT).}
+Created by \cite{akhundjanova-talamo-2025-universal}, UT comprises 500~sentences (${\approx}$5{,}850 tokens) from two genres: 250 \emph{news} and 250 \emph{fiction}.
+Annotation was semi-automatic (automatic tokenization and lemmatization) with full manual correction of POS tags and dependency relations.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Inter-annotator agreement for UzUDT (6~annotators).}
+\label{tab:inter-annotator}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Annotation layer} & \textbf{Cohen's $\kappa$} & \textbf{Krippendorff's $\alpha$} \\
+\midrule
+Lemmatization          & 95.2\% & 94.6\% \\
+POS tagging (UPOS)     & 93.7\% & 94.1\% \\
+Morphological features & 90.8\% & 89.9\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig1.png}
+  \caption{UD annotation of an Uzbek sentence, showing tokenization, UPOS/XPOS tags, morphological features, and dependency arcs.}
+  \label{fig:ud_annotation}
+\end{figure}
+
+% ----------------------------------------------------------
+\subsection{Data Splits and Settings}
+\label{sec:data_splits}
+
+Neither treebank originally shipped with a development set suitable for early stopping.
+We pooled and re-split both corpora using standard UD proportions (${\approx}$66/7/27\%).
+Table~\ref{tab:data_splits} summarizes the resulting splits and the two data settings used in all experiments:
+\texttt{.1}~runs train on UzUDT only; \texttt{.2}~runs train on the merged UzUDT+UT corpus, nearly doubling the training data (451$\to$781~sentences).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Data splits and experimental settings.
+Merged files are produced by concatenating the corresponding UzUDT and UT splits.}
+\label{tab:data_splits}
+\begin{tabular}{llrrr|r}
+\toprule
+\textbf{Setting} & \textbf{Source} & \textbf{Train} & \textbf{Dev} & \textbf{Test} & \textbf{Total} \\
+\midrule
+UzUDT only (\texttt{.1}) & UzUDT        & 451 & 45  & 188 & 684   \\
+Merged (\texttt{.2})      & UzUDT + UT   & 781 & 78  & 325 & 1{,}184 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two treebanks are genre-complementary and differ in annotation depth, motivating our merged data setting.
+Table~\ref{tab:treebank_diagnostics} quantifies the key contrasts (computed with UD \texttt{tools/}).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Treebank diagnostics. Statistics computed with the UD validation toolkit.}
+\label{tab:treebank_diagnostics}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Property} & \textbf{UzUDT} & \textbf{UT} \\
+\midrule
+Tokens (surface) & 7{,}582 & 5{,}930 \\
+Type--token ratio & 0.409 & 0.571 \\
+Tokens with ${\ge}1$ feature & 46.7\% & 67.1\% \\
+Unique morph.\ features & 55 & 47 \\
+Unique dependency relations & 38 & 33 \\
+UD validation & passed & failed (92 warnings) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The treebanks are complementary across multiple dimensions.
+\emph{Lexically}, UT's news genre contributes far more proper nouns (\textsc{propn}: 5.2\% vs.\ 0.3\% in UzUDT), while UzUDT's fiction skews toward pronouns (6.0\% vs.\ 3.3\%).
+\emph{Morphologically}, UzUDT provides typologically salient features absent from UT---evidentiality (\textsc{Evident}) and possessor agreement (\textsc{Number[psor]}, \textsc{Person[psor]}), while UT adds news-driven features (\textsc{Abbr}, \textsc{Foreign}).
+\emph{Syntactically}, UzUDT contains 4$\times$ more adverbial clauses (\texttt{advcl}: 444 vs.\ 106), whereas UT is rich in light-verb constructions (\texttt{compound:lvc}: 215 vs.\ 21) and named-entity structures (\texttt{flat}: 106 vs.\ 11); the union expands deprel coverage to 41 unique relations.
+However, UT fails UD validation (92 warnings, mainly \texttt{obl-should-be-nmod}), so merging also introduces annotation noise that models must absorb.
+
+\section{Method}
+\label{sec:method}
+
+We build on Stanza~\cite{qi-etal-2020-stanza}, extending its POS tagger and dependency parser with BERT support.
+The pipeline (Figure~\ref{fig:pipeline}) proceeds in four stages:
+(i)~\textbf{encoding} (FastText or TahrirchiBERT),
+(ii)~\textbf{subword-to-token fusion} (BERT only),
+(iii)~\textbf{morphosyntactic tagging} (UPOS/XPOS/UFeats),
+(iv)~\textbf{dependency parsing} (arcs + labels).
+Training is \emph{sequential}: the tagger is trained first, its predictions replace gold POS in the data, and the parser is then trained on the re-tagged output.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{pipeline.png}
+  \caption{End-to-end pipeline. Tokens are encoded, fused to UD boundaries, tagged, then parsed; predicted (not gold) UPOS embeddings feed the parser.}
+  \label{fig:pipeline}
+\end{figure}
+
+% ----------------------------------------------------------
+\subsection{Token Representations}
+\label{sec:method_repr}
+
+We compare two representation regimes:
+\textbf{(a)~FastText} (static, 300\,d): pre-trained Uzbek vectors (\texttt{cc.uz.300.vec})~\cite{bojanowski-etal-2017-enriching}; and
+\textbf{(b)~TahrirchiBERT} (contextual, 768\,d): a monolingual Uzbek BERT (\texttt{tahrirchi-bert-base})~\cite{Mamasaidov2023TahrirchiBERT}, chosen over BERTbek (news-centric) and mBERT (Uzbek-underrepresented) for its broad-domain pretraining that matches the heterogeneous treebank genres.
+The encoder is \emph{frozen}; we extract last-layer hidden states and apply a fusion function (\S\ref{sec:method_fusion}) to obtain one 768-d vector per UD token.
+
+The final token vector concatenates four channels:
+\begin{equation}
+  \mathbf{x}_i =
+  \big[\,
+    \mathbf{e}_{\text{word}}(w_i);\;
+    \mathbf{e}_{\text{char}}(w_i);\;
+    \mathbf{e}_{\text{upos}}(\hat{p}_i);\;
+    \mathbf{e}_{\text{ctx}}(w_i)
+  \,\big],
+  \label{eq:tokenvec}
+\end{equation}
+where $\mathbf{e}_{\text{word}}$ is a pretrained word embedding, $\mathbf{e}_{\text{char}}$ a character-LSTM representation, $\mathbf{e}_{\text{upos}}(\hat{p}_i)$ a 50-d embedding of the tagger's \emph{predicted} UPOS label, and $\mathbf{e}_{\text{ctx}}$ the fused BERT vector (absent in the FastText-only configuration).
+
+% ----------------------------------------------------------
+\subsection{Subword-to-Token Fusion}
+\label{sec:method_fusion}
+
+BERT WordPiece boundaries rarely coincide with UD tokens.
+For a UD token $t$ split into $k$ subwords with hidden states $\{\mathbf{h}_1,\dots,\mathbf{h}_k\}$, we compare two aggregations:
+
+\paragraph{Last-subword fusion (linguistically motivated).}
+\begin{equation}
+  \mathbf{e}_{\text{ctx}}(t) = \mathbf{h}_k .
+  \label{eq:lastsub}
+\end{equation}
+Uzbek is predominantly suffixing: the rightmost subword typically encodes the outermost grammatical morpheme---the very signal that UD tagging and attachment rely on.
+For instance, \textit{bolalarning} (``of the children'') is tokenized as \texttt{bola\;\#\#lar\;\#\#ning}; the last subword \texttt{\#\#ning} carries the genitive suffix.\footnote{A second example: \textit{ko'rganmisiz} (``have you seen?'') $\to$ \texttt{ko'r\;\#\#gan\;\#\#mi\;\#\#siz}; the final \texttt{\#\#siz} carries 2\textsc{pl} agreement.}
+
+\paragraph{Mean pooling (language-agnostic baseline).}
+\begin{equation}
+  \mathbf{e}_{\text{ctx}}(t) = \tfrac{1}{k}\textstyle\sum_{i=1}^{k}\mathbf{h}_i .
+  \label{eq:meanpool}
+\end{equation}
+This makes no typological assumption, serving as a controlled comparator under the same encoder.
+
+% ----------------------------------------------------------
+\subsection{Tagger and Parser}
+\label{sec:method_models}
+
+\paragraph{Joint morphosyntactic tagger.}
+A BiLSTM contextualizes the token sequence; task-specific softmax heads jointly predict UPOS, XPOS, and UFeats.
+To avoid oracle leakage, the parser receives only \emph{predicted} UPOS embeddings $\mathbf{e}_{\text{upos}}(\hat{p}_i)$.
+
+\paragraph{Deep biaffine dependency parser.}
+Following Dozat and Manning~\cite{DBLP:conf/iclr/DozatM17}, BiLSTM states are projected into head/dependent subspaces via MLPs, and biaffine scoring produces arc and relation scores. The output is a labeled dependency tree over UD tokens.
+
+\section{Experiments and Results}
+\label{sec:experiments}
+
+Our experiments address three controlled comparisons:
+(i)~\emph{embedding type}---static FastText vectors versus contextual TahrirchiBERT representations, both held constant with respect to fusion and data;
+(ii)~\emph{subword-to-token fusion}---linguistically-motivated last-subword selection versus language-agnostic mean pooling, both using the same TahrirchiBERT encoder;
+and (iii)~\emph{data setting}---training on UzUDT alone (451~sentences) versus the merged UzUDT+UT corpus (781~sentences).
+
+\paragraph{Run matrix.}
+We adopt a structured multi-factor design with $3$~embedding/fusion configurations $\times$ $2$~data settings, yielding \textbf{6~experimental runs} (Table~\ref{tab:matrix}).
+\textbf{E1} uses static FastText embeddings (\texttt{cc.uz.300}, 300-dim) without subword fusion.
+\textbf{E2} uses TahrirchiBERT with \emph{last-subword} fusion, selecting the hidden state of the final WordPiece subword per UD token to preserve suffix-level morphosyntactic cues.
+\textbf{E3} uses TahrirchiBERT with \emph{mean pooling}, averaging all subword hidden states per UD token.
+Within each configuration, the \texttt{.1}~suffix denotes training on UzUDT only and the \texttt{.2}~suffix denotes training on the merged UzUDT+UT corpus.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lllll@{}}
+\toprule
+\textbf{Run} & \textbf{Embeddings} & \textbf{Fusion} & \textbf{Data} & \textbf{Train sents} \\
+\midrule
+E1.1 & FastText  & ---           & UzUDT      & 451 \\
+E1.2 & FastText  & ---           & UzUDT+UT   & 781 \\
+E2.1 & TahrirchiBERT & Last-subword  & UzUDT      & 451 \\
+E2.2 & TahrirchiBERT & Last-subword  & UzUDT+UT   & 781 \\
+E3.1 & TahrirchiBERT & Mean pooling  & UzUDT      & 451 \\
+E3.2 & TahrirchiBERT & Mean pooling  & UzUDT+UT   & 781 \\
+\bottomrule
+\end{tabular*}
+\caption{Experiment matrix.
+E1~vs.\ E2 isolates the embedding effect (static vs.\ contextual) while holding fusion constant.
+E2~vs.\ E3 isolates the fusion strategy while holding BERT constant.
+Comparing \texttt{.1}~vs.\ \texttt{.2} within each row measures the data-augmentation effect.}
+\label{tab:matrix}
+\end{table}
+
+% ----------------------------------------------------------
+\subsection{Training Protocol and Evaluation}
+\label{sec:training_eval}
+
+\paragraph{Pipeline training.}
+For each of the six runs, we first train a BiLSTM-based morphosyntactic tagger (UPOS, XPOS, UFeats) and use it to re-tag the training, development, and test files with predicted POS labels.
+A deep biaffine dependency parser~\cite{DBLP:conf/iclr/DozatM17} is then trained on the re-tagged data so that it never sees gold POS tags, matching the realistic inference setting.
+Test-set evaluation is performed with the standard CoNLL~2018 shared-task script.
+
+\paragraph{Hyperparameters and model selection.}
+All models are trained within a modified Stanza~\cite{qi-etal-2020-stanza} fork using the Adam optimizer ($\beta=(0.9,0.999)$, $\text{lr}=3\!\times\!10^{-3}$, batch\,=\,5{,}000 tokens, dropout\,=\,0.33).
+Training runs for a maximum of 50{,}000 steps with early stopping on dev-set performance (AllTags for the tagger, LAS for the parser).
+All remaining architecture and optimization settings follow Stanza defaults; the parser uses a single-layer MLP (dim\,=\,500) for both arc and relation scoring, and UPOS embeddings of dimension~50 are concatenated into the parser input.
+In TahrirchiBERT configurations, the BERT encoder is \emph{not fine-tuned}; we extract frozen hidden states and apply the fusion function to produce 768-dim token vectors.
+
+\paragraph{Metrics.}
+For tagging we report UPOS, XPOS, and UFeats accuracy.
+For parsing we report UAS and LAS.
+All scores are computed on the held-out test split using the UD evaluation script (\texttt{conll18\_ud\_eval.py}).
+
+% ----------------------------------------------------------
+\subsection{Main Results}
+\label{sec:main_results}
+
+Tables~\ref{tab:tagging_results} and~\ref{tab:parsing_results} present the test-set results for all six runs.
+The best scores are set in bold; selected cross-run deltas are shown in the bottom rows to aid interpretation.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrrr@{}}
+\toprule
+\textbf{Run} & \textbf{Configuration} & \textbf{UPOS} & \textbf{XPOS} & \textbf{UFeats} \\
+\midrule
+E1.1 & FastText, UzUDT               & 79.19 & 79.81 & 66.61 \\
+E1.2 & FastText, UzUDT+UT            & 80.26 & 83.20 & 66.98 \\
+\addlinespace
+E2.1 & BERT\,+\,last-sub, UzUDT      & 82.45 & 80.90 & 65.37 \\
+E2.2 & BERT\,+\,last-sub, UzUDT+UT   & \textbf{85.08} & 84.72 & \textbf{71.09} \\
+\addlinespace
+E3.1 & BERT\,+\,mean, UzUDT           & 82.76 & 81.37 & 65.22 \\
+E3.2 & BERT\,+\,mean, UzUDT+UT        & 84.02 & \textbf{87.07} & 70.39 \\
+\midrule
+\multicolumn{5}{l}{\textit{Selected deltas}} \\
+\addlinespace
+\multicolumn{2}{l}{$\Delta$ Embedding (E2.2$-$E1.2)}
+      & \emph{+4.82} & \emph{+1.52} & \emph{+4.11} \\
+\multicolumn{2}{l}{$\Delta$ Fusion (E2.2$-$E3.2)}
+      & \emph{+1.06} & \emph{$-$2.35} & \emph{+0.70} \\
+\multicolumn{2}{l}{$\Delta$ Data (E2.2$-$E2.1)}
+      & \emph{+2.63} & \emph{+3.82} & \emph{+5.72} \\
+\bottomrule
+\end{tabular*}
+\caption{Morphosyntactic tagging results (accuracy, \%).
+``BERT'' abbreviates TahrirchiBERT throughout.
+Bold marks the best score per column.
+Deltas are computed on the merged-data BERT rows to highlight the three experimental factors.}
+\label{tab:tagging_results}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrr@{}}
+\toprule
+\textbf{Run} & \textbf{Configuration} & \textbf{UAS} & \textbf{LAS} \\
+\midrule
+E1.1 & FastText, UzUDT               & 69.57 & 51.24 \\
+E1.2 & FastText, UzUDT+UT            & 72.27 & 62.40 \\
+\addlinespace
+E2.1 & BERT\,+\,last-sub, UzUDT      & 72.05 & 54.19 \\
+E2.2 & BERT\,+\,last-sub, UzUDT+UT   & \textbf{72.39} & \textbf{63.81} \\
+\addlinespace
+E3.1 & BERT\,+\,mean, UzUDT           & 69.10 & 51.55 \\
+E3.2 & BERT\,+\,mean, UzUDT+UT        & 70.74 & 60.05 \\
+\midrule
+\multicolumn{4}{l}{\textit{Selected deltas}} \\
+\addlinespace
+\multicolumn{2}{l}{$\Delta$ Embedding (E2.2$-$E1.2)}
+      & \emph{+0.12} & \emph{+1.41} \\
+\multicolumn{2}{l}{$\Delta$ Fusion (E2.2$-$E3.2)}
+      & \emph{+1.65} & \emph{+3.76} \\
+\multicolumn{2}{l}{$\Delta$ Data (E2.2$-$E2.1)}
+      & \emph{+0.34} & \emph{+9.62} \\
+\multicolumn{2}{l}{$\Delta$ Data (E1.2$-$E1.1)}
+      & \emph{+2.70} & \emph{+11.16} \\
+\bottomrule
+\end{tabular*}
+\caption{Dependency parsing results (accuracy, \%).
+Bold marks the best score per column.
+The data-augmentation delta ($\Delta$~Data) is shown interaction for both FastText and BERT.}
+\label{tab:parsing_results}
+\end{table}
+
+The best overall system is \textbf{E2.2} (TahrirchiBERT + last-subword fusion + merged data), which ranks first in four of five metrics (UPOS, UFeats, UAS, LAS).
+The sole exception is XPOS, where mean-pooling configuration E3.2 achieves 87.07 which is the highest score across all runs.
+
+% ----------------------------------------------------------
+\subsection{Observations}
+\label{sec:observations}
+
+\paragraph{Observation~1: Contextual vs.\ static representations.}
+TahrirchiBERT consistently outperforms FastText for UPOS tagging, with gains of +3.26 on UzUDT alone (E2.1\,vs.\,E1.1) and +4.82 on merged data (E2.2\,vs.\,E1.2).
+The improvement is amplified by corpus size: UFeats flips from $-$1.24 on small data to +4.11 on merged data, suggesting a minimum data threshold for BERT to learn fine-grained morphological feature bundles.
+LAS gains are more modest (+1.41 to +2.95), indicating that contextual embeddings have a larger impact on local tagging decisions than on structural dependency predictions under severe data scarcity.
+The per-run evaluation trajectories in Figure~\ref{fig:app:tagger_dynamics} (Appendix) corroborate this pattern: BERT runs (E2/E3) consistently track above FastText (E1) on UPOS and UFeats throughout training, with clear separation visible from early steps.
+
+\paragraph{Observation~2: Subword-to-token fusion.}
+The comparison between last-subword (E2) and mean pooling (E3) reveals a task-dependent pattern.
+For \emph{dependency parsing}, last-subword fusion is clearly superior: the LAS advantage is +2.64 on UzUDT and widens to \textbf{+3.76} on merged data, confirming that suffix-positional cues become \emph{more} exploitable as training data grows.
+This gap is consequential: mean pooling with BERT (E3.2, LAS\,=\,60.05) actually falls behind static FastText on merged data (E1.2, LAS\,=\,62.40), while last-subword BERT (E2.2, LAS\,=\,63.81) surpasses both---demonstrating that the correct fusion strategy is essential for BERT to outperform FastText on parsing.
+For POS tagging the picture is mixed: XPOS consistently favors mean pooling ($-$2.35 on merged data), likely because language-specific tags are determined by the full word form rather than the final suffix, whereas UPOS and UFeats show a weak but consistent last-subword advantage on merged data (+1.06 and +0.70, respectively).
+The dev-score and LAS/UAS curves in Figure~\ref{fig:app:parser_dynamics} (Appendix) visually confirm the fusion gap: last-subword runs plateau at higher parsing metrics than their mean-pooling counterparts across both data settings.
+
+\paragraph{Observation~3: Cross-treebank augmentation.}
+Merging UzUDT with UD\_Uzbek-UT produces the single largest accuracy improvement in the study.
+LAS jumps by +11.16 for FastText (E1.1$\to$E1.2) and +9.62 for TahrirchiBERT (E2.1$\to$E2.2)---far exceeding the BERT upgrade effect.
+The interaction between BERT and data is synergistic, not merely additive: BERT's UFeats advantage swings from $-$1.24 (small data) to +4.11 (merged), a +5.35 amplification.
+The two treebanks are structurally complementary in genre (literature/academic vs.\ news/fiction), UPOS distribution (PROPN 0.3\% in UzUDT vs.\ 5.2\% in UT), and dependency-relation coverage (\texttt{advcl} is 4$\times$ more frequent in UzUDT; \texttt{compound:lvc} is 10$\times$ more frequent in UT), explaining why even a modest increase from 451 to 781 training sentences yields such large gains.
+The data effect is equally strong under mean pooling: E3.2 LAS improves by +8.50 over E3.1, confirming that the augmentation benefit is robust across fusion strategies.
+
+\paragraph{Observation~4: Training dynamics.}
+All twelve models converge rapidly, reaching their best dev-set checkpoint within 5--18\% of the 50{,}000-step budget (typically 300--1{,}300 steps).
+BERT configurations converge slightly earlier than FastText (steps~600--1{,}000 vs.\ 800--1{,}300), suggesting that contextual representations provide a stronger initialization.
+Total wall-clock training time for all twelve models is approximately 265~minutes on a single NVIDIA RTX A6000 GPU.
+Full training curves including loss, dev scores, learning-rate schedules, and GPU memory allocation are provided in Figures~\ref{fig:app:parser_dynamics} and~\ref{fig:app:tagger_dynamics} (Appendix).
+
+\paragraph{Observation~5: Annotation heterogeneity in merged data.}
+Merging two independently developed treebanks inevitably introduces annotation inconsistencies.
+To quantify this effect, we compared label distributions in the intersecting deprel inventory.
+The UT treebank fails UD validation with 92~warnings, predominantly \texttt{obl}~tokens that should be \texttt{nmod} according to UD~v2 guidelines.
+These misanalyses inflate \texttt{obl} frequency by ${\approx}$14\% in the merged training set relative to a corrected distribution.
+We also observe divergent label granularity: UT lacks subtypes such as \texttt{obl:agent} and \texttt{nmod:poss} that UzUDT distinguishes.
+Despite this noise, the merged-data setting consistently outperforms the UzUDT-only setting across all six configuration pairs, suggesting that the coverage benefits of genre complementarity outweigh the annotation noise.
+Future releases of both treebanks should prioritize harmonising these label divergences, which we expect will yield further gains.
+
+% ----------------------------------------------------------
+\subsection{Error Analysis}
+\label{sec:error_analysis}
+
+To characterise remaining parsing challenges, we conducted a manual error analysis on 100~randomly sampled sentences from the test set of the best system (E2.2: TahrirchiBERT + last-subword + merged data).
+We categorised each arc/label error by its linguistic source; Table~\ref{tab:error_analysis} summarises the distribution.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Error analysis on 100 test sentences (E2.2). Errors are categorised by linguistic source.}
+\label{tab:error_analysis}
+\begin{tabular}{lrp{5.5cm}}
+\toprule
+\textbf{Error type} & \textbf{\%} & \textbf{Typical pattern} \\
+\midrule
+PP/oblique attachment  & 28 & \texttt{obl} vs.\ \texttt{nmod} confusion; dative/locative postpositional phrases attached to wrong head \\
+Coordination scope     & 22 & Conjuncts spanning multi-clause structures; \texttt{conj} arcs attached too high or too low \\
+Subordinate clauses    & 18 & \texttt{advcl} and \texttt{ccomp} mislabelled or attached to matrix verb vs.\ auxiliary \\
+Compound constructions & 14 & \texttt{compound:lvc} vs.\ \texttt{nmod}; light-verb boundaries misidentified \\
+Long-distance deps     & 10 & Dependencies spanning $>$6 tokens; head misidentified across intervening clauses \\
+Other                  &  8 & Rare deprels, punctuation attachment, multi-word expressions \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three patterns dominate.
+\emph{PP/oblique attachment} (28\%) is driven by the \texttt{obl}/\texttt{nmod} ambiguity, which is exacerbated by the UT inconsistencies noted in Observation~5.
+\emph{Coordination scope} errors (22\%) arise when conjuncts span multiple clauses---a known difficulty for biaffine parsers that score arcs independently without global constraints.
+\emph{Subordinate clause attachment} (18\%) reflects Uzbek's flexible clause ordering, where adverbial and complement clauses can be pre- or post-verbal.
+
+These findings suggest that targeted improvements---annotation harmonisation for obliques, higher-order parsing for coordination, and clause-boundary features for subordination---could yield substantial further gains.
+
+% ----------------------------------------------------------
+\subsection{Comparison with Advanced Architectures}
+\label{sec:advanced_comparison}
+
+Our experimental design deliberately focuses on \emph{lightweight} strategies (subword fusion heuristics, data concatenation) that are orthogonal to model architecture, allowing us to isolate the contribution of each factor under controlled conditions.
+More complex approaches---such as fine-tuning the transformer encoder~\cite{kondratyuk-straka-2019-75}, graph-based higher-order parsing~\cite{DBLP:conf/acl/ZhangZZL20}, or sequence-to-sequence parsing with large language models---could potentially improve absolute performance.
+However, in low-resource settings with fewer than 800 training sentences, fine-tuning introduces a high risk of overfitting, while higher-order decoders substantially increase computational cost with diminishing returns on small treebanks.
+Our results establish that data-centric augmentation and linguistically-informed preprocessing yield the largest gains at minimal computational cost, providing a strong foundation upon which more complex architectures can be evaluated in future work.
+A systematic comparison with fine-tuned transformers and higher-order parsers is planned as the Uzbek UD ecosystem grows beyond 2{,}000 sentences.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \textsc{UzUDT}, a 684-sentence gold-standard Uzbek UD
+treebank, and a controlled study of two lightweight robustness
+strategies for low-resource parsing: linguistically-motivated
+last-subword fusion and cross-treebank data augmentation.
+Among three embedding/fusion configurations and two data settings,
+cross-treebank training is the dominant factor (LAS
++9.62--11.16), while last-subword fusion is critical specifically
+for dependency parsing (LAS +3.76 over mean pooling on merged data).
+The best system (TahrirchiBERT, last-subword, merged) achieves
+85.08~UPOS, 72.39~UAS, and 63.81~LAS.
+Our error analysis (\S\ref{sec:error_analysis}) identifies PP/oblique attachment, coordination scope, and subordinate-clause attachment as the three dominant remaining challenge categories, providing concrete targets for future work.
+
+\paragraph{Data \& Models Availability}
+
+Both treebanks are released through the Universal Dependencies
+repository.\footnote{\url{https://universaldependencies.org}}
+The merged data in experiments and full research logs are included in the Github\footnote{\url{https://github.com/SanatbekMatlatipov/robust-parsing-uzbek}}. The full twelve trained model checkpoints are available at
+\url{https://huggingface.co/Sanatbek/uzudt}.
+
+\section{Limitations}
+\label{sec:limitations}
+Several factors may impact the generalizability of our findings. The small scale of the development sets (45 and 78 sentences) increases sensitivity during early stopping, while the sequential split of the UT corpus introduces a significant genre mismatch between the news-heavy training data and fiction-heavy test set. Furthermore, annotation heterogeneity persists; UD\_Uzbek-UT exhibits validation inconsistencies and lacks the morphological depth, specifically regarding possessor agreement and evidentiality found in UzUDT, introducing label noise in merged-corpus experiments.
+
+\begin{credits}
+\subsubsection{\ackname} ...\texttt{(will be determined after review)}
+\end{credits}
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+\bibliographystyle{splncs04}
+\bibliography{mybibliography}
+\appendix
+\section{Appendix}
+\label{app:figs}
+\begin{figure}[H] 
+    \centering 
+    \includegraphics[width=\textwidth]{uzbek-depparse.png} 
+    \caption{Training and validation dynamics of the Uzbek UD dependency parser across representative runs (UzUDT-only vs.\ merged UzUDT+UT). The panels track the development score and parsing quality (LAS/UAS/MLAS/BLEX) over training steps, alongside optimization signals (average training loss, learning rate, step-level loss) and GPU memory allocation. Curves show rapid early convergence followed by stable plateaus, with merged-data and contextual configurations generally achieving higher dev and parsing metrics than UzUDT-only baselines.}
+    \label{fig:app:parser_dynamics}
+\end{figure}
+
+\begin{sidewaysfigure}[p]
+  \centering
+  % width=\textheight makes it fill the page after rotation
+  \includegraphics[width=\textheight]{uzbek-pos-tagger.png}
+  \caption{Training and validation dynamics of the Uzbek UD tagger across the six runs (E1--E3 $\times$ data setting). Panels report evaluation F1 for UPOS/XPOS/UFeats and \textsc{AllTags}, the overall development score, training losses (avg/step), the global step progression, and GPU memory allocation. Curves show rapid convergence and stable plateaus; contextual configurations (TahrirchiBERT, E2/E3) generally track above the static FastText baseline (E1), and merged-data runs (.2) tend to improve over UzUDT-only (.1).}
+  \label{fig:app:tagger_dynamics}
+\end{sidewaysfigure}
+\end{document}
