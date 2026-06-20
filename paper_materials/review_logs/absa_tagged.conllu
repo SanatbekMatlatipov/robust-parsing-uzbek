@@ -1,0 +1,12 @@
+# sent_id = absa-1
+# text = taomlari mazali emas , lekin xizmati a'lo darajada .
+1	taomlari	_	NOUN	N	Case=Nom|Number=Plur|Person[psor]=3	0	dep	_	_
+2	mazali	_	ADJ	A	_	0	dep	_	_
+3	emas	_	ADV	P	_	0	dep	_	_
+4	,	_	PUNCT	Y	_	0	dep	_	_
+5	lekin	_	CCONJ	C	_	0	dep	_	_
+6	xizmati	_	NOUN	N	Case=Nom|Number[psor]=Plur,Sing|Person[psor]=3	0	dep	_	_
+7	a'lo	_	ADJ	A	_	0	dep	_	_
+8	darajada	_	ADV	P	_	0	dep	_	_
+9	.	_	PUNCT	Y	_	0	dep	_	_
+
