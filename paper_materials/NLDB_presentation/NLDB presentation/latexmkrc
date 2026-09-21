@@ -1,0 +1,2 @@
+$ENV{'TEXINPUTS'}='/compile/ldvtheme//:' . $ENV{'TEXINPUTS'};
+$ENV{'TEXINPUTS'}='/compile/bibtex//:' . $ENV{'TEXINPUTS'}; 

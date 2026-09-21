@@ -1,0 +1,446 @@
+% ============================================================
+%  TurkLang 2026 --- Speech notes for the 14-minute talk
+%  Paper: Neural Morphosyntactic Tagging and Dependency Parsing for Uzbek
+%  Author: Sanatbek Matlatipov
+%
+%  Optimised for printing on a black & white printer:
+%    - 12pt serif body, 1.4 line spacing
+%    - bold cues only (no colours), clear slide separators
+%    - generous left margin for handwritten annotations
+%    - cumulative timing budget printed next to each slide
+%
+%  Build with:  pdflatex speech_notes.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm,left=3.2cm,right=2.2cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{amsmath,amssymb}
+
+\setstretch{1.40}
+\setlist[itemize]{leftmargin=1.3em,topsep=2pt,itemsep=2pt}
+
+\titleformat{\section}
+   {\normalfont\Large\bfseries\filright}
+   {Slide \thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small TurkLang 2026 --- Speech notes (14 min)}
+\fancyhead[R]{\small S.~Matlatipov}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\timing}[2]{%
+   \par\noindent\textbf{\small [#1\,$\to$\,#2\,min]}\par\vspace{0.2em}}
+\newcommand{\say}[1]{\textbf{#1}}
+\newcommand{\pause}{\par\vspace{0.4em}\textbf{[pause]}\par}
+
+\begin{document}
+
+% ------------------------------------------------------------
+%  COVER PAGE
+% ------------------------------------------------------------
+\begin{center}
+   {\LARGE\bfseries Speech notes --- 14 minutes}\\[0.6em]
+   {\large Neural Morphosyntactic Tagging\\and Dependency Parsing for Uzbek}\\[0.4em]
+   {\normalsize XIV International Conference on Computer Processing of Turkic Languages}\\
+   {\normalsize \textbf{TurkLang 2026}}\\[1.2em]
+   \textit{Sanatbek Matlatipov}\\
+   National University of Uzbekistan, Tashkent
+\end{center}
+
+\vspace{1em}
+\noindent\textbf{How to use these notes.}
+Each section maps to one slide. The bracketed times
+\textbf{[start\,$\to$\,end]} are cumulative running time. Phrases in
+\textbf{bold} are the ones to emphasise; \textbf{[pause]} marks a short
+breath. Plain text is the spoken script --- read naturally, not
+word-for-word.
+
+\vspace{0.5em}
+\noindent\textbf{Total budget:} 14 minutes of speech + $\approx$1 minute
+buffer for transitions. Target around 0:50--1:10 per slide.
+
+\vfill\hrule\vspace{0.5em}
+\noindent\textit{Print double-sided on A4. The wide left margin is for handwritten cues.}
+
+\newpage
+
+% ------------------------------------------------------------
+%  SLIDE 1 --- Title
+% ------------------------------------------------------------
+\section*{Slide 1 --- Title}
+\timing{0:00}{0:30}
+
+Good morning / afternoon, and thank you to the TurkLang organisers for
+the opportunity to present.
+
+My name is \say{Sanatbek Matlatipov}, from the National University of
+Uzbekistan. The talk is on \say{Neural Morphosyntactic Tagging and
+Dependency Parsing for Uzbek} --- a companion piece to the gold-standard
+treebank work, but here the focus is on \say{the model and the
+evaluation}.
+
+% ------------------------------------------------------------
+%  SLIDE 2 --- Outline
+% ------------------------------------------------------------
+\section*{Slide 2 --- Outline}
+\timing{0:30}{1:00}
+
+The talk is structured in three blocks:
+
+\begin{itemize}
+   \item First, \textbf{why} Uzbek is hard, and what existing work has done.
+   \item Second, the \textbf{pipeline} --- preprocessing, representation, and the joint tagging / parsing model.
+   \item Third, the \textbf{results}, the error analysis, and what they tell us about Uzbek parsing.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 3 --- Motivation
+% ------------------------------------------------------------
+\section*{Slide 3 --- Why Uzbek morphosyntactic analysis is hard}
+\timing{1:00}{2:00}
+
+Uzbek is a \say{Turkic, agglutinative, free-SOV language} with roughly
+35 million speakers. Three properties make UD analysis substantially
+harder than for analytic languages.
+
+\begin{itemize}
+   \item \textbf{Long suffix chains} on both verbs and nouns.
+   \item Rich \textbf{case, possessive, and tense-aspect-mood} feature bundles.
+   \item Which together produce \textbf{enormous lexical sparsity} --- many surface forms, but each appears very few times.
+\end{itemize}
+
+\noindent
+And the UD treebank we evaluate on, \say{UzUDT}, has \textbf{under ten
+thousand tokens}. So our research question is: \say{can a reproducible
+neural pipeline --- Apertium normalization plus BERTbek embeddings ---
+deliver a strong baseline despite all of this?}
+
+% ------------------------------------------------------------
+%  SLIDE 4 --- Related work
+% ------------------------------------------------------------
+\section*{Slide 4 --- Where this work fits}
+\timing{2:00}{2:45}
+
+Briefly on related work. The framework is \textbf{Universal Dependencies}.
+For neural pipelines I build on \textbf{Stanza}, the \textbf{biaffine
+parser of Dozat and Manning}, and \textbf{UDify}. For Turkic in general
+there is excellent work on Turkish, Kazakh, Uyghur and Tatar; for Uzbek
+specifically there is the original \say{Uzbek-UT} from
+Akhundjanova and Talamo, and the newer \say{UzUDT} that I use as my
+benchmark.
+
+\pause
+
+Two further ingredients are the \textbf{Apertium} finite-state analyser
+for Uzbek --- through the work of Salaev, Sharipov and others --- and the
+\textbf{BERTbek} monolingual Transformer by Kuriyozov. Combining these
+two has not been done in a reproducible UD-aligned baseline before, and
+that is what this paper contributes.
+
+% ------------------------------------------------------------
+%  SLIDE 5 --- Data
+% ------------------------------------------------------------
+\section*{Slide 5 --- UzUDT: data and splits}
+\timing{2:45}{3:30}
+
+The data is the publicly available \say{UzUDT} treebank --- 681 sentences
+and 7\,542 tokens, annotated in UD version 2.
+
+\begin{itemize}
+   \item I take the original test set as is: \textbf{198 sentences, 2\,101 tokens}.
+   \item And I deterministically carve a 10\% \textbf{development set} from the training portion --- 48 sentences, 518 tokens --- so I can do early stopping and model selection without touching the test set.
+\end{itemize}
+
+\noindent
+This leaves \textbf{435 training sentences and roughly 4\,900 training
+tokens}. It is \say{a small treebank by any measure} --- which is part of
+why the choice of representation matters.
+
+% ------------------------------------------------------------
+%  SLIDE 6 --- Pipeline overview
+% ------------------------------------------------------------
+\section*{Slide 6 --- End-to-end pipeline}
+\timing{3:30}{4:30}
+
+This slide shows the full architecture. From left to right, four stages:
+
+\begin{itemize}
+   \item \textbf{Apertium} morphology-aware normalization on raw text.
+   \item \textbf{BERTbek} encoding on the resulting subword sequence.
+   \item \textbf{Super-token fusion} that aggregates subwords back to UD word boundaries.
+   \item And a \textbf{joint head} that does tagging --- UPOS, XPOS, UFeats --- and biaffine dependency parsing at the same time.
+\end{itemize}
+
+\noindent
+The key design point is that we \say{never break the UD word
+alignment}: every component upstream of the parser keeps a stable
+subword-to-word mapping. That makes evaluation honest, and it makes the
+model reproducible across runs.
+
+
+% ------------------------------------------------------------
+%  SLIDE 7 --- Preprocessing
+% ------------------------------------------------------------
+\section*{Slide 7 --- Morphology-aware preprocessing}
+\timing{4:30}{5:30}
+
+Preprocessing has three steps:
+
+\begin{itemize}
+   \item \textbf{Text normalization} --- Unicode and UD-compliant tokenisation, so token boundaries are stable.
+   \item \textbf{Apertium morphological analysis} --- lexicon lookup and morphotactic parsing. This \say{stabilises lemmas across inflectional variants} and dramatically reduces lexical sparsity.
+   \item \textbf{Subword tokenisation} for BERTbek, while preserving the UD word boundaries.
+\end{itemize}
+
+\noindent
+The figure on the right shows what \say{Uzbek morphotactics} actually
+looks like --- long suffix chains, sometimes five or six morphemes on a
+single verb or noun. Apertium handles these chains explicitly, so the
+neural model does not have to memorise every surface form from a few
+hundred sentences.
+
+% ------------------------------------------------------------
+%  SLIDE 8 --- Token representations
+% ------------------------------------------------------------
+\section*{Slide 8 --- Token representations and super-token fusion}
+\timing{5:30}{7:00}
+
+BERTbek produces \textbf{one vector per WordPiece}, but UD evaluation
+operates at \textbf{word level}. We bridge that gap with \say{super-token
+fusion} --- a fancy name for a simple operation. For each UD word $w_i$,
+we take its $m_i$ subword vectors and \textbf{mean-pool} them into a
+single representation $\mathbf{e}_{\mathrm{ctx}}(w_i)$.
+
+\pause
+
+The final per-token vector concatenates \textbf{five channels}: a word
+embedding, a character embedding, a UPOS embedding using the
+\emph{predicted} (not gold) tag --- so no oracle leakage --- an optional
+explicit morphological channel which is \textbf{disabled in this
+baseline}, and finally the BERTbek mean-pooled context vector.
+
+\pause
+
+Why mean pooling rather than something fancier? Two reasons. First, it
+is \textbf{deterministic and language-agnostic}; nothing to tune.
+Second, in our experiments it was \textbf{competitive with last-subword
+pooling} for tagging, while avoiding a positional heuristic. We want a
+clean baseline that other groups can reproduce.
+
+% ------------------------------------------------------------
+%  SLIDE 9 --- Joint tagging and parsing
+% ------------------------------------------------------------
+\section*{Slide 9 --- Joint tagging and biaffine parsing}
+\timing{7:00}{8:00}
+
+A \textbf{BiLSTM} consumes the per-token vectors and produces contextual
+hidden states. From those, three softmax heads predict
+\textbf{UPOS, XPOS, and UFeats}, and a \textbf{biaffine parser} --- the
+classic Dozat--Manning architecture --- predicts arcs and relation labels.
+
+\pause
+
+The training objective is the boxed equation: \say{the tagging loss plus
+$\lambda$ times the parsing loss}, where the parsing loss is itself the
+sum of arc and relation cross-entropies. We set $\lambda = 1.0$ --- a
+deliberate choice to keep the baseline simple. Optimisation is AdamW
+with a peak learning rate of \textbf{two times ten to the minus five},
+\textbf{linear warmup over the first ten percent of steps}, batch size
+32, and early stopping on the development set.
+
+% ------------------------------------------------------------
+%  SLIDE 10 --- Hyperparameters
+% ------------------------------------------------------------
+\section*{Slide 10 --- Hyperparameters at a glance}
+\timing{8:00}{8:45}
+
+I will not read this table line by line --- it is in the paper. The
+takeaway is that \textbf{nothing was hand-tuned per run}. Every
+hyperparameter is fixed and reported. That is the price you pay to
+claim \say{a reproducible baseline}, and it is a price worth paying for
+a low-resource language where comparing future improvements honestly
+matters more than chasing a fragile peak.
+
+% ------------------------------------------------------------
+%  SLIDE 11 --- Tagging results
+% ------------------------------------------------------------
+\section*{Slide 11 --- Morphosyntactic tagging results}
+\timing{8:45}{9:45}
+
+The tagging results, read carefully.
+
+\begin{itemize}
+   \item \textbf{Coarse tags are robust.} UPOS reaches \textbf{86.1\%} and XPOS \textbf{84.0\%}.
+   \item \textbf{Fine-grained features are harder.} UFeats drops to \textbf{70.1\%}, and AllTags --- the metric that demands every feature correct for a token to count --- drops to \textbf{61.4\%}.
+\end{itemize}
+
+\noindent
+The drop is \say{driven by suffix-bundle sparsity}. A finite verb in
+Uzbek can carry tense, aspect, mood, person and number all at once. If
+even one of those is wrong, AllTags marks the token as a miss. There
+are also some residual annotation inconsistencies in the underlying
+treebank --- small in number, but they hit the strictest metric hardest.
+
+% ------------------------------------------------------------
+%  SLIDE 12 --- Parsing results
+% ------------------------------------------------------------
+\section*{Slide 12 --- Dependency parsing results}
+\timing{9:45}{10:45}
+
+The parsing results, in the standard CoNLL-U metrics.
+
+\begin{itemize}
+   \item \textbf{UAS 74.2 / LAS 66.9} --- solid attachment, weaker relation labelling.
+   \item The \textbf{seven-point UAS--LAS gap} tells a consistent story: \say{the parser knows where words attach, but it sometimes labels the edge incorrectly}.
+   \item \textbf{CLAS, MLAS, BLEX} all fall in the 44--47 range, which is expected --- these stricter metrics multiply tagging errors and parsing errors together. They confirm that the difficulty lives \textbf{at the morphology--syntax interface}, not in either layer alone.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 13 --- Relation distribution
+% ------------------------------------------------------------
+\section*{Slide 13 --- What the parser has to predict}
+\timing{10:45}{11:30}
+
+This bar chart shows the \textbf{top 20 dependency relations} in UzUDT.
+The distribution is \say{heavily skewed} --- punctuation, oblique,
+nominal subject, and root absorb most of the mass. Mid-frequency
+relations like \texttt{advcl}, \texttt{acl}, and \texttt{xcomp} carry
+\textbf{the harder syntactic phenomena}.
+
+\pause
+
+The implication is direct: the dominant classes drive UAS, but they do
+not push LAS up. \textbf{LAS is bounded above by how well the model
+handles the long tail}, and that tail is data-starved.
+
+% ------------------------------------------------------------
+%  SLIDE 14 --- Discussion / error analysis
+% ------------------------------------------------------------
+\section*{Slide 14 --- Why Uzbek remains challenging}
+\timing{11:30}{12:30}
+
+Three factors persist beyond what subword context can repair.
+
+\begin{itemize}
+   \item \textbf{Subword boundaries do not align with morphemes.} WordPiece is trained on raw text, not Uzbek morphology, and grammatical information ends up scattered across subwords inconsistently.
+   \item \textbf{Polyfunctional markers.} The same surface suffix can mark \texttt{case}, or play a \texttt{mark} role, or even encode discourse --- and surface form alone is not enough to disambiguate.
+   \item \textbf{Complex predicates.} Light verbs and serial-verb constructions create representational ambiguity between \texttt{xcomp}, \texttt{ccomp}, and \texttt{compound:lvc}.
+\end{itemize}
+
+\pause
+
+The errors concentrate on \textbf{obl versus obj} for case-marked
+nominals, and on \textbf{advcl versus xcomp} for embedded clauses.
+Apertium normalisation and super-token fusion \textbf{do not solve
+these} --- they reduce the noise floor and make the baseline reproducible.
+Solving them requires either \say{more annotated data} or \say{a richer
+morpheme-aware tokenizer}.
+
+% ------------------------------------------------------------
+%  SLIDE 15 --- Conclusion
+% ------------------------------------------------------------
+\section*{Slide 15 --- Conclusion}
+\timing{12:30}{13:30}
+
+To summarise:
+
+\begin{itemize}
+   \item We deliver a \textbf{reproducible neural baseline} for Uzbek UD analysis on UzUDT, combining a Stanza-style biaffine model with Apertium normalisation and BERTbek super-token fusion.
+   \item Tagging: \textbf{UPOS 86.1, XPOS 84.0, UFeats 70.1, AllTags 61.4}.
+   \item Parsing: \textbf{UAS 74.2, LAS 66.9}.
+   \item Errors are concentrated \textbf{at the morphology--syntax interface}, exactly where small treebanks are weakest.
+\end{itemize}
+
+\noindent
+The natural next steps are: turn on the \textbf{explicit Apertium
+feature channel}, scale to a \textbf{multi-domain Uzbek UD treebank},
+add \textbf{cross-lingual transfer} from Turkish or Kazakh, and
+experiment with \textbf{morpheme-aware tokenizers} for transformer
+parsers like XLM-R or TURNA.
+
+% ------------------------------------------------------------
+%  SLIDE 16 --- Thank you
+% ------------------------------------------------------------
+\section*{Slide 16 --- Thank you}
+\timing{13:30}{14:00}
+
+That brings me to the end. The code, configurations, and trained models
+are available on request. I would like to thank the open-source teams
+behind \textbf{Stanza, Apertium, and BERTbek} --- without them this kind
+of reproducible baseline for a low-resource language would simply not
+be possible.
+
+\pause
+
+Thank you very much --- I am happy to take your questions.
+
+% ------------------------------------------------------------
+%  Q & A prep --- printed as a back page for the speaker only
+% ------------------------------------------------------------
+\newpage
+\section*{Likely Q\&A --- quick cues}
+
+\noindent\textbf{Q. Why disable the explicit morphological feature channel?}\\
+We wanted a \textbf{clean baseline}. With it disabled, every gain from
+future morphology-aware variants is unambiguously attributable. Turning
+it on is listed as immediate future work.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why mean pooling rather than attention or last subword?}\\
+\textbf{Reproducibility and simplicity}. Mean pooling has \textbf{no
+trainable parameters}, no positional heuristic, and was empirically
+competitive with last-subword in our development experiments.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why not a full transformer parser end-to-end?}\\
+The Stanza-style pipeline is \textbf{lightweight, fast on CPU, and
+trivially comparable} with existing UD baselines. A full transformer
+parser is excellent future work but a different paper.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Could mBERT or XLM-R outperform BERTbek here?}\\
+On a \textbf{very small treebank} like UzUDT, monolingual BERTbek tends
+to beat multilingual baselines on downstream Uzbek tasks. With more
+data and joint Turkic training, multilingual models become competitive.
+
+\vspace{0.4em}
+\noindent\textbf{Q. How much variance is in UAS / LAS across seeds?}\\
+The paper reports a \textbf{single-seed} result. Multi-seed variance was
+not the focus of this work, but it is a fair point: a small treebank
+like UzUDT does carry non-trivial seed sensitivity, and a multi-seed
+study is part of the planned follow-up.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Is the 86.10 UPOS comparable to Turkish baselines?}\\
+\textbf{Caution: different treebanks, different domain.} The number is
+in the same range as small-Turkic UD baselines without contextual
+embeddings, and \textbf{lags behind larger-treebank Turkish UPOS} (which
+exceeds 92\%). The gap reflects training-set size much more than model
+architecture.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Does Apertium actually help, or is it noise?}\\
+The paper motivates Apertium normalisation as a way to \textbf{stabilise
+lemmas and reduce lexical sparsity} for an agglutinative language; the
+reported results use that pipeline throughout. A \textbf{controlled
+ablation} with/without Apertium is not reported in this paper and is
+listed as future work.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Will the code and configs be released?}\\
+Yes --- \textbf{available on request} and being prepared for public
+release alongside the UzUDT companion paper.
+
+\end{document}

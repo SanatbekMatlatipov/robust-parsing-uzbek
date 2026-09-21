@@ -1,0 +1,231 @@
+% ============================================================
+%  EDM 2026 --- Speaker notes v2.0 (MEDIUM density)
+%  Paper: Graph-Based vs Transition-Based Dependency Parsing
+%         for Uzbek
+%  Authors: S. Matlatipov, M. Ismoilova, M. Aripov
+%
+%  Purpose: ~30% lighter than the full notes. Keeps the "why"
+%  and the key transitions, trims flourish and redundancy.
+%  At a relaxed pace this lands around 7.5 minutes.
+%
+%  Build with:  pdflatex presentation_speaker_notes_v2.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm,left=3.2cm,right=2.2cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{amsmath,amssymb}
+
+\setstretch{1.42}
+\setlist[itemize]{leftmargin=1.3em,topsep=2pt,itemsep=2pt}
+
+\titleformat{\section}
+   {\normalfont\Large\bfseries\filright}
+   {Slide \thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.1em}{0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small EDM 2026 --- Speaker notes v2.0 (medium, 7.5 min)}
+\fancyhead[R]{\small S.~Matlatipov}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\timing}[2]{%
+   \par\noindent\textbf{\small [#1\,$\to$\,#2\,min]}\par\vspace{0.15em}}
+\newcommand{\say}[1]{\textbf{#1}}
+\newcommand{\breathe}{\par\vspace{0.3em}\textbf{[pause]}\par}
+
+\begin{document}
+
+% ------------------------------------------------------------
+%  COVER
+% ------------------------------------------------------------
+\begin{center}
+   {\LARGE\bfseries Speaker notes v2.0 --- medium}\\[0.5em]
+   {\large Graph-Based vs Transition-Based\\Dependency Parsing for Uzbek}\\[0.4em]
+   {\normalsize \textbf{EDM 2026} \quad ($\approx$7.5 min, relaxed pace)}\\[1em]
+   \textit{Sanatbek Matlatipov}\\
+   \texttt{s.matlatipov@nuu.uz}
+\end{center}
+
+\vspace{0.8em}
+\noindent\textbf{How to use.} One short paragraph per slide --- enough to
+keep the ``why,'' but trimmed so a calm delivery still fits 7.5 minutes.
+Bold phrases are the ones to land; \textbf{[pause]} is a deliberate beat.
+
+\vspace{0.4em}
+\noindent\textbf{Three numbers to land:} \textbf{LAS 63.81 vs 47.11}
+(a \textbf{16.70} gap) and cross-treebank \textbf{+9.62 LAS}.
+
+\vspace{0.4em}
+\noindent\textbf{Slow down on:} Slide~7 (fusion) and Slide~10 (the gap).
+Everything else can move briskly.
+
+\vfill\hrule\vspace{0.4em}
+\noindent\textit{If you finish early, pause --- don't pad with detail.}
+
+\newpage
+
+% ------------------------------------------------------------
+\section*{Slide 1 --- Title}
+\timing{0:00}{0:20}
+Good morning, and thank you to the organisers. I am \say{Sanatbek
+Matlatipov}, from the National University of Uzbekistan, with co-authors
+Maftuna Ismoilova and Mersaid Aripov. Our question is simple but
+unanswered for Uzbek: when data is scarce, \say{which parser should you
+reach for --- graph-based or transition-based --- and why?}
+
+% ------------------------------------------------------------
+\section*{Slide 2 --- Why Uzbek is hard}
+\timing{0:20}{1:00}
+Two properties make this hard. Uzbek is \say{agglutinative} --- a word
+stacks suffixes for case, tense, person --- and it is \say{low-resource},
+with only 1,184 UD sentences total. The box on the right is the key idea:
+take \textit{bolalarning}, ``of the children'' --- stem, plural, and the
+genitive \textbf{\textit{-ning}}. That final suffix \emph{is} the
+relation. So in Uzbek, \say{miss the suffix and you miss the parse.}
+
+% ------------------------------------------------------------
+\section*{Slide 3 --- Contributions}
+\timing{1:00}{1:30}
+Three contributions. First, the \say{first head-to-head comparison} of a
+graph-based parser, Stanza, and a transition-based parser, spaCy --- both
+on the \say{same} BERT, so architecture is the only variable. Second, we
+show cross-treebank data helps the two \say{very differently}. Third, an
+error analysis showing where each one wins. Everything is public.
+
+% ------------------------------------------------------------
+\section*{Slide 4 --- The two treebanks}
+\timing{1:30}{2:00}
+We use two treebanks: \say{UzUDT} --- 684 sentences of fiction and
+academic text --- and \say{UT} --- 500 sentences of news and fiction.
+Neither had a standard split, so we re-split both. Merged, that is 781
+training sentences --- roughly \say{double} the data over UzUDT alone.
+
+% ------------------------------------------------------------
+\section*{Slide 5 --- Why they are complementary}
+\timing{2:00}{2:30}
+And this is not just \emph{more} data --- it is \say{broader} data. UT is
+news-heavy, with far more proper nouns and light-verb compounds; UzUDT is
+literary, with more adverbial clauses and richer morphology. They fill
+each other's blind spots --- which is why merging works so well later.
+
+% ------------------------------------------------------------
+\section*{Slide 6 --- Two architectures}
+\timing{2:30}{3:05}
+Same encoder, two very different decoders. \say{Stanza} is graph-based:
+it scores \emph{every} head--dependent pair and decodes the best tree
+globally. \say{spaCy} is transition-based: it builds the tree
+incrementally, left to right. They even fuse BERT sub-words differently
+--- last piece vs.\ average --- and that choice matters, so let me take it
+next.
+
+% ------------------------------------------------------------
+\section*{Slide 7 --- Subword fusion (SLOW DOWN)}
+\timing{3:05}{3:50}
+BERT splits words into \say{WordPieces}, but UD annotates whole tokens,
+so we must pool several pieces into one. Look at the table: the
+\emph{last} piece always carries the decisive suffix --- genitive,
+accusative, converb. \breathe So \say{averaging} all pieces dilutes that
+signal; \say{keeping the last piece} preserves it. That one change is
+worth \say{+2.6 LAS}, with no extra parameters --- and it helps parsing,
+not tagging.
+
+% ------------------------------------------------------------
+\section*{Slide 8 --- Setup}
+\timing{3:50}{4:15}
+Seven models across the two frameworks. We use each one's \say{documented
+defaults} --- a fair out-of-the-box comparison, the way a practitioner
+actually meets these tools --- and the standard UD metrics: tagging, plus
+unlabeled and labeled attachment.
+
+% ------------------------------------------------------------
+\section*{Slide 9 --- Results per framework}
+\timing{4:15}{4:50}
+Two quick reads. \say{Inside each framework}, the best system uses
+\say{merged data}. And in both, the single biggest jump comes from
+merging --- up to eleven LAS points. That sets up the comparison.
+
+% ------------------------------------------------------------
+\section*{Slide 10 --- The comparison (SLOW DOWN)}
+\timing{4:50}{5:40}
+This is the core result --- same encoder, same data, \say{only the
+architecture differs}. On tagging, spaCy is better. But on \say{labeled
+parsing}, Stanza scores \say{63.81 against 47.11} --- a \say{16.70-point
+gap}, among the largest reported. \breathe And the punchline: Stanza wins
+\emph{despite} worse tagging. So for Uzbek, the \say{architecture} --- not
+tagging accuracy --- drives parse quality, because exhaustive scoring
+suits a rich case system.
+
+% ------------------------------------------------------------
+\section*{Slide 11 --- Augmentation differs}
+\timing{5:40}{6:10}
+Merging helps both --- but \say{unevenly}. For tagging the gains are
+equal. For parsing they diverge: Stanza gains \say{+9.62 LAS}, spaCy only
++1.76. The graph parser is the one that actually exploits the broader
+data; spaCy instead gains most on morphology.
+
+% ------------------------------------------------------------
+\section*{Slide 12 --- Error analysis}
+\timing{6:10}{6:40}
+Where do errors cluster? In the \say{long-distance relations} ---
+coordination and noun modification --- while local relations are fine.
+These structurally hard cases are exactly where exhaustive graph scoring
+has the advantage.
+
+% ------------------------------------------------------------
+\section*{Slide 13 --- Examples}
+\timing{6:40}{7:00}
+Two real outputs. On the left, a \say{perfect parse}, including the tricky
+genitive chain and a converb. On the right, a \say{failure} on a
+light-verb construction --- gold in blue, the wrong arcs in red. Rare
+patterns like this are what a small treebank under-covers.
+
+% ------------------------------------------------------------
+\section*{Slide 14 --- Conclusion}
+\timing{7:00}{7:25}
+To conclude: a clear trade-off --- graph-based parses far better,
+\say{+16.70 LAS} --- and cross-treebank data is the \say{biggest lever}.
+So our recommendation for Uzbek is concrete: \say{graph-based parser,
+monolingual BERT, last-subword fusion}. Next steps: multi-seed testing
+and broader frameworks.
+
+% ------------------------------------------------------------
+\section*{Slide 15 --- Thank you}
+\timing{7:25}{--}
+Thank you --- the data, code, and checkpoints are all released, and I am
+happy to take your questions.
+
+% ------------------------------------------------------------
+\newpage
+\section*{If asked --- short answers}
+
+\noindent\textbf{Fair comparison?} Defaults for both --- and the 16.70 gap
+is far larger than any tuning effect.
+
+\vspace{0.3em}
+\noindent\textbf{Single runs?} A bootstrap CI is about $\pm$2.4 LAS ---
+well below the gap --- and the ranking is consistent across all runs.
+
+\vspace{0.3em}
+\noindent\textbf{Why last-subword?} Uzbek suffixes sit at the end, so the
+last piece carries the syntactic cue. +2.6 LAS, no extra cost.
+
+\vspace{0.3em}
+\noindent\textbf{Size or genre?} Both --- merging doubles the data
+\emph{and} the treebanks are genre-complementary.
+
+\vspace{0.3em}
+\noindent\textbf{Link to EDM?} Uzbek parsing underpins educational NLP ---
+writing feedback, readability --- for 37 million speakers.
+
+\end{document}

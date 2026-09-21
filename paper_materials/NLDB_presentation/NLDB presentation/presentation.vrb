@@ -1,0 +1,38 @@
+\frametitle{Pipeline: from text to a labeled tree}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+   node distance=6mm,
+   stage/.style={rectangle, rounded corners, draw=black, thick,
+                 align=center, minimum height=1.25cm, minimum width=2.1cm,
+                 font=\small},
+   io/.style={rectangle, draw=black!55, fill=black!5, align=center,
+              minimum height=1.05cm, font=\small},
+   arr/.style={-{Stealth[length=3mm]}, thick}
+  ]
+  \node[io] (in) {UD-tokenized\\Uzbek sentence};
+  \node[stage, fill=tumcolor-blue!20,   right=of in]  (enc)
+        {Encoder\\{\scriptsize FastText /}\\{\scriptsize TahrirchiBERT}};
+  \node[stage, fill=tumcolor-orange!28, right=of enc] (fus)
+        {Subword$\to$Token\\Fusion};
+  \node[stage, fill=tumcolor-green!28,  right=of fus] (tag)
+        {Joint Tagger\\{\scriptsize UPOS/XPOS/UFeats}};
+  \node[stage, fill=tumcolor-blue!32,   right=of tag] (par)
+        {Biaffine\\Parser};
+  \node[io, right=of par] (out) {Labeled\\UD tree};
+  \draw[arr] (in)--(enc);
+  \draw[arr] (enc)--(fus);
+  \draw[arr] (fus)--(tag);
+  \draw[arr] (tag)--(par);
+  \draw[arr] (par)--(out);
+  \draw[arr, dashed, tumcolor-green!60!black]
+        (tag.south) .. controls +(0,-1.0) and +(0,-1.0) .. (par.south);
+  \node[font=\scriptsize, tumcolor-green!55!black]
+        at ($(tag.south)!0.5!(par.south)+(0,-0.78)$) {predicted UPOS};
+\end{tikzpicture}}
+
+\vspace{0.45cm}
+\footnotesize
+Encoder is \textbf{frozen}; fusion maps WordPieces to UD tokens;
+training is \textbf{sequential} (tagger first, then parser on
+\emph{re-tagged} data --- no gold-tag leakage).

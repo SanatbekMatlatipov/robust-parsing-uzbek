@@ -1,0 +1,570 @@
+% ============================================================
+%  NLDB 2026 --- Speech notes for the 15-minute talk
+%  Paper: Towards Robust Uzbek Neural Dependency Parsing
+%         (Cross-Treebank Training & Linguistically-Motivated
+%          Subword Fusion)
+%  Author: Sanatbek Matlatipov
+%
+%  Optimised for printing on a black & white printer:
+%    - 12pt serif body, 1.4 line spacing
+%    - bold cues only (no colours), clear slide separators
+%    - generous left margin for handwritten annotations
+%    - cumulative timing budget printed next to each slide
+%
+%  Build with:  pdflatex presentation_speaker_notes.tex
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm,left=3.2cm,right=2.2cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{amsmath,amssymb}
+
+\setstretch{1.40}
+\setlist[itemize]{leftmargin=1.3em,topsep=2pt,itemsep=2pt}
+
+\titleformat{\section}
+   {\normalfont\Large\bfseries\filright}
+   {Slide \thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.4em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small NLDB 2026 --- Speech notes (15 min)}
+\fancyhead[R]{\small S.~Matlatipov}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\timing}[2]{%
+   \par\noindent\textbf{\small [#1\,$\to$\,#2\,min]}\par\vspace{0.2em}}
+\newcommand{\say}[1]{\textbf{#1}}
+\newcommand{\pause}{\par\vspace{0.4em}\textbf{[pause]}\par}
+
+\begin{document}
+
+% ------------------------------------------------------------
+%  COVER PAGE
+% ------------------------------------------------------------
+\begin{center}
+   {\LARGE\bfseries Speech notes --- 15 minutes}\\[0.6em]
+   {\large Towards Robust Uzbek Neural\\Dependency Parsing}\\[0.3em]
+   {\normalsize Cross-Treebank Training \& Linguistically-Motivated Subword Fusion}\\[0.6em]
+   {\normalsize International Conference on Applications of Natural Language\\to Information Systems}\\
+   {\normalsize \textbf{NLDB 2026} --- 18 June 2026}\\[1.2em]
+   \textit{Sanatbek Matlatipov}\\
+   National University of Uzbekistan, Tashkent\\
+   \texttt{s.matlatipov@nuu.uz}
+\end{center}
+
+\vspace{1em}
+\noindent\textbf{How to use these notes.}
+Each section maps to one slide. The bracketed times
+\textbf{[start\,$\to$\,end]} are cumulative running time. Phrases in
+\textbf{bold} are the ones to emphasise; \textbf{[pause]} marks a short
+breath. Plain text is the spoken script --- read naturally, not
+word-for-word.
+
+\vspace{0.5em}
+\noindent\textbf{Total budget:} $\approx$15 minutes of speech inside a
+15-minute slot. Target around 0:30--0:45 per slide; the motivation now
+spans two slides --- \textbf{Slide 4 (challenges)} and \textbf{Slide 5
+(suffixes carry the syntax)} --- so keep each tight. Slow down on
+\textbf{Slide 14 (fusion)} and \textbf{Slides 18--19 (results)}.
+
+\vspace{0.5em}
+\noindent\textbf{Two ideas the audience must remember:}
+\textbf{last-subword fusion} and \textbf{cross-treebank training}.
+\textbf{Numbers to land:} 85.08 / 72.39 / 63.81 (UPOS / UAS / LAS) and
+cross-treebank \textbf{+9.62 to +11.16 LAS}. Also mention: \textbf{Uzbek
+is spoken by 40 million}, \textbf{Turkic Family}, \textbf{SOV word
+order}, \textbf{null subject}, \textbf{no articles}.
+
+\vfill\hrule\vspace{0.5em}
+\noindent\textit{Print double-sided on A4. The wide left margin is for handwritten cues.}
+
+\newpage
+
+% ------------------------------------------------------------
+%  SLIDE 1 --- Title
+% ------------------------------------------------------------
+\section*{Slide 1 --- Title}
+\timing{0:00}{0:20}
+
+Good morning / afternoon, and thank you to the NLDB organisers.
+
+My name is \say{Sanatbek Matlatipov}, from the National University of
+Uzbekistan. My talk is on \say{Towards Robust Uzbek Neural Dependency
+Parsing} --- making Uzbek parsing robust in a genuinely
+\say{low-resource} setting, using two lightweight and efficient ideas
+rather than bigger models.
+
+% ------------------------------------------------------------
+%  SLIDE 2 --- Outline
+% ------------------------------------------------------------
+\section*{Slide 2 --- Outline}
+\timing{0:20}{0:35}
+
+The talk has a simple arc:
+
+\begin{itemize}
+   \item Quick \textbf{motivation} and related work.
+   \item The \textbf{dataset} we built and pair with.
+   \item The \textbf{methodology} --- pipeline, representation, model.
+   \item And \textbf{results}, error analysis, and takeaways.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  SLIDE 3 --- Uzbek Language I
+% ------------------------------------------------------------
+\section*{Slide 3 --- Uzbek Language I}
+\timing{0:35}{1:05}
+
+Before diving into the parsing challenge, let me briefly introduce Uzbek.
+
+Uzbek NLP has seen \say{growing interest} in recent years ---
+TahrirchiBERT, BERTbek, and several shared tasks demonstrate that.
+But compared to major world languages, computational resources remain
+sparse, and we still face genuinely low-resource conditions for
+structured prediction tasks like parsing.
+
+Uzbek is the \say{official language} of Uzbekistan. It is native to
+Central Asia, Afghanistan, parts of Russia, and Xinjiang in China.
+Roughly \textbf{40 million} people speak Uzbek as of 2026 --- a
+significant speech community, yet under-resourced in computational
+linguistics.
+
+The map on the right shows where Uzbek is spoken. You can see it spans
+a large geographic region across Central Asia and beyond.
+
+% ------------------------------------------------------------
+%  SLIDE 4 --- Why is Uzbek dependency parsing hard? (challenges)
+% ------------------------------------------------------------
+\section*{Slide 4 --- Why is Uzbek dependency parsing hard?}
+\timing{1:05}{1:35}
+
+Three things make Uzbek parsing hard. First, Uzbek is \say{agglutinative}
+--- a single word stacks suffixes for case, tense, person, even
+evidentiality. Look at the figure: \textit{kelmaganlardanmisizlar?} is
+\say{one} Uzbek word, but it unpacks into the eight-word English question
+``Are you one of those who didn't come?'' --- come, not, past, plural, one
+of, question, are, you. That is the morphological density a parser has to
+decode. Second, \say{flexible word order} together with strong genre
+variation. Third, it is genuinely \say{low-resource} --- fewer than a
+thousand annotated UD sentences before this work.
+
+On the right are the \textbf{Turkic-family} traits the parser must cope
+with: \say{null subject} --- you can drop the subject pronoun;
+\say{no articles} and \say{no grammatical gender}, unlike English; and
+\textbf{Subject-Object-Verb} order, quite different from English SVO.
+
+\pause
+
+So the picture is \say{rich morphology} on one side, \say{scarce data} on
+the other. Those are exactly the two problems we attack --- better
+representations for the morphology, more data for the scarcity. The next
+slide shows \say{why} that morphology matters so much.
+
+% ------------------------------------------------------------
+%  SLIDE 5 --- Suffixes carry the syntax (the hook)
+% ------------------------------------------------------------
+\section*{Slide 5 --- Suffixes carry the syntax}
+\timing{1:35}{2:05}
+
+Here is the intuition in one example. Take \textit{bolalarning} --- ``of
+the children.'' Stem \textit{bola}, plus plural \textit{-lar}, plus
+genitive \textbf{\textit{-ning}}. That final suffix \textbf{is} the
+syntactic relation: the \textbf{\textit{-ning}} genitive is what creates
+the possessive arc --- \texttt{nmod:poss} --- onto \textit{kitobi}, and
+that phrase is the subject of \textit{keldi}, ``arrived.''
+
+\pause
+
+The take-away: \say{strip the rightmost suffix and the syntax
+disappears}. A parser that ignores it misses the parse. That is precisely
+what motivates our \textbf{last-subword fusion} later in the talk. The
+tree is a real example from our treebank.
+
+% ------------------------------------------------------------
+%  SLIDE 6 --- The gap and our approach
+% ------------------------------------------------------------
+\section*{Slide 6 --- The gap and our approach}
+\timing{2:05}{2:35}
+
+The core problem: existing Uzbek treebanks are small, and neural parsers
+need \say{both} more data \say{and} better representations.
+
+\begin{itemize}
+   \item On the \textbf{data} side --- a new treebank, \textbf{UzUDT}, 684 gold sentences, the largest for Uzbek.
+   \item On the \textbf{modelling} side --- two lightweight strategies: \textbf{last-subword fusion} and \textbf{cross-treebank training}.
+\end{itemize}
+
+\noindent
+Crucially: \say{no heavy architecture changes}. This is the efficient,
+low-resource-friendly path.
+
+% ------------------------------------------------------------
+%  SLIDE 7 --- Contributions
+% ------------------------------------------------------------
+\section*{Slide 7 --- Contributions}
+\timing{2:35}{3:10}
+
+Four contributions:
+
+\begin{itemize}
+   \item \textbf{UzUDT} --- built in INCEpTION, six annotators, full adjudication.
+   \item \textbf{Last-subword fusion} --- a linguistically-motivated WordPiece-to-UD-token alignment.
+   \item \textbf{Cross-treebank training} --- merging two genre-complementary Uzbek treebanks.
+   \item A clean \textbf{factorial study} --- three configs $\times$ two data settings $=$ six runs --- plus released code and twelve checkpoints.
+\end{itemize}
+
+\noindent
+Headline: best system \say{85.08 UPOS, 72.39 UAS, 63.81 LAS} --- and
+cross-treebank alone adds \textbf{nine to eleven LAS points}.
+
+% ------------------------------------------------------------
+%  SLIDE 8 --- Related work
+% ------------------------------------------------------------
+\section*{Slide 8 --- Where this work fits}
+\timing{3:10}{3:45}
+
+Briefly --- the framework is \textbf{Universal Dependencies}; we build on
+morphology-aware parsing for Turkic languages like Turkish. For Uzbek
+specifically there was one small treebank, \say{Uzbek-UT}; we add
+\say{UzUDT}.
+
+\pause
+
+Architecturally we use a standard neural pipeline --- Stanza-style, with
+a \textbf{Dozat--Manning biaffine parser} --- and Uzbek encoders like
+\textbf{TahrirchiBERT}. Our niche is \say{lightweight} robustness:
+suffix-aware fusion plus cross-treebank data, not a new architecture.
+
+% ------------------------------------------------------------
+%  SLIDE 9 --- UzUDT
+% ------------------------------------------------------------
+\section*{Slide 9 --- UzUDT: a new gold Uzbek UD treebank}
+\timing{3:45}{4:30}
+
+UzUDT: \textbf{684 sentences}, about \textbf{7,800 tokens}, across fiction
+and academic text. Annotated in INCEpTION by six people --- four
+linguists and two NLP engineers --- with double annotation and
+\say{full adjudication}. Full UD~v2 layers: UPOS, XPOS, lemma, features,
+and dependency relations.
+
+\pause
+
+Inter-annotator agreement is strong --- \textbf{kappa of 95 on lemmas, 94
+on UPOS, 91 on features}. So the labels are reliable. To our knowledge
+this is the \say{largest publicly available Uzbek UD treebank}.
+
+% ------------------------------------------------------------
+%  SLIDE 10 --- Second treebank & data settings
+% ------------------------------------------------------------
+\section*{Slide 10 --- Second treebank \& data settings}
+\timing{4:30}{5:05}
+
+The second treebank is \textbf{UD\_Uzbek-UT} --- 500 sentences, news and
+fiction, semi-automatic with manual correction.
+
+\begin{itemize}
+   \item Setting \textbf{.1} is UzUDT only --- 451 training sentences.
+   \item Setting \textbf{.2} merges both --- 781.
+\end{itemize}
+
+\noindent
+So merging nearly \say{doubles} the training data. That is a direct
+test: \say{is raw data quantity the bottleneck?}
+
+% ------------------------------------------------------------
+%  SLIDE 11 --- Complementarity
+% ------------------------------------------------------------
+\section*{Slide 11 --- Why the treebanks are complementary}
+\timing{5:05}{5:45}
+
+These two treebanks cover \say{different syntax} --- which is exactly why
+merging helps.
+
+\begin{itemize}
+   \item UT is news-heavy, so many \textbf{proper nouns} --- 5.2\% versus our 0.3\%.
+   \item UzUDT has more \textbf{pronouns} and \textbf{four times} more adverbial clauses.
+   \item And UT has \textbf{ten times} more light-verb compounds.
+\end{itemize}
+
+\noindent
+So they fill each other's gaps --- merging is not just more data, it is
+\say{broader} data.
+
+% ------------------------------------------------------------
+%  SLIDE 12 --- Pipeline overview
+% ------------------------------------------------------------
+\section*{Slide 12 --- Pipeline: from text to a labeled tree}
+\timing{5:45}{6:30}
+
+Here is the full pipeline, left to right. A UD-tokenised sentence goes
+into a \say{frozen encoder} --- FastText or TahrirchiBERT. Then our
+\textbf{fusion} step maps subwords to UD tokens. Then a \textbf{joint
+tagger} predicts UPOS, XPOS and features. Then a \textbf{biaffine parser}
+produces the labeled tree.
+
+\pause
+
+Two design choices matter. The encoder is \say{frozen} --- efficient.
+And training is \say{sequential}: tagger first, then the parser runs on
+\say{re-tagged} data --- the dashed arrow --- so there is no gold-tag
+leakage at inference.
+
+% ------------------------------------------------------------
+%  SLIDE 13 --- Token representation
+% ------------------------------------------------------------
+\section*{Slide 13 --- Token representation: four channels}
+\timing{6:30}{7:05}
+
+Each token is a concatenation of four vectors: a static \textbf{word}
+embedding, a \textbf{character}-LSTM vector, the \textbf{predicted UPOS}
+embedding, and a \textbf{contextual} vector from BERT.
+
+\pause
+
+Two of the six runs differ here. In the \say{FastText} config, the word
+channel is static 300-d and there is \say{no} contextual channel. In the
+\say{TahrirchiBERT} config, that contextual channel is a \textbf{768-d
+fused} vector --- and that fusion is our key contribution.
+
+% ------------------------------------------------------------
+%  SLIDE 14 --- Subword to token fusion (KEY)
+% ------------------------------------------------------------
+\section*{Slide 14 --- Subword$\to$token fusion: our key heuristic}
+\timing{7:05}{8:05}
+
+This is the heart of the method. BERT emits \say{WordPieces}, but UD
+annotates \say{tokens} --- they do not line up. We must collapse several
+subword vectors into one per token.
+
+\pause
+
+Our heuristic --- \say{last-subword}: take the vector of the \textbf{final}
+WordPiece as the token's representation. For \textit{bolalarning} that is
+\textit{\#\#ning}, the orange piece.
+
+\pause
+
+Why the last one? Because Uzbek is \say{suffixing} --- the rightmost
+piece carries the \say{outermost} morphology. \textit{\#\#ning} literally
+is the genitive case --- the bit the parser most needs. The baseline,
+\textbf{mean pooling}, averages all pieces and \say{dilutes} exactly that
+suffix signal. This one-line change is worth almost \textbf{four LAS
+points}.
+
+% ------------------------------------------------------------
+%  SLIDE 15 --- Joint tagger
+% ------------------------------------------------------------
+\section*{Slide 15 --- Joint morphosyntactic tagger}
+\timing{8:05}{8:45}
+
+The tagger is a shared \textbf{BiLSTM} over the token vectors, feeding
+\textbf{three softmax heads} --- UPOS, XPOS and morphological features ---
+jointly. Joint tagging lets the three layers share evidence, which helps
+when data is scarce.
+
+\pause
+
+And only the \say{predicted} UPOS embedding --- not the gold tag --- is
+exported downstream to the parser. Again, \say{no leakage}.
+
+% ------------------------------------------------------------
+%  SLIDE 16 --- Biaffine parser
+% ------------------------------------------------------------
+\section*{Slide 16 --- Deep biaffine dependency parser}
+\timing{8:45}{9:25}
+
+Standard \textbf{Dozat--Manning} biaffine parser. The BiLSTM states ---
+now including the predicted UPOS embedding --- are projected by MLPs into
+\textbf{head} and \textbf{dependent} subspaces. A biaffine attention then
+scores \say{every} head--dependent pair, and we decode a labeled tree
+over the UD tokens.
+
+\pause
+
+The example on the right --- \textit{asarlar bizga eshigini ochib
+beradi} --- shows subject, oblique, the \texttt{xcomp}, the object, and the
+root.
+
+% ------------------------------------------------------------
+%  SLIDE 17 --- Experiment matrix
+% ------------------------------------------------------------
+\section*{Slide 17 --- Experiment matrix}
+\timing{9:25}{10:00}
+
+Six runs, fully factorial. Rows vary three things:
+
+\begin{itemize}
+   \item \textbf{E1 vs E2} --- the embedding: static FastText versus contextual BERT.
+   \item \textbf{E2 vs E3} --- the fusion: our last-subword versus mean pooling.
+   \item \textbf{.1 vs .2} --- the data: single versus cross-treebank.
+\end{itemize}
+
+\noindent
+The green row, \textbf{E2.2}, is the full system: BERT, last-subword,
+merged data.
+
+% ------------------------------------------------------------
+%  SLIDE 18 --- Main results
+% ------------------------------------------------------------
+\section*{Slide 18 --- Main results (test set)}
+\timing{10:00}{11:00}
+
+Tagging on the left, parsing on the right; the green row is our full
+system, \textbf{E2.2}.
+
+\begin{itemize}
+   \item E2.2 wins \say{four of five} metrics --- best UPOS at \textbf{85.08}, best features, best UAS \textbf{72.39}, best LAS \textbf{63.81}.
+   \item The only exception is \textbf{XPOS}, where mean pooling edges ahead --- a minor, fine-grained-tag effect.
+\end{itemize}
+
+\noindent
+Notice the LAS column climbs steadily as we add \say{contextual
+embeddings, then fusion, then data}.
+
+% ------------------------------------------------------------
+%  SLIDE 19 --- Three findings
+% ------------------------------------------------------------
+\section*{Slide 19 --- Three findings}
+\timing{11:00}{12:00}
+
+\begin{itemize}
+   \item \textbf{1. Contextual beats static.} BERT over FastText gives nearly \textbf{five UPOS points} on merged data.
+   \item \textbf{2. Fusion matters for parsing.} Last-subword over mean is \textbf{+3.76 LAS}. And the ordering is telling: mean-pooled BERT (60.05) actually \say{loses} to FastText (62.40); last-subword BERT (63.81) wins. A bad fusion wastes your encoder.
+   \item \textbf{3. Cross-treebank is the biggest lever.} \textbf{+9.62 LAS} for BERT, \textbf{+11.16} for FastText --- just from merging.
+\end{itemize}
+
+\noindent
+For low-resource parsing, \say{broader data beats clever modelling}.
+
+% ------------------------------------------------------------
+%  SLIDE 20 --- Error analysis
+% ------------------------------------------------------------
+\section*{Slide 20 --- Error analysis (100 test sentences, E2.2)}
+\timing{12:00}{12:45}
+
+We hand-checked 100 test sentences. The errors concentrate in
+\say{attachment}:
+
+\begin{itemize}
+   \item \textbf{Prepositional / oblique attachment} --- 28\%.
+   \item \textbf{Coordination scope} --- 22\%, then subordinate clauses and compounds.
+\end{itemize}
+
+\noindent
+The dominant confusion is \textbf{\texttt{obl} versus \texttt{nmod}}, and
+coordination scope. The tree on the right shows a missed \say{light-verb
+construction} --- gold \texttt{compound:lvc} in blue, the model's wrong
+arcs dashed in red. Rare constructions are exactly what the smaller
+treebank under-covers.
+
+% ------------------------------------------------------------
+%  SLIDE 21 --- Conclusion
+% ------------------------------------------------------------
+\section*{Slide 21 --- Conclusion}
+\timing{12:45}{13:30}
+
+Three takeaways:
+
+\begin{itemize}
+   \item We released \textbf{UzUDT}, the largest gold Uzbek UD treebank.
+   \item \textbf{Cross-treebank training} is the dominant factor --- up to eleven LAS points.
+   \item \textbf{Last-subword fusion} is a cheap, linguistically-motivated win --- almost four LAS points.
+\end{itemize}
+
+\noindent
+Best system: \say{85.08 / 72.39 / 63.81}. Limitations: small dev sets
+and some genre mismatch. Next: \textbf{BERTbek} and
+\textbf{BERT-plus-FastText fusion}. Everything --- data and twelve
+checkpoints --- is on Hugging Face, code on GitHub.
+
+% ------------------------------------------------------------
+%  SLIDE 22 --- Thank you
+% ------------------------------------------------------------
+\section*{Slide 22 --- Thank you}
+\timing{13:30}{14:00}
+
+That brings me to the end. I would like to thank the open-source teams
+behind \textbf{Stanza, TahrirchiBERT, and Universal Dependencies}, and
+the UzUDT annotation team.
+
+\pause
+
+Thank you very much --- I am happy to take your questions.
+(Contact: \texttt{s.matlatipov@nuu.uz}.)
+
+% ------------------------------------------------------------
+%  Appendix backups (only if asked)
+% ------------------------------------------------------------
+\newpage
+\section*{Appendix backups --- only if asked}
+
+\begin{itemize}
+   \item \textbf{A1 --- Parser training dynamics.} Dev LAS/UAS over training; the merged setting converges higher and more stably than UzUDT-only.
+   \item \textbf{A2 --- Tagger training dynamics.} UPOS / XPOS / UFeats / AllTags F1 across the six runs; E2.2 leads on most curves.
+   \item \textbf{A3 --- A correctly parsed sentence.} A clean example the full system gets right end-to-end.
+\end{itemize}
+
+% ------------------------------------------------------------
+%  Q & A prep --- printed as a back page for the speaker only
+% ------------------------------------------------------------
+\newpage
+\section*{Likely Q\&A --- quick cues}
+
+\noindent\textbf{Q. Why freeze the encoder instead of fine-tuning?}\\
+\textbf{Efficiency and stability}. On fewer than a thousand sentences,
+fine-tuning a Transformer overfits; freezing gives a strong, reproducible
+baseline at a fraction of the cost.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why last-subword pooling rather than mean or attention?}\\
+It is \textbf{motivated by Uzbek morphology} --- the rightmost subword
+carries the outermost, syntactically decisive suffix. Empirically it is
+\textbf{+3.76 LAS} over mean pooling, with no extra parameters.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Is last-subword fusion Uzbek-specific?}\\
+It targets \textbf{suffixing, agglutinative} morphology, so it should
+transfer to other Turkic languages --- Turkish, Kazakh, Uyghur. Testing
+that is future work.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why not mBERT, XLM-R, or UDify?}\\
+We deliberately compare \textbf{lightweight, Uzbek-specific} encoders for
+a fair low-resource baseline. Multilingual and cross-lingual transfer is
+a natural --- but separate --- next step.
+
+\vspace{0.4em}
+\noindent\textbf{Q. The dev sets are tiny (45 / 78) --- isn't that noisy?}\\
+\textbf{Yes, and we state it as a limitation.} But the headline data
+effect --- \textbf{nine to eleven LAS points} --- is far larger than any
+plausible dev-set noise, so the conclusion is safe.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Why does XPOS regress under last-subword?}\\
+Mean pooling slightly \textbf{smooths fine-grained tags}. The net effect
+across the other four metrics still favours last-subword, and it is our
+best overall system (four of five metrics).
+
+\vspace{0.4em}
+\noindent\textbf{Q. Does merging help only because of size, or genre too?}\\
+\textbf{Both.} Merging doubles the data \emph{and} the treebanks are
+genre-complementary --- UT brings proper nouns and light-verb compounds,
+UzUDT brings pronouns and adverbial clauses.
+
+\vspace{0.4em}
+\noindent\textbf{Q. Will the code and checkpoints be released?}\\
+\textbf{Yes} --- the UzUDT data and \textbf{twelve checkpoints} are on
+Hugging Face, and the full code is on GitHub.
+
+\end{document}
