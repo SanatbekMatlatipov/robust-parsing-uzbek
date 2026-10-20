@@ -1,0 +1,944 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Kafedra ilmiy seminari uchun taqdimot (15 daqiqa, 19 slayd)
+%  Mavzu: O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil
+%         qilishning matematik modeli va sonli usullari
+%  Ixtisoslik: 05.01.07 -- Matematik modellashtirish. Sonli usullar va
+%              dasturlar majmui
+%  Ma’ruzachi: Matlatipov Sanatbek
+%
+%  Dizayn: HonsAnSkills.tex shabloni (Madrid mavzusi, dolphin rang sxemasi,
+%  navigatsiya belgilarisiz), 16:9.  Nutq matni: Matlatipov_seminar_nutq_matni.tex
+%
+%  Kompilyatsiya:  latexmk -pdf Matlatipov_seminar_taqdimot.tex
+%                  (yoki pdflatex ikki marta: kolontitul belgilari uchun)
+%
+%  Raqamlar manbasi (barchasi repozitoriydagi jurnallardan):
+%   * validatsiya: saved_models/{pos,depparse}/*_training_log.csv
+%     (eng yaxshi nazorat nuqtasi = e’lon qilingan model);
+%   * bootstrap: saved_models/depparse/*.dev.pred.conllu (oxirgi qadam bashoratlari);
+%   * test va turg‘unlik: paper_materials/review_logs/perturbation_results.json
+%     (faqat UAS/LAS; u yerdagi UPOS ustuni oltin teglarga nisbatan emas),
+%     results/spacy_s1.1_test.json;
+%   * korpus statistikasi: data/udbase/*/*.conllu.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\setbeamertemplate{navigation symbols}{}
+\usefonttheme[onlymath]{serif}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{booktabs,multirow,array,tabularx}
+\usepackage{fontawesome5}
+\usepackage{etoolbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,backgrounds,shapes.misc,shapes.geometric,shadows}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{tikz-dependency}
+
+\setbeamersize{text margin left=0.7cm,text margin right=0.7cm}
+\setbeamerfont{frametitle}{size=\fontsize{11.5}{13.5}\selectfont,series=\bfseries}
+\setbeamerfont{block title}{size=\small}
+\setbeamerfont{block body}{size=\small}
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+% ---------------------------------------------------------------- ranglar
+\definecolor{bmain}{RGB}{51,51,178}        % beamer "structure" rangi
+\colorlet{blight}{bmain!10!white}
+\colorlet{bsoft}{bmain!35!white}
+\definecolor{accent}{RGB}{226,119,32}      % urg‘u (to‘q sariq)
+\definecolor{okgreen}{RGB}{38,135,70}
+\definecolor{badred}{RGB}{186,48,48}
+\definecolor{ftgray}{RGB}{125,125,135}     % FastText seriyasi
+
+% ---------------------------------------------------------------- pgfplots
+\pgfplotsset{
+  every axis/.append style={
+    font=\scriptsize,
+    tick label style={font=\tiny},
+    label style={font=\scriptsize},
+    legend style={font=\tiny,draw=none,fill=white,fill opacity=0.85,text opacity=1},
+    axis line style={black!45}, tick style={black!45},
+    grid style={black!10}, major grid style={black!10}},
+  /pgf/number format/.cd, use comma, 1000 sep={\,},
+}
+
+% ---------------------------------------------------------------- TikZ uslublari
+\tikzset{
+  >={Latex[length=1.8mm]},
+  box/.style={rounded corners=3pt,draw=bmain!60,fill=blight,align=center,inner sep=3pt},
+  dbox/.style={rounded corners=3pt,fill=bmain,text=white,align=center,inner sep=3pt,font=\bfseries},
+  abox/.style={rounded corners=3pt,draw=accent!80,fill=accent!12,align=center,inner sep=3pt},
+  stage/.style={rounded corners=3pt,draw=bmain!60,fill=blight,align=center,inner sep=2.5pt,
+                font=\scriptsize,minimum height=1.05cm,text width=2.25cm},
+  flow/.style={->,thick,bmain!70},
+  ref/.style={font=\tiny\itshape,text=black!50},
+}
+
+% ---------------------------------------------------------------- yordamchi buyruqlar
+% piktogramma rangli doirada
+\newcommand{\ic}[1]{\tikz[baseline=-0.65ex]\node[circle,fill=bmain,text=white,inner sep=0pt,minimum size=0.56cm,font=\footnotesize]{#1};}
+% "Ilmiy yangilik N" belgisi: pastki kolontitulning o‘ng qismida
+\gdef\yangiliknum{}
+\BeforeBeginEnvironment{frame}{\gdef\yangiliknum{}}
+\newcommand{\yangilik}[1]{\gdef\yangiliknum{#1}}
+\addtobeamertemplate{footline}{}{%
+  \ifx\yangiliknum\empty\else
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[fill=accent,text=white,rounded corners=1.5pt,font=\tiny\bfseries,inner sep=1.4pt]
+        at ([xshift=-3.0cm,yshift=0.145cm]current page.south east) {\faLightbulb\ Ilmiy yangilik \yangiliknum};
+    \end{tikzpicture}%
+  \fi}
+% markazlashtirilgan sarlavha qutisi (titul va yakuniy slayd uchun)
+\newcommand{\titlebox}[2]{%
+  \tikz\node[rounded corners=5pt,fill=bmain!8,draw=bmain!30,text=bmain,align=center,
+             text width=#1,inner sep=9pt,drop shadow={opacity=0.25}]{#2};}
+% raqamli kartochka (statistik ko‘rsatkich)
+\newcommand{\stattile}[3]{%
+  \tikz\node[rounded corners=3pt,fill=bmain!10,minimum width=#1,minimum height=0.9cm,align=center,inner sep=2pt]
+    {{\color{bmain}\bfseries\small #2}\\[-1pt]{\tiny #3}};}
+% ilmiy yangilik kartochkasidagi slayd havolasi
+\newcommand{\ysec}[1]{\hfill\mbox{\color{accent}\bfseries\tiny[#1]}}
+% manba izohi
+\newcommand{\manba}[1]{{\tiny\color{black!55}#1}}
+% BPE bo‘lagi va oxirgi bo‘lak
+\newcommand{\bp}[1]{\tikz[baseline=(b.base)]\node[draw=bmain!45,fill=blight,rounded corners=1.5pt,inner sep=1.6pt,font=\scriptsize\ttfamily](b){\strut #1};}
+\newcommand{\bl}[1]{\tikz[baseline=(b.base)]\node[draw=accent,fill=accent!20,rounded corners=1.5pt,inner sep=1.6pt,font=\scriptsize\ttfamily\bfseries](b){\strut #1};}
+
+% o‘zbekcha teorema muhitlari
+\newenvironment{tarif}[1][]{\begin{block}{Ta’rif #1}}{\end{block}}
+\newenvironment{teorema}[1][]{\begin{block}{Teorema #1}}{\end{block}}
+\newenvironment{lemmauz}[1][]{\begin{block}{Lemma #1}}{\end{block}}
+\newenvironment{masala}[1][]{\begin{alertblock}{Masala #1}}{\end{alertblock}}
+
+\newcommand{\R}{\mathbb{R}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\ReLU}{ReLU}
+\newcommand{\vv}[1]{\mathbf{#1}}
+\newcommand{\ind}{\mathbf{1}}
+
+% ---------------------------------------------------------------- titul ma’lumotlari
+% !!! Ilmiy rahbar ma’lumotini seminardan oldin tasdiqlang (README.md ga qarang).
+\newcommand{\ilmiyrahbar}{f.-m.f.d., professor Aripov Mersaid Mirsidikovich}
+\newcommand{\kafedranomi}{Amaliy matematika va kompyuter tahlili kafedrasi}
+
+\title[O‘zbek tili gaplarining sintaktik tahlili]{O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil qilishning matematik modeli va sonli usullari}
+\author[S.~Matlatipov]{Matlatipov Sanatbek}
+\institute[O‘zMU]{Mirzo Ulug‘bek nomidagi O‘zbekiston Milliy universiteti}
+\date[]{2026}   % qisqa sana bo‘sh: kolontitulda "Ilmiy yangilik" belgisi uchun joy
+
+\begin{document}
+
+%==============================================================================
+% 1. TITUL
+%==============================================================================
+\begin{frame}
+  \centering
+  \vspace{-6pt}
+  \begin{tikzpicture}
+    \node[anchor=east] at (0,0) {\includegraphics[height=1.2cm]{nuu-logo}};
+    \node[anchor=west,font=\footnotesize\bfseries,text=bmain] at (0.12,0.2) {MIRZO ULUG‘BEK NOMIDAGI O‘ZBEKISTON MILLIY UNIVERSITETI};
+    \node[anchor=west,font=\scriptsize,text=black!70] at (0.12,-0.22) {\kafedranomi};
+  \end{tikzpicture}\\[8pt]
+  {\normalsize\bfseries MATLATIPOV SANATBEK}\\[8pt]
+  \titlebox{0.9\textwidth}{\large\bfseries O‘zbek tili gaplarini neyron tarmoqlar asosida\\ sintaktik tahlil qilishning matematik modeli va sonli usullari}\\[9pt]
+  {\small 05.01.07 -- Matematik modellashtirish. Sonli usullar va dasturlar majmui}\\[3pt]
+  {\small Kafedra ilmiy seminari}\\[10pt]
+  {\footnotesize Ilmiy rahbar: \ilmiyrahbar}\\[5pt]
+  {\scriptsize\color{black!60} Toshkent -- 2026}
+\end{frame}
+
+%==============================================================================
+% 2. DOLZARBLIK
+%==============================================================================
+\section{Kirish}
+\begin{frame}{Mavzuning dolzarbligi}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+  \small
+  \begin{tabular}{@{}m{0.7cm}@{}>{\raggedright\arraybackslash}m{6.95cm}@{}}
+    \ic{\faLanguage} & O‘zbek tili --- 35 mln dan ortiq kishi so‘zlashadigan \textbf{agglyutinativ} turkiy til. Gapning \textbf{sintaktik tuzilishi} mashina tarjimasi, axborot qidiruvi va savol-javob tizimlari uchun asos.\\[7pt]
+    \ic{\faDatabase} & \textbf{Kam resursli muhit}: Universal Dependencies (UD) tizimida o‘zbek tili uchun bor-yo‘g‘i \textbf{1\,184 ta gap} sintaktik annotatsiyalangan.\\[7pt]
+    \ic{\faCubes} & Kelishik, egalik, son, zamon va shaxs ma’nolari \textbf{qo‘shimchalar zanjiri} bilan ifodalanadi $\Rightarrow$ so‘z shakllari ko‘p, lug‘at siyrak.\\[7pt]
+    \ic{\faProjectDiagram} & Kichik tanlanmada ishonchli ishlaydigan, \textbf{matematik asoslangan} model va \textbf{sonli usullar} (aniq dekodlash, turg‘un o‘qitish) zarur.
+  \end{tabular}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \centering
+  {\scriptsize\bfseries\color{bmain} So‘z shakli: morfemalar va BPE qism so‘zlari}\\[3pt]
+  \begin{tikzpicture}[x=0.29cm,y=1cm,font=\scriptsize]
+    % morfemalar (1 belgi = 0,29 sm)
+    \foreach \a/\b/\t/\g in {0/5/kitob/o‘zak,5/8/-lar/ko‘plik,8/12/-imiz/egalik,12/14/-da/o‘rin,14/16/-gi/sifat}{
+      \draw[rounded corners=1.5pt,draw=bmain!60,fill=blight] (\a+0.06,0) rectangle (\b-0.06,0.46);
+      \node at ({(\a+\b)/2},0.23) {\t};
+      \node[font=\tiny,text=black!60,anchor=north] at ({(\a+\b)/2},-0.02) {\g};
+    }
+    \node[anchor=east,font=\tiny,text=black!60] at (-0.2,0.23) {morfemalar};
+    % TahrirchiBERT BPE (haqiqiy tokenlash)
+    \foreach \a/\b/\t/\c in {0/5/kitob/blight,5/12/larimiz/blight,12/16/dagi/accent!22}{
+      \draw[rounded corners=1.5pt,draw=bmain!60,fill=\c] (\a+0.06,-0.95) rectangle (\b-0.06,-0.49);
+      \node[font=\scriptsize\ttfamily] at ({(\a+\b)/2},-0.72) {\t};
+    }
+    \node[anchor=east,font=\tiny,text=black!60] at (-0.2,-0.72) {BPE};
+    \draw[->,accent,thick] (14,-0.97) -- (14,-1.3) node[below,font=\tiny,text=accent!85!black,xshift=-0.6cm] {oxirgi qism so‘z: \textit{-da} + \textit{-gi}};
+  \end{tikzpicture}\\[6pt]
+  \begin{tikzpicture}
+  \begin{axis}[
+      scale only axis,width=3.55cm,height=1.55cm,
+      xbar,bar width=7pt,
+      xmin=0,xmax=21500,
+      ymin=0.4,ymax=3.6,
+      ytick={1,2,3},
+      yticklabels={O‘zbek (UzUDT+UT),Turk (BOUN),Ingliz (EWT)},
+      yticklabel style={font=\tiny},
+      xtick={0,10000,20000},
+      scaled x ticks=false,
+      xmajorgrids,
+      nodes near coords,
+      every node near coord/.append style={font=\tiny},
+      title={\tiny\bfseries\color{bmain} UD korpuslari hajmi (gaplar soni)},
+      title style={yshift=-4pt},
+    ]
+    \addplot[fill=accent,draw=none,bar shift=0pt] coordinates {(1184,1)};
+    \addplot[fill=bmain,draw=none,bar shift=0pt] coordinates {(9761,2) (16622,3)};
+  \end{axis}
+  \end{tikzpicture}\\[-1pt]
+  \manba{Manba: universaldependencies.org. BPE bo‘linishi --- TahrirchiBERT tokenizatorining haqiqiy natijasi.}
+\end{column}
+\end{columns}
+\end{frame}
+
+%==============================================================================
+% 3. O‘RGANILGANLIK DARAJASI
+%==============================================================================
+\begin{frame}{Muammoning o‘rganilganlik darajasi}
+  \centering\vspace*{-6pt}
+  \begin{tikzpicture}[font=\tiny]
+    \fill[accent!8,rounded corners=3pt] (10.95,-1.32) rectangle (14.45,1.32);
+    \node[font=\tiny\itshape,text=accent!80!black,anchor=north east,inner sep=1pt] at (14.45,-1.34) {o‘zbek tili uchun resurslar};
+    \draw[->,bmain!50,line width=1.2pt] (-0.3,0) -- (14.5,0);
+    \foreach \x/\yr/\t/\s in {
+      0.3/1959/{L.~Tesnière: bog‘liqlik grammatikasi}/1, 1.42/1965--67/{Chu--Liu, Edmonds: optimal tarmoqlanish}/-1,
+      2.54/1996/{J.~Eisner: proyektiv DP, $O(n^3)$}/1, 3.66/1997/{Hochreiter, Schmidhuber: LSTM}/-1,
+      4.78/2003/{J.~Nivre: o‘tish usuli}/1, 5.9/2005/{R.~McDonald: MST tahlil}/-1,
+      7.02/2016/{J.~Nivre va b.: Universal Dependencies}/1, 8.14/2017/{Dozat, Manning: chuqur bi-affin}/-1,
+      9.26/2019/{J.~Devlin va b.: BERT}/1, 10.38/2020/{P.~Qi va b.: Stanza}/-1,
+      11.5/2023/{M.~Mamasaidov va b.: TahrirchiBERT}/1, 12.62/2025/{A.~Akhundjanova, L.~Talamo: UD\_Uzbek-UT}/-1}{
+      \node[circle,fill=bmain,inner sep=0pt,minimum size=5pt] at (\x,0) {};
+      \ifnum\s=1
+        \node[font=\tiny\bfseries,text=bmain] at (\x,0.22) {\yr};
+        \node[text width=1.62cm,align=center,anchor=south,inner sep=1pt] at (\x,0.33) {\t};
+      \else
+        \node[font=\tiny\bfseries,text=bmain] at (\x,-0.22) {\yr};
+        \node[text width=1.62cm,align=center,anchor=north,inner sep=1pt] at (\x,-0.33) {\t};
+      \fi
+    }
+    \node[star,star points=5,star point ratio=2.2,fill=accent,inner sep=0pt,minimum size=9pt] at (13.74,0) {};
+    \node[font=\tiny\bfseries,text=accent!85!black] at (13.74,0.25) {2026};
+    \node[text width=1.3cm,align=center,font=\tiny\bfseries,text=accent!85!black,anchor=south,inner sep=1pt] at (13.74,0.36) {Ushbu tadqiqot};
+  \end{tikzpicture}\\[-2pt]
+  \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.315\textwidth}
+    \begin{block}{\faUniversity\ O‘zbekiston olimlari}
+      \scriptsize M.\,M.~Aripov, M.\,X.~Xakimov, G‘.\,R.~Matlatipov, N.~Abdurakhmonova, M.\,S.~Sharipov, E.\,R.~Quriyozov, B.\,B.~Elov, U.\,I.~Salaev, M.~Mamasaidov
+    \end{block}
+  \end{column}
+  \begin{column}{0.315\textwidth}
+    \begin{block}{\faGlobe\ Xorijiy va MDH olimlari}
+      \scriptsize L.~Tesnière, J.~Edmonds, R.~Tarjan, J.~Eisner, J.~Nivre, R.~McDonald, T.~Dozat, C.\,D.~Manning, P.~Qi, J.~Devlin, M.-C.~de~Marneffe, D.~Zeman, M.~Straka, G.~Eryiğit, U.\,A.~Tukeyev (Qozog‘iston)
+    \end{block}
+  \end{column}
+  \begin{column}{0.315\textwidth}
+    \begin{alertblock}{Hal etilmagan masala}
+      \scriptsize O‘zbek tili uchun (i) UD sintaktik korpuslari juda kichik va heterogen; (ii) BPE qism so‘zlaridan \textbf{agglyutinativ so‘z vektorini} hosil qilish operatori asoslanmagan; (iii) aniq (MST) va ochko‘z dekodlash hamda modelning \textbf{turg‘unligi} tizimli o‘rganilmagan.
+    \end{alertblock}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+%==============================================================================
+% 4. MASALANING QO‘YILISHI
+%==============================================================================
+\begin{frame}{Masalaning qo‘yilishi}
+  \centering\vspace*{-4pt}
+  \begin{dependency}[theme=simple,arc angle=42,edge style={bmain!75,line width=0.6pt},
+      label style={font=\tiny,fill=white,draw=none,inner sep=0.6pt,text=bmain!90!black}]
+    \begin{deptext}[column sep=0.42cm,row sep=0.01cm,font=\scriptsize]
+      bu \& bo‘limdagi \& asarlar \& bizga \& bu \& xazinaning \& eshigini \& ochib \& beradi \& . \\
+      |[font=\tiny\color{black!55}]| PRON \& |[font=\tiny\color{black!55}]| ADJ \& |[font=\tiny\color{black!55}]| NOUN \& |[font=\tiny\color{black!55}]| PRON \& |[font=\tiny\color{black!55}]| PRON \& |[font=\tiny\color{black!55}]| NOUN \& |[font=\tiny\color{black!55}]| NOUN \& |[font=\tiny\color{black!55}]| VERB \& |[font=\tiny\color{black!55}]| VERB \& |[font=\tiny\color{black!55}]| PUNCT \\
+    \end{deptext}
+    \depedge{2}{1}{det}
+    \depedge{3}{2}{amod}
+    \depedge{9}{3}{nsubj}
+    \depedge{9}{4}{obl}
+    \depedge{6}{5}{det}
+    \depedge{7}{6}{nmod:poss}
+    \depedge{8}{7}{obj}
+    \depedge{9}{8}{xcomp}
+    \deproot[edge unit distance=2.2ex]{9}{root}
+    \depedge{9}{10}{punct}
+  \end{dependency}\\[-6pt]
+  \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.5\textwidth}
+    \begin{tarif}[1 (bog‘liqlik daraxti)]
+      \scriptsize $x=(w_1,\dots,w_n)$ --- gap, $w_0=\textsc{root}$;\ \ $y=\{(h_i,i,r_i)\}_{i=1}^{n}$: \ $h_i\in\{0,\dots,n\}\setminus\{i\}$ --- \textbf{hokim} so‘z, $r_i\in\mathcal R$ ($|\mathcal R|=39$).\\[1pt]
+      $y\in\mathcal T(x)\iff G_y=\big(\{0,\dots,n\},\{h_i\to i\}\big)$ --- $0$ ildizli \textbf{yoyiluvchi arborestsensiya}, \ $|\{i:h_i=0\}|=1$.
+    \end{tarif}
+    \begin{lemmauz}[1 (A.~Cayley formulasi asosida)]
+      \scriptsize $|\mathcal T(x)|=n^{\,n-1}$:\ \ $n=10\Rightarrow10^{9}$;\ \ $\bar n=11{,}4\Rightarrow\approx10^{11}$.\\
+      {\tiny\itshape Isbot g‘oyasi: ildizli belgilangan daraxtlar bilan biyeksiya; Cayley: $n\cdot n^{\,n-2}$.}
+    \end{lemmauz}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+    \begin{masala}[(P)]
+      \scriptsize
+      \textbf{Dekodlash:}\ \ $\hat y=\argmax\nolimits_{y\in\mathcal T(x)}\ \log P_\theta(y\mid x)$\\[3pt]
+      \textbf{O‘qitish:}\ \ $\hat\theta=\argmin\nolimits_{\theta}\widehat R(\theta)$,\ \ $\widehat R(\theta)=-\frac{1}{|\mathcal D|}\sum\nolimits_{(x,y)\in\mathcal D}\log P_\theta(y\mid x)$\\[3pt]
+      \textbf{Teglash:}\ \ $\hat t_i=\argmax\nolimits_{t}P_\varphi(t\mid x,i)$,\ \ $t\in\mathcal U\times\mathcal X\times\mathcal F$\\[3pt]
+      \textbf{Sifat:}\ \ $\mathrm{UAS}=\frac1N\sum_{i}\ind[\hat h_i=h_i]$,\ \ $\mathrm{LAS}=\frac1N\sum_i\ind[\hat h_i=h_i\wedge\hat r_i=r_i]$
+    \end{masala}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+%==============================================================================
+% 5. MAQSAD VA VAZIFALAR
+%==============================================================================
+\begin{frame}{Tadqiqotning maqsadi, vazifalari, obyekti va predmeti}
+  \begin{block}{\faBullseye\ Tadqiqotning maqsadi}
+    \scriptsize Kam resursli sharoitda o‘zbek tili gaplarini avtomatik morfosintaktik tahlil qilishning neyron tarmoqli \textbf{matematik modelini}, uni o‘qitish va dekodlashning \textbf{sonli usullarini} ishlab chiqish hamda ularni \textbf{dasturiy majmua} sifatida amalga oshirish.
+  \end{block}
+  \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.56\textwidth}
+    {\color{bmain}\bfseries\small \faTasks\ Tadqiqotning vazifalari}\\[1pt]
+    \scriptsize
+    \begin{enumerate}\setlength{\itemsep}{2pt}
+      \item UD standartidagi oltin standart sintaktik korpus (\textbf{UzUDT}) yaratish va uni statistik tahlil qilish;
+      \item tahlil masalasini arborestsensiyalar to‘plamida \textbf{optimallashtirish masalasi} sifatida formallashtirish;
+      \item agglyutinativ morfologiyani hisobga oluvchi \textbf{qism so‘z vektorlarini birlashtirish operatorini} ishlab chiqish;
+      \item bi-affin baholash, MST dekodlash va korpuslararo o‘qitishning \textbf{sonli usullarini} tadqiq qilish;
+      \item aniqlik va \textbf{turg‘unlikni} tajribada baholash; dasturiy majmuani yaratish.
+    \end{enumerate}
+  \end{column}
+  \begin{column}{0.41\textwidth}
+    \begin{block}{\faMicroscope\ Obyekt va predmet}
+      \scriptsize \textbf{Obyekt:} o‘zbek tilidagi matnlar va ularning UD sintaktik korpuslari (UzUDT, UT).\\[2pt]
+      \textbf{Predmet:} sintaktik tahlilning graf-ehtimollik modeli, uni o‘qitish va dekodlashning sonli usullari, dasturiy majmuasi.
+    \end{block}
+    \begin{block}{\faCogs\ Usullar}
+      \scriptsize Graflar nazariyasi, kombinatorik va stoxastik optimallashtirish, ehtimollar nazariyasi, matematik statistika, neyron tarmoqlar.
+    \end{block}
+  \end{column}
+  \end{columns}
+\end{frame}
+
+%==============================================================================
+% 6. ILMIY YANGILIK
+%==============================================================================
+\begin{frame}{Tadqiqotning ilmiy yangiligi}
+  \centering\vspace*{10pt}
+  \begin{tikzpicture}[
+      card/.style={rounded corners=3pt,fill=bmain!7,draw=bmain!25,text width=7.05cm,inner sep=4pt,anchor=north west,font=\scriptsize},
+      num/.style={circle,fill=bmain,text=white,font=\scriptsize\bfseries,inner sep=0pt,minimum size=0.46cm}]
+    \node[card] (c1) at (0,0) {\hspace*{0.55cm}\parbox[t]{6.4cm}{\raggedright O‘zbek tili uchun UD standartidagi oltin standart sintaktik korpus --- \textbf{UzUDT} (684 gap, 7\,582 token, annotatorlararo kelishuv $\kappa=0{,}91\text{--}0{,}95$) yaratilgan, UD v2.17 tarkibida ochiq e’lon qilingan; uning statistik xossalari (noproyektivlik, yoy uzunligi, hokim yo‘nalishi) aniqlangan. \ysec{13-sl.}}};
+    \node[card] (c2) at ([yshift=-0.14cm]c1.south west) {\hspace*{0.55cm}\parbox[t]{6.4cm}{\raggedright Bog‘liqlik tahlili masalasi yoyiluvchi arborestsensiyalar to‘plamida ehtimollikni maksimallashtirish masalasi sifatida formallashtirilgan; agglyutinativ morfologiyani hisobga oluvchi \textbf{«oxirgi qism so‘z»} birlashtirish operatori taklif etilgan va u o‘rtacha qiymat operatoriga nisbatan LAS ni \textbf{statistik ahamiyatli} oshirishi ko‘rsatilgan ($+2{,}6$ punkt, $p\approx0{,}002$). \ysec{8, 10, 14-sl.}}};
+    \node[card] (c3) at (7.35,0) {\hspace*{0.55cm}\parbox[t]{6.4cm}{\raggedright Korpuslararo empirik risk bo‘yicha stoxastik optimallashtirish (Adam $\to$ AMSGrad, erta to‘xtatish) va \textbf{Chu--Liu--Edmonds} algoritmi bilan aniq dekodlashning sonli sxemasi ishlab chiqilgan; uning ochko‘z o‘tish usuliga nisbatan ustunligi (bir xil test to‘plamida LAS $+8{,}7$) va orfografik g‘alayonlarga \textbf{turg‘unligi} miqdoriy baholangan. \ysec{11, 12, 15-sl.}}};
+    \node[card] (c4) at ([yshift=-0.14cm]c3.south west) {\hspace*{0.55cm}\parbox[t]{6.4cm}{\raggedright Stanza kutubxonasining teglovchi va parseriga kontekstli vektorlarni ulaydigan modullar (\texttt{-{}-bert\_model}, \texttt{-{}-bert\_pooling}), spaCy uchun o‘zbek tili moduli, baholash va bootstrap vositalaridan iborat \textbf{dasturiy majmua} yaratilgan; o‘qitilgan modellar ochiq e’lon qilingan. \ysec{16-sl.}}};
+    \foreach \i in {1,...,4} \node[num] at ([xshift=0.3cm,yshift=-0.29cm]c\i.north west) {\i};
+  \end{tikzpicture}
+\end{frame}
+
+%==============================================================================
+% 7. MODEL SXEMASI
+%==============================================================================
+\section{Matematik model}
+\begin{frame}{Matematik modelning umumiy sxemasi}
+  \centering
+  \begin{tikzpicture}[node distance=0.55cm]
+    % 1-qator: kirish va kontekstli tasvir
+    \node[stage] (x) {\textbf{Gap}\\$x=(w_1,\dots,w_n)$};
+    \node[stage,right=of x] (bpe) {\textbf{BPE tokenlash}\\$\beta(w_i)=\sigma_{a_i..b_i}$\\{\tiny $|\mathcal V|=30\,528$}};
+    \node[stage,right=of bpe] (bert) {\textbf{TahrirchiBERT}\\12 qatlam, $d=768$\\{\tiny (muzlatilgan)}};
+    \node[stage,right=of bert,draw=accent!80,fill=accent!12] (pool) {\textbf{Birlashtirish} $\Pi$\\$\vv e_i=\sum_k\pi_{ik}\bar{\vv h}_k$\\{\tiny oxirgi / o‘rtacha}};
+    \node[stage,right=of pool] (vin) {\textbf{Kirish vektori}\\$\vv v_i\in\R^{1143}$\\{\tiny so‘z, lemma, belgi, teg}};
+    % 2-qator: tahlil (o‘ngdan chapga)
+    \node[stage,below=1.05cm of vin] (lstm) {\textbf{Highway BiLSTM}\\$3\times(2\times400)$\\$\vv r_i\in\R^{800}$};
+    \node[stage,left=of lstm] (biaff) {\textbf{Chuqur bi-affin}\\$s_{ij},\ s_{ijr}$\\{\tiny + yo‘nalish, masofa}};
+    \node[stage,left=of biaff] (prob) {\textbf{Ehtimollik}\\$P_\theta(h_i=j\mid x)$\\{\tiny qator bo‘yicha softmax}};
+    \node[stage,left=of prob,draw=accent!80,fill=accent!12] (cle) {\textbf{Dekodlash}\\Chu--Liu--Edmonds\\{\tiny MST, bitta ildiz}};
+    \node[stage,left=of cle,fill=bmain!20] (y) {\textbf{Daraxt} $\hat y$\\$\{(\hat h_i,i,\hat r_i)\}$};
+    % teglovchi
+    \node[stage,above=0.45cm of vin,text width=3.1cm,minimum height=0.7cm] (tag) {\textbf{Teglovchi}: 2 qatlamli BiLSTM $\to$ $\hat u_i,\hat\xi_i,\hat f_i$};
+    \foreach \a/\b in {x/bpe,bpe/bert,bert/pool,pool/vin,lstm/biaff,biaff/prob,prob/cle,cle/y} \draw[flow] (\a) -- (\b);
+    \draw[flow] (vin) -- (lstm);
+    \draw[flow] (tag) -- (vin);
+    % slayd havolalari
+    \node[ref,below=1pt of bpe] {8-slayd};
+    \node[ref,below=1pt of pool] {8-slayd};
+    \node[ref,below=1pt of lstm] {9-slayd};
+    \node[ref,below=1pt of biaff] {10-slayd};
+    \node[ref,below=1pt of prob] {10-slayd};
+    \node[ref,below=1pt of cle] {11-slayd};
+    % qism sarlavhalar
+    \node[font=\tiny\bfseries,text=bmain,anchor=south west] at ([yshift=2pt]x.north west) {I. Kontekstli tasvir};
+    \node[font=\tiny\bfseries,text=bmain,anchor=north east] at ([yshift=-14pt]lstm.south east) {II. Tuzilmani baholash va dekodlash (o‘qitish: 12-slayd)};
+  \end{tikzpicture}\\[6pt]
+  \footnotesize Ikki bosqichli quvur: avval teglovchi o‘qitiladi, so‘ng parser kirishiga UPOS/XPOS/UFeats teglari beriladi\\ (A tajribalarda --- bashorat qilingan, B da --- oltin); FastText variantida $\vv e_i$ o‘rniga $\vv W_p\vv p_i\in\R^{125}$.
+\end{frame}
+
+%==============================================================================
+% 8. QISM SO‘Z OPERATORI
+%==============================================================================
+\begin{frame}{Qism so‘z vektorlarini so‘z darajasiga o‘tkazish operatori}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+  \begin{tarif}[2 (BPE va qatlamlar)]
+    \scriptsize $\beta:\ w_i\mapsto(\sigma_{a_i},\dots,\sigma_{b_i})$,\ \ $m_i=b_i-a_i+1$ --- qism so‘zlar soni.\\
+    Kontekstli tasvir (Stanza sxemasi): \ $\bar{\vv h}_k=\tfrac14\sum_{\ell=9}^{11}\vv H^{(\ell)}_k\in\R^{768}$.
+  \end{tarif}
+  \begin{tarif}[3 (birlashtirish operatori)]
+    \scriptsize $\vv E=\Pi\,\bar{\vv H}$, \ $\vv e_i=\sum_{k=1}^{M}\pi_{ik}\bar{\vv h}_k$, \ $\Pi\in\R^{n\times M}$ --- \textbf{qator-stoxastik} matritsa:\\[3pt]
+    $\pi^{\text{oxirgi}}_{ik}=\ind[k=b_i]$,\qquad $\pi^{\text{o‘rt}}_{ik}=\dfrac{\ind[a_i\le k\le b_i]}{m_i}$.
+  \end{tarif}
+  \begin{block}{Gipoteza (suffiks lokalizatsiyasi)}
+    \scriptsize O‘zbek tilida grammatik ko‘rsatkichlar so‘zning \textbf{o‘ng chetida} joylashadi $\Rightarrow$ $\bar{\vv h}_{b_i}$ kelishik, shaxs-son ma’lumotini to‘playdi; o‘rtacha qiymat operatori bu signalning ulushini $1/m_i$ gacha kamaytiradi.
+  \end{block}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \centering
+  {\scriptsize\bfseries\color{bmain} TahrirchiBERT tokenizatorining haqiqiy natijasi}\\[3pt]
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}>{\scriptsize\itshape}r@{\ \ }l@{}}
+    kitoblarimizdagi & \bp{kitob}\,\bp{larimiz}\,\bl{dagi}\\
+    o‘quvchilarimizdagi & \bp{o}\,\bp{‘}\,\bp{quvchi}\,\bp{larimiz}\,\bl{dagi}\\
+    maktablarimizning & \bp{maktab}\,\bl{larimizning}\\
+    ko‘rganmisiz & \bp{ko}\,\bp{‘}\,\bp{rgan}\,\bl{misiz}\\
+    xazinaning & \bp{xazina}\,\bl{ning}\\
+  \end{tabular}\\[6pt]
+  \begin{tikzpicture}[font=\scriptsize]
+    \foreach \t/\x [count=\k] in {kitob/0,larimiz/1.55,dagi/3.1}{
+      \node[draw=bmain!50,fill=blight,rounded corners=1.5pt,minimum width=1.25cm,font=\scriptsize\ttfamily] (s\k) at (\x,0) {\t};
+    }
+    \node[box,font=\scriptsize] (em) at (0.75,1.3) {$\vv e_i^{\,\text{o‘rt}}=\tfrac13\sum_k\bar{\vv h}_k$};
+    \node[abox,font=\scriptsize] (el) at (3.25,1.3) {$\vv e_i^{\,\text{oxirgi}}=\bar{\vv h}_{b_i}$};
+    \foreach \k in {1,2,3} \draw[->,bmain!60,dashed] (s\k.north) -- (em.south);
+    \draw[->,accent,thick] (s3.north) -- (el.south);
+  \end{tikzpicture}\\[3pt]
+  \manba{o‘/g‘ dagi tutuq belgisi (‘) alohida qism so‘zga ajraladi.}
+\end{column}
+\end{columns}
+\yangilik{2}
+\end{frame}
+
+%==============================================================================
+% 9. BiLSTM
+%==============================================================================
+\begin{frame}{Kontekstni hisobga oluvchi kodlovchi: highway BiLSTM}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.57\textwidth}
+  \begin{block}{Kirish vektori}
+    \scriptsize $\vv v_i=\big[\vv e^{w}_i;\ \vv e^{\mathrm{lem}}_i;\ \vv e^{\mathrm{upos}}_i+\vv e^{\mathrm{xpos}}_i;\ \textstyle\sum_k\vv e^{f_k}_i;\ \vv W_c\vv c_i;\ \vv e_i\big]\in\R^{1143}$\\[1pt]
+    {\tiny so‘z $75$ + lemma $75$ + teglar $50$ + belgilar $50$ + harf-LSTM $125$ + BERT $768$}
+  \end{block}
+  \begin{block}{LSTM yacheykasi (S.~Hochreiter, J.~Schmidhuber, 1997)}
+    \scriptsize
+    $\begin{pmatrix}\vv i_t\\ \vv f_t\\ \vv o_t\\ \vv g_t\end{pmatrix}=\begin{pmatrix}\sigma\\ \sigma\\ \sigma\\ \tanh\end{pmatrix}\!\left(\vv W\begin{bmatrix}\vv v_t\\ \vv h_{t-1}\end{bmatrix}+\vv b\right)$,\qquad
+    $\begin{aligned}\vv c_t&=\vv f_t\odot\vv c_{t-1}+\vv i_t\odot\vv g_t,\\ \vv h_t&=\vv o_t\odot\tanh(\vv c_t).\end{aligned}$
+  \end{block}
+  \begin{block}{Ikki yo‘nalish va highway bog‘lanish, \ $\ell=1,2,3$}
+    \scriptsize $\vv z^{(\ell)}_t=\big[\overrightarrow{\vv h}^{(\ell)}_t;\overleftarrow{\vv h}^{(\ell)}_t\big]+\sigma\big(\vv G^{(\ell)}\vv z^{(\ell-1)}_t\big)\odot\tanh\big(\vv W_H^{(\ell)}\vv z^{(\ell-1)}_t\big)$,\quad $\vv r_i=\vv z^{(3)}_i\in\R^{800}$
+  \end{block}
+\end{column}
+\begin{column}{0.4\textwidth}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,
+      cell/.style={rounded corners=2pt,draw=bmain!60,fill=blight,minimum width=0.78cm,minimum height=0.5cm},
+      bcell/.style={rounded corners=2pt,draw=accent!80,fill=accent!12,minimum width=0.78cm,minimum height=0.5cm}]
+    \foreach \i in {1,...,4}{
+      \node (v\i) at (1.25*\i,0) {$\vv v_{\i}$};
+      \node[cell] (f\i) at (1.25*\i,0.95) {$\overrightarrow{\vv h}_{\i}$};
+      \node[bcell] (b\i) at (1.25*\i,1.85) {$\overleftarrow{\vv h}_{\i}$};
+      \node (r\i) at (1.25*\i,2.85) {$\vv r_{\i}$};
+      \draw[->,black!45] (v\i) -- (f\i);
+      \draw[->,black!45] (v\i.north east) to[bend right=35] (b\i.south east);
+      \draw[->,black!45] (b\i) -- (r\i);
+      \draw[->,black!45] (f\i.north west) to[bend left=35] (r\i.south west);
+    }
+    \foreach \i/\j in {1/2,2/3,3/4}{
+      \draw[->,bmain,thick] (f\i) -- (f\j);
+      \draw[->,accent,thick] (b\j) -- (b\i);
+    }
+  \end{tikzpicture}\\[4pt]
+  \begin{block}{Gradient oqimi}
+    \scriptsize To‘g‘ridan-to‘g‘ri yo‘l bo‘yicha $\dfrac{\partial\vv c_t}{\partial\vv c_{t-1}}=\operatorname{diag}(\vv f_t)$: unutish darvozasi uzoq bog‘lanishlarda gradientning so‘nishini yumshatadi.
+  \end{block}
+  {\tiny\color{black!60} Teglovchi: 2 qatlam, $2\times200$; \ parser: 3 qatlam, $2\times400$.}
+\end{column}
+\end{columns}
+\end{frame}
+
+%==============================================================================
+% 10. BI-AFFIN BAHOLASH
+%==============================================================================
+\begin{frame}{Chuqur bi-affin baholash va ehtimollik modeli}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.6\textwidth}
+  \begin{tarif}[4 (chuqur bi-affin baholovchi)]
+    \scriptsize $\vv a^{d}_i=\ReLU(\vv W_d\vv r_i+\vv b_d)$,\ \ $\vv a^{h}_j=\ReLU(\vv W_h\vv r_j+\vv b_h)\in\R^{400}$,\\[2pt]
+    $s_{ij}=[\vv a^{d}_i;1]^{\top}\,\vv U\,[\vv a^{h}_j;1]$,\ \ $\vv U\in\R^{401\times401}$;\ \ munosabat: $s_{ijr}$, $\vv U^{(r)}$.
+  \end{tarif}
+  \begin{lemmauz}[2 (bi-affin forma --- bilinear forma)]
+    \scriptsize $\vv U=\begin{bmatrix}\vv U_{11}&\vv u_{12}\\ \vv u_{21}^{\top}&u_{22}\end{bmatrix}$ bo‘lsa, \ $s_{ij}=\vv a^{d\top}_i\vv U_{11}\vv a^{h}_j+\vv u_{21}^{\top}\vv a^{h}_j+c_i$, \ $c_i=\vv a^{d\top}_i\vv u_{12}+u_{22}$.\\[1pt]
+    softmax siljishga invariant $\Rightarrow$ $c_i$ ta’sir qilmaydi; $\vv u_{21}^{\top}\vv a^{h}_j$ --- «hokimlik apriori».
+  \end{lemmauz}
+  \begin{block}{Ehtimollik modeli (lokal normallash)}
+    \scriptsize $\tilde s_{ij}=s_{ij}+\log\sigma\big(\lambda_{ij}\sgn(j-i)\big)-\log\big(1+\tfrac12(|j-i|-\delta_{ij})^{2}\big)$\\
+    {\tiny 2-had --- yoy yo‘nalishi, 3-had --- masofa uchun \textbf{Koshi yadrosi} ($\delta_{ij}\ge1$)}\\[1pt]
+    $P_\theta(h_i=j\mid x)=e^{\tilde s_{ij}}\big/\sum\nolimits_{k\ne i}e^{\tilde s_{ik}}$,\qquad $P_\theta(r_i=r\mid x,h_i=j)=\softmax_r\,(s_{ijr})$.
+  \end{block}
+\end{column}
+\begin{column}{0.37\textwidth}
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+      width=6.1cm,height=3.9cm,
+      ybar,bar width=6.2pt,
+      ymin=0,ymax=62,
+      symbolic x coords={1,2,3,4,5,6,7,8,9,10,>10},
+      xtick=data,
+      xlabel={$|h_i-i|$ (yoy uzunligi)},ylabel={ulushi, \%},
+      ymajorgrids,
+      nodes near coords,
+      every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=1},
+      title={\tiny\bfseries\color{bmain} Yoy uzunligi taqsimoti (UzUDT+UT)},
+      title style={yshift=-4pt},
+    ]
+    \addplot[fill=bmain,draw=none,bar shift=0pt] coordinates {(1,52.0)(2,17.3)(3,8.5)(4,5.4)(5,4.1)(6,3.2)(7,2.3)(8,1.5)(9,1.3)(10,1.1)};
+    \addplot[fill=accent,draw=none,bar shift=0pt] coordinates {(>10,3.3)};
+  \end{axis}
+  \end{tikzpicture}\\[3pt]
+  \stattile{2.45cm}{84,6\,\%}{hokim o‘ngda (SOV)}\hfill
+  \stattile{2.45cm}{$\bar d=2{,}72$}{o‘rtacha yoy uzunligi}\\[3pt]
+  \manba{Tinish belgilari va \textsc{root} yoylarisiz, 13\,512 token. Og‘ir dumli taqsimot masofa uchun Koshi tipidagi yadro tanlovini asoslaydi.}
+\end{column}
+\end{columns}
+\yangilik{2}
+\end{frame}
+
+%==============================================================================
+% 11. MST DEKODLASH
+%==============================================================================
+\section{Sonli usullar}
+\begin{frame}{Sonli usul (1): maksimal yoyiluvchi arborestsensiya --- Chu--Liu--Edmonds}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.56\textwidth}
+  \begin{teorema}[1 (Chu, Liu, 1965; Edmonds, 1967)]
+    \scriptsize $G=(V,A,w)$ --- to‘liq yo‘naltirilgan graf, $w_{ji}=\log P_\theta(h_i=j\mid x)$. Model yoylar bo‘yicha faktorlanganda
+    \[\hat y=\argmax_{y\in\mathcal T(x)}\ \sum_{(j\to i)\in y}w_{ji}\]
+    maksimal og‘irlikdagi yoyiluvchi arborestsensiyadir; CLE algoritmi uni \textbf{aniq} topadi: $O(n^3)$, R.~Tarjan (1977) amalga oshirishida $O(n^2)$.
+  \end{teorema}
+  \begin{block}{Algoritm: ochko‘z tanlov + sikl kontraksiyasi}
+    \scriptsize \textbf{1)} har bir $i$ uchun $h_i=\arg\max_j w_{ji}$; \ \textbf{2)} sikl bo‘lmasa --- yechim optimal; \ \textbf{3)} sikl $C$ bitta uchga qisqartiriladi: $w'_{j\to C}=\max_{i\in C}\big(w_{ji}-w_{h_i i}\big)$, so‘ng rekursiya va qayta yoyish.\\[1pt]
+    \textbf{Bitta ildiz sharti:} nomzod ildizlar bo‘yicha CLE qayta yechiladi.
+  \end{block}
+\end{column}
+\begin{column}{0.41\textwidth}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,
+      nd/.style={circle,draw=bmain!70,fill=blight,inner sep=1.2pt,minimum size=0.5cm},
+      rt/.style={rounded corners=2pt,fill=bmain,text=white,inner sep=2pt,font=\tiny\bfseries}]
+    % (a) ochko‘z tanlov --- sikl
+    \node[rt] (r) at (0,1.35) {ROOT};
+    \node[nd] (a) at (-0.75,0) {1}; \node[nd] (b) at (0.15,0) {2}; \node[nd] (c) at (0.95,0) {3};
+    \draw[->,bmain] (r) -- (a);
+    \draw[->,badred,thick] (b) to[bend left=35] (c);
+    \draw[->,badred,thick] (c) to[bend left=35] (b);
+    \draw[->,bmain] (a) to[bend right=40] (b);
+    \node[font=\tiny,text=badred] at (0.55,-0.58) {sikl $C$};
+    \node[font=\tiny\bfseries] at (0.1,-0.95) {(a) ochko‘z tanlov};
+    % (b) kontraksiya
+    \node[rt] (r2) at (2.9,1.35) {ROOT};
+    \node[nd] (a2) at (2.4,0) {1};
+    \node[nd,draw=accent,fill=accent!15,minimum size=0.62cm] (C) at (3.45,0) {$C$};
+    \draw[->,bmain] (r2) -- (a2);
+    \draw[->,accent,thick] (a2) -- node[below,font=\tiny]{$w'$} (C);
+    \node[font=\tiny\bfseries] at (2.9,-0.95) {(b) kontraksiya};
+    \draw[->,black!35,thick] (1.45,0.6) -- (2.0,0.6);
+  \end{tikzpicture}\\[3pt]
+  \renewcommand{\arraystretch}{1.1}
+  \scriptsize
+  \begin{tabular}{@{}rrr@{}}
+    \toprule
+    $n$ & $|\mathcal T(x)|=n^{\,n-1}$ & CLE: $\sim n^2$\\
+    \midrule
+    5 & 625 & 25\\
+    10 & $10^{9}$ & 100\\
+    20 & $5{,}2\cdot10^{24}$ & 400\\
+    \bottomrule
+  \end{tabular}\\[5pt]
+  \tikz\node[rounded corners=3pt,fill=bmain!10,text width=5.3cm,align=center,inner sep=3pt]
+    {{\color{bmain}\bfseries\small 9,2\,\% gaplar noproyektiv}\\[-1pt]{\tiny (109 / 1\,184). Proyektiv usullar (J.~Eisner, $O(n^3)$) ularni ifodalay olmaydi; CLE ifodalaydi.}};
+\end{column}
+\end{columns}
+\yangilik{3}
+\end{frame}
+
+%==============================================================================
+% 12. O‘QITISH
+%==============================================================================
+\begin{frame}{Sonli usul (2): korpuslararo empirik riskni stoxastik minimallashtirish}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+  \begin{block}{Yo‘qotish funksiyasi (bitta gap uchun)}
+    \scriptsize $\begin{aligned}\mathcal L(\theta)&=-\textstyle\sum_{i=1}^{n}\log P_\theta(h_i^{*}\mid x)-\sum_{i=1}^{n}\log P_\theta(r_i^{*}\mid x,h_i^{*})\\ &\quad+\mathcal L_{\text{yo‘n}}+\mathcal L_{\text{mas}}\end{aligned}$\\[1pt]
+    {\tiny $\mathcal L_{\text{yo‘n}}$, $\mathcal L_{\text{mas}}$ --- yoy yo‘nalishi va masofasi bo‘yicha yordamchi yo‘qotishlar}
+  \end{block}
+  \begin{block}{Korpuslararo empirik risk (qavariq aralashma)}
+    \scriptsize $\widehat R(\theta)=\lambda\,\widehat R_{\mathrm{UzUDT}}(\theta)+(1-\lambda)\,\widehat R_{\mathrm{UT}}(\theta)$,\ \ $\lambda=\tfrac{451}{781}\approx0{,}58$;\ \ ya’ni $\widehat P=\lambda\widehat P_1+(1-\lambda)\widehat P_2$
+  \end{block}
+  \begin{block}{Adam $\to$ AMSGrad}
+    \scriptsize $\vv m_t=\beta_1\vv m_{t-1}+(1-\beta_1)\vv g_t$,\ \ $\vv v_t=\beta_2\vv v_{t-1}+(1-\beta_2)\vv g_t^{2}$,\ \ $\theta_t=\theta_{t-1}-\alpha\,\hat{\vv m}_t\big/\big(\sqrt{\hat{\vv v}_t}+\varepsilon\big)$;\\[2pt]
+    $\alpha=3\cdot10^{-3}$, $(\beta_1,\beta_2)=(0{,}9;\,0{,}95)$, $\varepsilon=10^{-6}$, $\|\vv g_t\|_2\le1$; dropout 0,5; partiya 5\,000 token.\\[2pt]
+    \textbf{To‘xtatish:} 3\,000 qadam yaxshilanish bo‘lmasa $\Rightarrow$ AMSGrad ($\hat{\vv v}_t=\max(\hat{\vv v}_{t-1},\vv v_t)$); yana 3\,000 qadam $\Rightarrow$ to‘xtash.
+  \end{block}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+      width=7.0cm,height=5.3cm,
+      xmin=0,xmax=7400,ymin=22,ymax=67,
+      xlabel={o‘qitish qadami},ylabel={LAS (validatsiya), \%},
+      xtick={0,2000,4000,6000},
+      scaled x ticks=false,
+      grid=both,
+      legend style={at={(0.98,0.03)},anchor=south east,legend columns=2,font=\tiny},
+      title={\tiny\bfseries\color{bmain} O‘qitish egri chiziqlari (jurnallardan)},
+      title style={yshift=-4pt},
+    ]
+    \addplot[ftgray,thick,dashed] coordinates {(100,29.35)(200,36.80)(300,44.25)(400,48.91)(600,52.64)(800,54.50)(1000,52.64)(1200,54.04)(1400,53.26)(1600,54.66)(1800,55.28)(2000,54.97)(2200,53.42)(2400,53.57)(2600,52.17)(2800,53.26)(3000,52.02)(3200,52.02)(3400,51.71)(3600,52.64)(3800,52.17)(4000,52.64)(4200,51.71)(4400,52.95)(4600,51.40)(4800,50.78)(5000,50.31)(5200,51.24)(5400,50.16)(5600,52.02)(5800,51.24)(6000,50.93)(6200,51.09)(6400,50.16)(6600,50.78)(6800,51.55)(7000,51.24)(7200,52.02)};
+    \addplot[bmain,thick,dashed] coordinates {(100,24.69)(200,34.47)(300,42.39)(400,50.31)(600,53.57)(800,55.75)(1000,58.23)(1200,56.68)(1400,56.06)(1600,56.83)(1800,54.97)(2000,53.11)(2200,54.81)(2400,54.19)(2600,54.35)(2800,54.50)(3000,54.04)(3200,52.64)(3400,54.35)(3600,53.57)(3800,54.35)(4000,53.88)(4200,54.19)(4400,53.26)(4600,54.35)(4800,54.97)(5000,54.66)(5200,53.88)(5400,54.04)(5600,54.04)(5800,53.26)(6000,53.57)(6200,53.57)(6400,54.19)(6600,54.04)(6800,53.57)(7000,54.19)};
+    \addplot[accent,thick,dashed] coordinates {(100,25.93)(200,34.01)(300,40.99)(400,46.27)(600,50.78)(800,54.04)(1000,55.90)(1200,52.64)(1400,54.04)(1600,54.19)(1800,53.26)(2000,53.88)(2200,52.80)(2400,54.35)(2600,52.95)(2800,54.66)(3000,53.57)(3200,52.80)(3400,53.11)(3600,52.64)(3800,52.80)(4000,52.33)(4200,52.17)(4400,51.71)(4600,51.86)(4800,52.64)(5000,51.40)(5200,52.48)(5400,53.26)(5600,53.26)(5800,52.33)(6000,52.80)(6200,52.80)(6400,52.48)(6600,53.11)(6800,52.02)(7000,51.55)};
+    \addplot[ftgray,thick] coordinates {(100,31.84)(200,38.43)(300,52.17)(400,57.11)(600,62.28)(800,62.87)(1000,61.34)(1200,61.46)(1400,61.57)(1600,60.99)(1800,61.34)(2000,61.93)(2200,61.10)(2400,62.04)(2600,60.28)(2800,61.22)(3000,60.16)(3200,60.05)(3400,60.28)(3600,60.63)(3800,59.34)(4000,60.99)(4200,60.28)(4400,60.99)(4600,62.04)(4800,61.22)(5000,61.10)(5200,61.22)(5400,60.63)(5600,60.87)(5800,60.63)(6000,61.34)(6200,60.16)(6400,61.93)(6600,60.75)(6800,62.40)};
+    \addplot[bmain,thick] coordinates {(100,29.14)(200,38.78)(300,49.82)(400,54.41)(600,59.58)(800,62.16)(1000,61.93)(1200,62.98)(1400,61.69)(1600,63.10)(1800,62.04)(2000,61.22)(2200,62.51)(2400,62.75)(2600,61.93)(2800,61.10)(3000,61.46)(3200,61.81)(3400,60.87)(3600,61.81)(3800,61.10)(4000,59.69)(4200,59.81)(4400,59.81)(4600,60.16)(4800,59.34)(5000,60.75)(5200,61.22)(5400,59.69)(5600,60.63)(5800,60.05)(6000,60.28)(6200,60.52)(6400,60.16)(6600,60.87)(6800,60.52)};
+    % eng yaxshi nazorat nuqtalari
+    \addplot[only marks,mark=*,mark size=1.7pt,black] coordinates {(1300,55.28)(1000,58.23)(1000,55.90)(800,62.87)(900,63.81)};
+    \legend{E1.1 FastText,E2.1 BERT+oxirgi,E3.1 BERT+o‘rt.,E1.2 FastText$^\dagger$,E2.2 BERT+oxirgi$^\dagger$}
+  \end{axis}
+  \end{tikzpicture}\\[-1pt]
+  \manba{$\bullet$ --- eng yaxshi nazorat nuqtasi (800--1\,300 qadam); keyin haddan tashqari moslashish.\\ Uzuq chiziq --- UzUDT, uzluksiz --- UzUDT+UT; $^\dagger$ oltin morfologik teglar bilan.}
+\end{column}
+\end{columns}
+\yangilik{3}
+\end{frame}
+
+%==============================================================================
+% 13. MA’LUMOTLAR VA TAJRIBA DIZAYNI
+%==============================================================================
+\section{Tajribalar}
+\begin{frame}{Ma’lumotlar va tajriba dizayni}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+  \renewcommand{\arraystretch}{1.1}
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    & \textbf{UzUDT} (muallif) & \textbf{UT}\\
+    \midrule
+    Janr & badiiy, ta’limiy & yangilik, badiiy\\
+    Gap / token & 684 / 7\,582 & 500 / 5\,930\\
+    Annotatsiya & qo‘lda, 6 annotator & yarim avtomatik\\
+    Kelishuv ($\kappa$, \%) & lemma 95,2; UPOS 93,7 & ---\\
+    UD validatsiyasi & \textcolor{okgreen}{\faCheck}\ o‘tgan & \textcolor{badred}{\faTimes}\ 92 ogohl.\\
+    Noproyektiv gaplar & 11,0\,\% & 6,8\,\%\\
+    Munosabat turlari & 38 & 33 \ (jami 39)\\
+    \bottomrule
+  \end{tabular}\\[6pt]
+  {\color{bmain}\bfseries\small Tajriba rejasi: $3\times2$ faktorli dizayn}\\[3pt]
+  \begin{tikzpicture}[font=\tiny,
+      hd/.style={fill=bmain,text=white,rounded corners=1.5pt,minimum height=0.48cm,font=\tiny\bfseries,align=center},
+      cl/.style={fill=bmain!8,draw=bmain!25,rounded corners=1.5pt,minimum width=1.9cm,minimum height=0.42cm,align=center}]
+    \node[hd,minimum width=2.3cm,minimum height=0.62cm] at (0,0) {Vektor / birlashtirish};
+    \node[hd,minimum width=2.2cm,minimum height=0.62cm] at (2.38,0) {UzUDT\\[-1pt]{\tiny\mdseries 435 / 48 / 198 gap}};
+    \node[hd,minimum width=2.2cm,minimum height=0.62cm] at (4.7,0) {UzUDT+UT$^\dagger$\\[-1pt]{\tiny\mdseries 781 / 78 / 325 gap}};
+    \foreach \t/\a/\b [count=\i] in {{FastText, 300}/E1.1/E1.2, {BERT + oxirgi}/E2.1/E2.2, {BERT + o‘rtacha}/E3.1/E3.2$^\ddagger$}{
+      \node[cl,minimum width=2.3cm] at (0,-0.12-0.47*\i) {\t};
+      \node[cl,minimum width=2.2cm] at (2.38,-0.12-0.47*\i) {\a};
+      \node[cl,minimum width=2.2cm] at (4.7,-0.12-0.47*\i) {\b};
+    }
+  \end{tikzpicture}\\[1pt]
+  \manba{$^\dagger$ bu sharoitda parserga oltin UPOS/XPOS/UFeats berilgan. \ $^\ddagger$ E3.2 jurnali repozitoriyda yo‘q.}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+      width=6.4cm,height=5.6cm,
+      xbar=0.5pt,bar width=4.6pt,
+      xmin=0,xmax=70,
+      symbolic y coords={discourse,PROPN,flat,svc,lvc,advcl},
+      ytick=data,
+      yticklabels={discourse,PROPN,flat,compound:svc,compound:lvc,advcl},
+      yticklabel style={font=\tiny\ttfamily},
+      xlabel={1\,000 tokenga to‘g‘ri keladigan soni},
+      xmajorgrids,
+      nodes near coords,
+      every node near coord/.append style={font=\tiny,/pgf/number format/fixed,/pgf/number format/precision=1},
+      legend style={at={(0.5,1.02)},anchor=south,legend columns=2},
+      reverse legend,
+    ]
+    \addplot[fill=accent,draw=none] coordinates {(1.2,discourse)(51.9,PROPN)(17.9,flat)(23.3,svc)(36.3,lvc)(17.9,advcl)};
+    \addplot[fill=bmain,draw=none] coordinates {(8.4,discourse)(3.4,PROPN)(1.5,flat)(1.1,svc)(2.8,lvc)(58.6,advcl)};
+    \legend{UT,UzUDT}
+  \end{axis}
+  \end{tikzpicture}\\[-2pt]
+  \manba{Korpuslar bir-birini to‘ldiradi. Manba: data/udbase/*.conllu.}
+\end{column}
+\end{columns}
+\yangilik{1}
+\end{frame}
+
+%==============================================================================
+% 14. NATIJALAR
+%==============================================================================
+\begin{frame}{Natijalar: validatsiya to‘plami, eng yaxshi nazorat nuqtasi}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+  \renewcommand{\arraystretch}{1.08}
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}llrrrr@{}}
+    \toprule
+    & & \multicolumn{2}{c}{\textbf{Teglash}} & \multicolumn{2}{c}{\textbf{Sintaktik tahlil}}\\
+    \cmidrule(lr){3-4}\cmidrule(l){5-6}
+    \textbf{Tajriba} & \textbf{Vektorlar} & UPOS & UFeats & UAS & LAS\\
+    \midrule
+    \multicolumn{6}{@{}l}{\tiny\itshape A. UzUDT; parserga bashorat qilingan teglar (48 gap, 644 token)}\\
+    E1.1 & FastText & 79,19 & 66,61 & 71,58 & 55,28\\
+    E2.1 & BERT + oxirgi & \textbf{83,54} & \textbf{68,17} & \textbf{73,91} & \textbf{58,23}\\
+    E3.1 & BERT + o‘rtacha & 83,39 & 65,84 & 71,58 & 55,90\\
+    \midrule
+    \multicolumn{6}{@{}l}{\tiny\itshape B. UzUDT+UT; parserga oltin teglar$^\dagger$ (78 gap, 851 token)}\\
+    E1.2 & FastText & 83,78 & 70,98 & 70,51 & 62,87\\
+    E2.2 & BERT + oxirgi & \textbf{87,19} & \textbf{73,21} & \textbf{72,39} & \textbf{63,81}\\
+    \bottomrule
+  \end{tabular}\\[5pt]
+  \begin{block}{Xulosalar}
+    \scriptsize \textbf{1.} Sintaktik tahlilda «oxirgi qism so‘z» operatori o‘rtacha qiymatdan \textbf{ishonchli} yaxshi.\\
+    \textbf{2.} TahrirchiBERT teglashni yaxshilaydi: UPOS $+3{,}4\ldots+4{,}4$ punkt.\\
+    \textbf{3.} Oltin morfologiya berilganda BERT ning sintaktik ustunligi ahamiyatsiz.
+  \end{block}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+      width=6.6cm,height=4.1cm,
+      ybar=1pt,bar width=6.5pt,
+      ymin=40,ymax=97,
+      symbolic x coords={E1.1,E2.1,E3.1,E1.2,E2.2},
+      xtick=data,
+      xticklabels={E1.1,E2.1,E3.1,E1.2$^\dagger$,E2.2$^\dagger$},
+      ymajorgrids,
+      nodes near coords,
+      every node near coord/.append style={font=\tiny,rotate=90,anchor=west,/pgf/number format/fixed,/pgf/number format/precision=1},
+      legend style={at={(0.5,1.02)},anchor=south,legend columns=3},
+      enlarge x limits=0.14,
+    ]
+    \addplot[fill=bmain!45,draw=none] coordinates {(E1.1,79.19)(E2.1,83.54)(E3.1,83.39)(E1.2,83.78)(E2.2,87.19)};
+    \addplot[fill=bmain,draw=none] coordinates {(E1.1,71.58)(E2.1,73.91)(E3.1,71.58)(E1.2,70.51)(E2.2,72.39)};
+    \addplot[fill=accent,draw=none] coordinates {(E1.1,55.28)(E2.1,58.23)(E3.1,55.90)(E1.2,62.87)(E2.2,63.81)};
+    \legend{UPOS,UAS,LAS}
+    \draw[black!40,dashed] ([xshift=0.5cm]axis cs:E3.1,40) -- ([xshift=0.5cm]axis cs:E3.1,97);
+  \end{axis}
+  \end{tikzpicture}\\[1pt]
+  \begin{block}{Juftlashgan bootstrap, $B=10^4$}
+    \scriptsize $\Delta^{*}_b=\mathrm{LAS}_A(S^{*}_b)-\mathrm{LAS}_B(S^{*}_b)$;\ 95\,\% IO $=\big[\Delta^{*}_{(0{,}025)};\Delta^{*}_{(0{,}975)}\big]$\\[1pt]
+    oxirgi -- o‘rt.: \ $+2{,}64$\ $[+0{,}97;+4{,}12]$, $p\approx0{,}002$ \textcolor{okgreen}{\faCheck}\\
+    BERT -- FT (A): \ $+2{,}95$\ $[0{,}00;+5{,}63]$, $p\approx0{,}03$\\
+    BERT -- FT (B): \ $-1{,}29$\ $[-4{,}66;+2{,}23]$ --- ahamiyatsiz
+  \end{block}
+\end{column}
+\end{columns}
+\vspace{-2pt}
+\manba{$^\dagger$ A va B bevosita taqqoslanmaydi: kiruvchi teglar (bashorat / oltin) va validatsiya to‘plamlari farqli. Bootstrap --- oxirgi qadam bashoratlari bo‘yicha.}
+\yangilik{2}
+\end{frame}
+
+%==============================================================================
+% 15. TEST, TURG‘UNLIK, DEKODLASH
+%==============================================================================
+\begin{frame}{Test to‘plamida baholash: turg‘unlik va dekodlash usullarini taqqoslash}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.52\textwidth}
+  \begin{tarif}[5 (sezgirlik)]
+    \scriptsize $\pi$ --- matnni buzuvchi (g‘alayon) operatori, $\rho_\pi$ --- o‘zgargan tokenlar ulushi;\ \ sezgirlik: \ $S_\pi=\mathrm{LAS}(\mathcal D)-\mathrm{LAS}\big(\pi(\mathcal D)\big)$.
+  \end{tarif}
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+      width=6.3cm,height=4.2cm,
+      xbar=0.5pt,bar width=4.5pt,
+      xmin=-10.4,xmax=0.4,
+      ymin=0.4,ymax=5.6,
+      ytick={1,2,3,4,5},
+      yticklabels={Kichik harf + tinishsiz,Tinish belgisiz,Tasodifiy bosh harf,Kod almashuvi (ru),Diakritikasiz},
+      yticklabel style={font=\tiny},
+      xlabel={o‘zgarish, punkt},
+      xmajorgrids,
+      legend style={at={(0.02,0.98)},anchor=north west,legend columns=2},
+      reverse legend,
+    ]
+    \addplot[fill=accent,draw=none,nodes near coords,every node near coord/.append style={font=\tiny,anchor=east,/pgf/number format/fixed,/pgf/number format/precision=2}] coordinates {(-8.13,1)(-8.30,2)(-2.52,3)(-0.14,4)(-1.14,5)};
+    \addplot[fill=bmain,draw=none] coordinates {(-3.62,1)(-3.74,2)(-2.00,3)(0,4)(-0.43,5)};
+    \legend{$\Delta$LAS,$\Delta$UAS}
+  \end{axis}
+  \end{tikzpicture}\\[-2pt]
+  \raggedright\manba{E2.1 modeli, UzUDT test to‘plami (198 gap, 2\,101 token); toza matnda UAS 71,06, LAS 54,07. $\rho_\pi$: diakritika 8,7\,\%, kod almashuvi 0,2\,\%, bosh harf 53,3\,\%, tinish belgisi 19,6\,\%.}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \centering
+  {\scriptsize\bfseries\color{bmain} Aniq va ochko‘z dekodlash (bir xil test to‘plami)}\\[3pt]
+  \renewcommand{\arraystretch}{1.2}
+  \scriptsize
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    & \textbf{Graf + CLE} & \textbf{O‘tish (arc-eager)} & $\Delta$\\
+    & {\tiny Stanza, E2.1} & {\tiny spaCy, S1.1} & \\
+    \midrule
+    UAS & \textbf{71,06} & 67,72 & $+3{,}34$\\
+    LAS & \textbf{54,07} & 45,35 & $+8{,}72$\\
+    \bottomrule
+  \end{tabular}\\[2pt]
+  \manba{Ikkalasi ham TahrirchiBERT; spaCy baholovchisi tinish belgilarini hisobga olmaydi.}\\[6pt]
+  \begin{block}{Talqin}
+    \scriptsize \textbf{1.} Global (MST) optimallashtirish ochko‘z ketma-ket qarorlardan \textbf{8,7 punkt} yaxshi: xatolar zanjir bo‘ylab tarqalmaydi.\\
+    \textbf{2.} Diakritika yo‘qolishiga turg‘un ($-1{,}1$), kod almashuviga deyarli befarq ($-0{,}1$).\\
+    \textbf{3.} Tinish belgilari --- muhim tuzilmaviy signal: ularsiz LAS $8{,}3$ punktga tushadi.
+  \end{block}
+\end{column}
+\end{columns}
+\yangilik{3}
+\end{frame}
+
+%==============================================================================
+% 16. DASTURIY MAJMUA
+%==============================================================================
+\section{Dasturiy majmua}
+\begin{frame}[fragile]{Dasturiy majmua}
+  \centering
+  \begin{tikzpicture}[
+      col/.style={rounded corners=4pt,fill=bmain,text=white,font=\scriptsize\bfseries,minimum width=3.25cm,minimum height=0.55cm},
+      it/.style={rounded corners=2pt,fill=bmain!7,draw=bmain!25,text width=3.05cm,font=\scriptsize,align=left,inner sep=3pt,anchor=north,minimum height=2.45cm}]
+    \foreach \x/\h/\b [count=\i] in {
+      0/{\faDatabase\ Ma’lumotlar}/{UzUDT (UD v2.17, CC BY-SA 4.0) va UT\\[2pt] CoNLL-U o‘quvchi va birlashtiruvchi\\[2pt] spaCy DocBin konvertori\\[2pt] korpus statistikasi},
+      3.65/{\faCogs\ O‘qitish}/{Stanza teglovchi va parseri: \texttt{-{}-bert\_model}, \texttt{-{}-bert\_pooling} \{\texttt{last}, \texttt{mean}\}\\[2pt] spaCy uchun \texttt{uz} til moduli\\[2pt] CSV / W\&B jurnallari},
+      7.3/{\faChartBar\ Baholash}/{CoNLL 2018 metrikalari (UAS, LAS, MLAS, BLEX)\\[2pt] juftlashgan bootstrap\\[2pt] g‘alayon (turg‘unlik) testlari},
+      10.95/{\faUpload\ E’lon qilish}/{HuggingFace: \texttt{Sanatbek/uzudt}\\[2pt] GitHub: \texttt{robust-parsing-uzbek}\\[2pt] UD rasmiy repozitoriysi}}{
+      \node[col] (h\i) at (\x,0) {\h};
+      \node[it] (b\i) at (\x,-0.45) {\b};
+    }
+    \foreach \i/\j in {1/2,2/3,3/4} \draw[->,very thick,bmain!50] (h\i.east) -- (h\j.west);
+  \end{tikzpicture}\\[8pt]
+  \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.6\textwidth}
+    \begin{block}{Ishga tushirish namunasi}
+\begin{semiverbatim}\scriptsize
+python -m stanza.models.parser -{}-mode train \\
+  -{}-bert_model tahrirchi/tahrirchi-bert-base \\
+  -{}-bert_pooling last \\
+  -{}-train_file uz.train.in.conllu \\
+  -{}-eval_file uz.dev.in.conllu
+\end{semiverbatim}
+    \end{block}
+  \end{column}
+  \begin{column}{0.37\textwidth}
+    \begin{block}{Texnik ko‘rsatkichlar}
+      \scriptsize Python, PyTorch; Stanza (teglovchi va parser modullari o‘zgartirilgan), spaCy 3.8; NVIDIA RTX A6000. Eng yaxshi model 600--1\,300 qadamda topiladi.
+    \end{block}
+  \end{column}
+  \end{columns}
+\yangilik{4}
+\end{frame}
+
+%==============================================================================
+% 17. XULOSA
+%==============================================================================
+\section{Xulosa}
+\begin{frame}{Xulosa}
+  \scriptsize
+  \begin{columns}[T,onlytextwidth]
+  \begin{column}{0.495\textwidth}
+  \begin{enumerate}\setlength{\itemsep}{3pt}
+    \item O‘zbek tili uchun oltin standart UD korpusi \textbf{UzUDT} (684 gap, 7\,582 token) yaratildi va e’lon qilindi; korpusning 11\,\% gaplari noproyektiv, yoylarning 84,6\,\% ida hokim o‘ngda joylashadi.
+    \item Sintaktik tahlil masalasi \textbf{yoyiluvchi arborestsensiyalar} to‘plamida ehtimollikni maksimallashtirish masalasi sifatida qo‘yildi; yechimlar soni $n^{\,n-1}$.
+    \item BPE qism so‘zlarini birlashtirishning \textbf{qator-stoxastik operatori} kiritildi; «oxirgi qism so‘z» operatori LAS ni $+2{,}6$ punktga oshiradi ($p\approx0{,}002$).
+  \end{enumerate}
+  \end{column}
+  \begin{column}{0.495\textwidth}
+  \begin{enumerate}\setcounter{enumi}{3}\setlength{\itemsep}{3pt}
+    \item Aniq \textbf{Chu--Liu--Edmonds} dekodlash ochko‘z o‘tish usulidan LAS bo‘yicha \textbf{8,7 punkt} yuqori.
+    \item Model diakritika va kod almashuviga turg‘un, tinish belgilariga sezgir ($-8{,}3$ LAS).
+    \item \textbf{Dasturiy majmua} (Stanza--BERT, spaCy-uz, baholash vositalari) yaratildi, modellar ochiq e’lon qilindi.
+  \end{enumerate}
+  \end{column}
+  \end{columns}
+  \vspace{4pt}
+  \begin{block}{Kelgusi ishlar}
+    \scriptsize Barcha tajribalarni yagona bo‘linma va bashorat qilingan teglar bilan \textbf{test to‘plamida} qayta baholash; ko‘p urug‘li (seed) tajribalar; global normallash (Kirchhoff matritsa-daraxt teoremasi, $Z(x)=\det\widehat{\vv L}$); BERTbek va FastText+BERT birikmasi.
+  \end{block}
+  \centering
+  \stattile{3.15cm}{684 gap}{UzUDT korpusi}\
+  \stattile{3.15cm}{$+2{,}6$ LAS}{oxirgi qism so‘z ($p\approx0{,}002$)}\
+  \stattile{3.15cm}{54,1 vs 45,4}{CLE va o‘tish usuli (test LAS)}\
+  \stattile{3.15cm}{63,8 LAS}{eng yaxshi (oltin teglar, val.)}
+\end{frame}
+
+%==============================================================================
+% 18. APROBATSIYA VA NASHRLAR
+%==============================================================================
+\begin{frame}{Natijalarning aprobatsiyasi va e’lon qilinganligi}
+  \setbeamertemplate{enumerate items}[default]
+  \scriptsize
+  {\small\bfseries\color{bmain} Xalqaro konferensiyalar}
+  \begin{enumerate}\setlength{\itemsep}{2pt}
+    \item Matlatipov S. Towards Robust Uzbek Neural Dependency Parsing: Cross-Treebank Training // \textit{NLDB 2026} (Springer LNCS), 18-iyun 2026.
+    \item Matlatipov S., Ismoilova M., Aripov M. Graph-Based vs Transition-Based Dependency Parsing for Uzbek // \textit{IEEE EDM 2026}.
+    \item Matlatipov S., Kurbanova M. A Gold-Standard Dependency Treebank for the Uzbek Language // \textit{TurkLang 2026} (XIV International Conference on Computer Processing of Turkic Languages).
+  \end{enumerate}
+  {\small\bfseries\color{bmain} Jurnal}
+  \begin{enumerate}\setcounter{enumi}{3}\setlength{\itemsep}{2pt}
+    \item Matlatipov S., Aripov M., Bobokandov M., Matlatipov G. Annotated Universal Dependencies Dataset for Literary and Educational Uzbek Texts // \textit{Data in Brief} (ko‘rib chiqilmoqda).
+  \end{enumerate}
+  {\small\bfseries\color{bmain} Oldingi ishlar va ochiq resurslar}
+  \begin{enumerate}\setcounter{enumi}{4}\setlength{\itemsep}{2pt}
+    \item Matlatipov S., Tukeyev U., Aripov M. Towards the Uzbek Language Endings as a Language Resource // \textit{ICCCI 2020}, CCIS, Springer.
+    \item Aripov M., Khakimov M., Matlatipov S., Sirojiddinov Z. Analysis and Processing of the Uzbek Language on the Multi-language Modelled Computer Translator Technology // \textit{LNCS} 13212, Springer, 2022.
+    \item UD\_Uzbek-UzUDT --- Universal Dependencies v2.17 (2025); modellar: \texttt{huggingface.co/Sanatbek/uzudt}.
+  \end{enumerate}
+\end{frame}
+
+%==============================================================================
+% 19. YAKUN
+%==============================================================================
+\begin{frame}
+  \centering
+  \titlebox{0.62\textwidth}{\LARGE\bfseries E’tiboringiz uchun rahmat!}\\[22pt]
+  {\small\bfseries Matlatipov Sanatbek}\\[3pt]
+  {\footnotesize Mirzo Ulug‘bek nomidagi O‘zbekiston Milliy universiteti}\\[10pt]
+  {\footnotesize \faEnvelope\ s.matlatipov@nuu.uz \qquad \faGithub\ SanatbekMatlatipov/robust-parsing-uzbek}
+\end{frame}
+
+\end{document}

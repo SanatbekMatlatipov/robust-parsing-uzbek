@@ -1,0 +1,555 @@
+% ============================================================
+%  Kafedra ilmiy seminari --- taqdimot uchun nutq matni
+%  Mavzu: O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik
+%         tahlil qilishning matematik modeli va sonli usullari
+%  Ixtisoslik: 05.01.07 -- Matematik modellashtirish. Sonli usullar
+%              va dasturlar majmui
+%  Ma’ruzachi: Matlatipov Sanatbek
+%  Davomiyligi: 15 daqiqa
+%  Slaydlar: Matlatipov_seminar_taqdimot.pdf (19 ta slayd)
+%
+%  Tamoyil: formulalar va raqamlar slaydda ko‘rsatiladi, ularni
+%  to‘liq o‘qish shart emas. Matn qisqa, sodda gaplardan iborat.
+%
+%  Kompilyatsiya:  pdflatex Matlatipov_seminar_nutq_matni.tex (ikki marta)
+% ============================================================
+\documentclass[14pt,a4paper]{extarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.0cm,left=3.0cm,right=2.0cm,top=2.0cm,bottom=2.2cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{needspace}
+\usepackage{array}
+\DeclareUnicodeCharacter{02BB}{\textquoteleft}
+
+% slayd sarlavhasi sahifa oxirida yolg‘iz qolmasin
+\let\origsection\section
+\renewcommand{\section}{\Needspace*{6\baselineskip}\origsection}
+
+\setstretch{1.6}
+% o‘/g‘ belgili so‘zlar bo‘g‘inga ajratilmaydi: qatorlar hoshiyaga chiqmasligi uchun
+\setlength{\emergencystretch}{3em}
+\tolerance=2000
+\setlist[itemize]{leftmargin=1.4em,topsep=3pt,itemsep=4pt}
+\setlist[enumerate]{leftmargin=1.6em,topsep=3pt,itemsep=3pt}
+
+\titleformat{\section}
+   {\normalfont\LARGE\bfseries\filright}
+   {}{0em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Kafedra ilmiy seminari --- nutq matni (15 daqiqa)}
+\fancyhead[R]{\small S.~Matlatipov}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{17pt}
+
+% [boshlanish -> tugash] jamlanma vaqt, har bir slayd sarlavhasi ostida
+\newcommand{\timing}[2]{%
+   \par\nobreak\noindent\textbf{[#1\,$\to$\,#2]}\par\vspace{0.3em}}
+% urg‘u bilan aytiladigan ibora
+\newcommand{\say}[1]{\textbf{#1}}
+\newcommand{\pausehere}{\par\vspace{0.4em}\noindent\textbf{[pauza]}\par}
+\newcommand{\pointto}[1]{\par\vspace{0.3em}\noindent\textit{\small
+   [Ko‘rsating: #1]}\par}
+
+\begin{document}
+
+% ============================================================
+%  TAYYORGARLIK SAHIFASI
+% ============================================================
+\begin{center}
+  {\LARGE\bfseries Nutq matni}\\[0.3em]
+  {\large «O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil
+  qilishning matematik modeli va sonli usullari»}\\[0.3em]
+  {\normalsize Ma’ruzachi: S.~Matlatipov\\
+  19 ta slayd \quad$\cdot$\quad 15 daqiqa}
+\end{center}
+
+\begin{spacing}{1.12}
+\noindent\textbf{Qanday o‘qiladi}
+\begin{itemize}[itemsep=1pt]
+  \item Matn qisqa, sodda gaplardan iborat --- shoshilmasdan o‘qing (daqiqasiga
+        taxminan 90 so‘z).
+  \item Formulalar va raqamlar slaydda ko‘rinib turadi; ularni to‘liq o‘qish shart emas.
+  \item \textbf{qalin matn} --- urg‘u bilan aytiladi;
+        \textbf{[pauza]} --- ikki-uch soniya to‘xtang;
+        {\small\itshape [Ko‘rsating: \dots]} --- ekrandagi joyga ishora qiling.
+  \item Vaqt yetmasa, 3- va 16-slaydlarni qisqartiring (har biri 20 soniyagacha).
+\end{itemize}
+
+\noindent\textbf{Vaqt nazorati} \ {\small (har bir bo‘limga shu vaqtda yetib keling)}\\[2pt]
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  Bo‘lim & Slaydlar & Boshlanish\\
+  \midrule
+  Kirish: dolzarblik, masala, maqsad, yangilik & 1--6 & 0:00\\
+  Matematik model & 7--10 & 5:00\\
+  Sonli usullar & 11--12 & 8:25\\
+  Tajribalar va natijalar & 13--15 & 10:20\\
+  Dasturiy majmua, xulosa, aprobatsiya & 16--19 & 13:05\\
+  \bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+\noindent\textbf{Mavzu nomi bo‘yicha muqobil variantlar} \ {\small (ilmiy rahbar bilan kelishing)}
+\begin{enumerate}[itemsep=1pt]
+  \item \textit{(slaydlarda)} «O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil
+        qilishning matematik modeli va sonli usullari».
+  \item «Kam resursli o‘zbek tili uchun morfosintaktik tahlilning graf-ehtimollik modeli va
+        sonli usullari».
+  \item «O‘zbek tili gaplarini bog‘liqlik sintaksisi asosida tahlil qilishning matematik
+        modellari, algoritmlari va dasturiy majmuasi».
+\end{enumerate}
+{\small «Semantik» so‘zini nomga kiritmang: semantik qatlam annotatsiya qilinmagan va baholanmagan.}
+
+\newpage
+\noindent\textbf{Savollar uchun asosiy raqamlar} \ {\small (ma’ruzada aytish shart emas)}\\[2pt]
+{\small
+\begin{tabular}{@{}>{\bfseries\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{11.9cm}@{}}
+  \toprule
+  UzUDT & 684 gap, 7\,582 token; 6 annotator; Cohen $\kappa$: lemma 95,2\,\%, UPOS 93,7\,\%,
+          belgilar 90,8\,\%; UD v2.17, validatsiyadan o‘tgan\\
+  UT & 500 gap, 5\,930 token; UD validatsiyasi: 92 ogohlantirish\\
+  Bo‘linmalar & UzUDT tajribalari (.1): 435\,/\,48\,/\,198 gap; birlashma (.2): 781\,/\,78\,/\,325 gap\\
+  Korpus statistikasi & noproyektiv gaplar 9,2\,\% (UzUDT 11,0\,\%, UT 6,8\,\%); hokim o‘ngda 84,6\,\%;
+          o‘rtacha yoy 2,72; qo‘shni so‘zlar orasidagi yoylar 52\,\%; munosabat turlari 39\\
+  Model & TahrirchiBERT: 12 qatlam, 768, BPE lug‘ati 30\,528; $\mathbf v_i\in\mathbb R^{1143}$;
+          BiLSTM $3\times(2\times400)$; bi-affin 400; teglovchi $2\times(2\times200)$\\
+  O‘qitish & Adam $(0{,}9;\,0{,}95)$, $\alpha=3\cdot10^{-3}$, $\varepsilon=10^{-6}$, $\|g\|\le1$,
+          dropout 0,5, partiya 5\,000 token; 3\,000 qadam sabr $\to$ AMSGrad; eng yaxshi qadam 800--1\,300\\
+  Validatsiya (LAS) & E1.1 55,28; E2.1 \textbf{58,23}; E3.1 55,90; E1.2 62,87; E2.2 \textbf{63,81}\\
+  Validatsiya (UPOS) & E1.1 79,19; E2.1 83,54; E3.1 83,39; E1.2 83,78; E2.2 87,19\\
+  Bootstrap & oxirgi--o‘rtacha: $\Delta$LAS $=+2{,}64$, 95\,\% IO $[0{,}97;\,4{,}12]$, $p\approx0{,}002$\\
+  Test (198 gap) & Stanza E2.1: UAS 71,06, LAS 54,07; spaCy S1.1: UAS 67,72, LAS 45,35\\
+  G‘alayonlar ($\Delta$LAS) & diakritika $-1{,}14$; kod almashuvi $-0{,}14$; bosh harf $-2{,}52$;
+          tinish belgisiz $-8{,}30$\\
+  \bottomrule
+\end{tabular}}
+
+\vspace{0.6em}
+\noindent\textbf{Seminardan oldin tekshiring} \ {\small (repozitoriy va jurnallar tahlili natijalari)}
+\begin{enumerate}[itemsep=2pt]
+  \item Titul slayddagi \textbf{ilmiy rahbar} (prof.~M.\,M.~Aripov deb olindi) va kafedra nomini
+        tasdiqlang (\texttt{\textbackslash ilmiyrahbar} buyrug‘i).
+  \item 18-slayddagi nashrlar holatini aniqlang: NLDB, IEEE EDM, TurkLang --- qabul qilingan /
+        chop etilganmi; Data in Brief --- ko‘rib chiqilmoqdami.
+  \item \textbf{Muhim.} Maqolalardagi «test» jadvali aslida \textbf{validatsiya} natijalari:
+        \texttt{*\_summary.json} dagi \texttt{final\_uas/final\_las} --- dev faylining oxirgi
+        qadamdagi qiymati (E2.2 uchun --- eng yaxshi qadam). Taqdimotda raqamlar «validatsiya,
+        eng yaxshi nazorat nuqtasi» deb to‘g‘ri belgilangan.
+  \item \textbf{Muhim.} Birlashma (.2) tajribalarida parserga \textbf{oltin} UPOS/XPOS/UFeats berilgan
+        (\texttt{data/depparse/merged} fayllari), UzUDT (.1) tajribalarida esa eski XLM-R teglovchisining
+        bashorati. Shuning uchun maqoladagi «korpuslarni birlashtirish LAS ni 9,6--11,2 punkt
+        oshiradi» xulosasi bu jurnallar bilan tasdiqlanmaydi.
+  \item .1 va .2 da UzUDT ning \textbf{turli bo‘linmalari}: 435\,/\,48\,/\,198 (eski) va
+        451\,/\,45\,/\,188 (yangi); eski dev ning 38 gapi yangi train ichida.
+  \item Birlashtirilgan fayllarda kodlash xatosi: «oʻyinni» $\to$ «oÊ»yinni» (train da 2\,554 marta).
+  \item E3.2 raqamlari (84,02\,/\,87,07\,/\,70,39\,/\,70,74\,/\,60,05) jurnallarda topilmadi:
+        teglovchi jurnali 1\,500-qadamda tugagan, parser jurnali yo‘q.
+  \item TahrirchiBERT --- bayt darajasidagi \textbf{BPE} tokenizator (WordPiece emas);
+        «bola \#\#lar \#\#ning» misoli haqiqiy emas (haqiqatda \textit{bolalarning} --- bitta token).
+  \item Haqiqiy giperparametrlar (W\&B): $\beta_2=0{,}95$, dropout 0,5 (so‘z dropout 0,33),
+        bi-affin 400, BiLSTM $3\times400$; maqolada $\beta_2=0{,}999$, dropout 0,33, MLP 500.
+        BERT qatlamlari: kodda $(\mathbf H^{(9)}+\mathbf H^{(10)}+\mathbf H^{(11)})/4$.
+  \item Munosabat turlari: 39 (maqolada 41). Robustlik jurnalidagi UPOS/UFeats raqamlari
+        oltin teglarga nisbatan emas --- taqdimotda faqat UAS/LAS ishlatildi.
+\end{enumerate}
+\end{spacing}
+
+\newpage
+
+% ------------------------------------------------------------
+\section*{1-slayd --- Titul varag‘i}
+\timing{0:00}{0:35}
+
+Hurmatli kafedra mudiri! Hurmatli seminar ishtirokchilari!
+
+Sizlarga \say{«O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil
+qilishning matematik modeli va sonli usullari»} mavzusidagi tadqiqotimni taqdim
+etaman. Ish matematik modellashtirish, sonli usullar va dasturlar majmui
+ixtisosligi bo‘yicha bajarilmoqda.
+
+Asosiy g‘oyam: gapning sintaktik tuzilishini aniqlash --- bu \textbf{graf ustidagi
+optimallashtirish masalasi}. Uni ehtimollik modeli va aniq sonli algoritm bilan
+yechish mumkin.
+
+% ------------------------------------------------------------
+\section*{2-slayd --- Mavzuning dolzarbligi}
+\timing{0:35}{1:35}
+
+O‘zbek tili --- \textbf{agglyutinativ til}. So‘zga qo‘shimchalar ketma-ket qo‘shiladi
+va har biri grammatik ma’no tashiydi.
+
+\pointto{«kitoblarimizdagi» sxemasi}
+
+Masalan, «kitoblarimizdagi» so‘zida o‘zak va to‘rtta qo‘shimcha bor. Neyron til
+modeli esa uni «kitob», «larimiz», «dagi» bo‘laklariga ajratadi. Eng muhim
+grammatik ma’lumot --- \textbf{oxirgi bo‘lakda}.
+
+\pointto{diagramma}
+
+Ikkinchi muammo --- ma’lumot kamligi. Universal Dependencies tizimida o‘zbek tili
+uchun bor-yo‘g‘i \textbf{bir ming bir yuz sakson to‘rtta} gap annotatsiyalangan.
+Turk tilida --- qariyb o‘n ming, ingliz tilida --- o‘n olti mingdan ortiq.
+
+Demak, kichik tanlanmada ham ishonchli ishlaydigan, \textbf{matematik asoslangan}
+model va sonli usullar zarur.
+
+% ------------------------------------------------------------
+\section*{3-slayd --- Muammoning o‘rganilganlik darajasi}
+\timing{1:35}{2:25}
+
+\pointto{vaqt chizig‘i}
+
+Vaqt chizig‘ida sohaning asosiy bosqichlari ko‘rsatilgan: Tesnièrening bog‘liqlik
+grammatikasidan, Chu--Liu va Edmondsning optimal daraxt algoritmidan boshlab, LSTM,
+bi-affin parser va BERT modellarigacha. So‘nggi yillarda o‘zbek tili uchun ham
+TahrirchiBERT modeli va birinchi UD korpusi yaratildi.
+
+\pointto{qizil blok}
+
+Biroq uchta masala ochiq qolgan: korpuslar juda kichik; qism so‘zlardan so‘z
+vektorini hosil qilish operatori asoslanmagan; dekodlash usullari va modelning
+turg‘unligi tizimli o‘rganilmagan. \say{Tadqiqot shu bo‘shliqni to‘ldiradi.}
+
+% ------------------------------------------------------------
+\section*{4-slayd --- Masalaning qo‘yilishi}
+\timing{2:25}{3:35}
+
+\pointto{daraxt}
+
+Gap --- so‘zlar ketma-ketligi. Har bir so‘zga bitta \textbf{hokim so‘z} va munosabat
+turi mos qo‘yiladi. Masalan, «beradi» --- gapning markazi, «asarlar» --- uning egasi,
+«bizga» --- vositali to‘ldiruvchi.
+
+\textbf{Birinchi ta’rif}: bog‘liqlik daraxti --- bu ildizi sun’iy ROOT uchida bo‘lgan
+yoyiluvchi yo‘naltirilgan daraxt, ya’ni \textbf{arborestsensiya}.
+
+\textbf{Lemma}: n ta so‘zli gap uchun bunday daraxtlar soni n ning n minus birinchi
+darajasiga teng. Bu Cayley formulasidan kelib chiqadi. O‘n so‘zli gap uchun --- bir
+milliard daraxt. Demak, barcha variantlarni saralab chiqish mumkin emas.
+
+\pointto{qizil blok}
+
+Shuning uchun masala ikki qismga bo‘linadi: \textbf{dekodlash} --- eng ehtimolli
+daraxtni topish va \textbf{o‘qitish} --- empirik riskni minimallashtirish. Sifat UAS va
+LAS mezonlari bilan baholanadi.
+
+% ------------------------------------------------------------
+\section*{5-slayd --- Maqsad, vazifalar, obyekt va predmet}
+\timing{3:35}{4:15}
+
+Tadqiqotning maqsadi --- kam resursli sharoitda o‘zbek tili gaplarini tahlil
+qilishning \textbf{matematik modelini, sonli usullarini va dasturiy majmuasini}
+yaratish.
+
+Buning uchun beshta vazifa qo‘yildi: korpus yaratish; masalani formallashtirish;
+birlashtirish operatorini ishlab chiqish; o‘qitish va dekodlash usullarini tadqiq
+qilish; aniqlik va turg‘unlikni baholab, dasturiy majmuani yaratish.
+
+Obyekt --- o‘zbek tilidagi matnlar va korpuslar; predmet --- tahlilning
+graf-ehtimollik modeli va sonli usullari.
+
+% ------------------------------------------------------------
+\section*{6-slayd --- Ilmiy yangilik}
+\timing{4:15}{5:00}
+
+Tadqiqotning \textbf{to‘rtta} ilmiy yangiligi bor.
+
+\textbf{Birinchidan}, o‘zbek tili uchun oltin standart UzUDT korpusi yaratildi va
+xalqaro UD tizimida e’lon qilindi.
+
+\textbf{Ikkinchidan}, masala arborestsensiyalar ustida formallashtirildi va «oxirgi
+qism so‘z» operatori taklif etildi; uning ustunligi statistik tasdiqlandi.
+
+\textbf{Uchinchidan}, o‘qitish va aniq dekodlashning sonli sxemasi ishlab chiqildi,
+modelning turg‘unligi baholandi.
+
+\textbf{To‘rtinchidan}, dasturiy majmua yaratildi.
+
+Har bir slayd qaysi yangilikka tegishli ekani pastki o‘ng burchakda ko‘rsatilgan.
+
+% ------------------------------------------------------------
+\section*{7-slayd --- Matematik modelning umumiy sxemasi}
+\timing{5:00}{5:40}
+
+Model ikki qismdan iborat.
+
+\pointto{yuqori qator}
+
+Birinchi qism --- \textbf{kontekstli tasvir}: gap qism so‘zlarga bo‘linadi,
+TahrirchiBERT har biriga vektor beradi, so‘ng bu vektorlar so‘z darajasiga
+birlashtiriladi.
+
+\pointto{pastki qator}
+
+Ikkinchi qism --- \textbf{tuzilmani baholash}: BiLSTM kontekstni hisobga oladi,
+bi-affin funksiya har bir so‘z juftligini baholaydi va Chu--Liu--Edmonds algoritmi
+daraxtni topadi. Keyingi slaydlarda har bir blokning formulalari.
+
+% ------------------------------------------------------------
+\section*{8-slayd --- Qism so‘zlarni birlashtirish operatori}
+\timing{5:40}{6:40}
+
+BERT so‘zni bir nechta qism so‘zga bo‘ladi, bizga esa har bir so‘z uchun bitta
+vektor kerak. Buni \textbf{$\Pi$ matritsa} bilan yozamiz: so‘z vektori --- qism so‘z
+vektorlarining qavariq kombinatsiyasi, $\Pi$ --- qator-stoxastik matritsa.
+
+Ikki variant bor: \textbf{o‘rtacha qiymat} --- barcha bo‘laklarga teng vazn; va biz
+taklif qilgan \textbf{«oxirgi qism so‘z»} --- butun vazn oxirgi bo‘lakka beriladi.
+
+\pointto{jadval}
+
+Jadvalda TahrirchiBERT tokenizatorining haqiqiy natijalari. Har safar oxirgi
+bo‘lakda kelishik yoki shaxs-son qo‘shimchasi turibdi: «dagi», «ning», «misiz».
+
+\say{Gipotezamiz}: o‘zbek tilida grammatik ma’lumot so‘zning o‘ng chetida
+to‘planadi, o‘rtacha qiymat esa uni suyultiradi.
+
+% ------------------------------------------------------------
+\section*{9-slayd --- Kodlovchi: highway BiLSTM}
+\timing{6:40}{7:20}
+
+Kirish vektori oltita qismdan iborat: so‘z, lemma, teglar, morfologik belgilar,
+harf darajasidagi vektor va BERT vektori --- jami bir ming bir yuz qirq uch o‘lcham.
+
+Kodlovchi --- \textbf{LSTM}. Formulalari slaydda: uchta darvoza va xotira holati.
+Unutish darvozasi gradientning so‘nishini yumshatadi, shuning uchun uzoq
+bog‘lanishlar saqlanadi. Biz uch qatlamli, ikki yo‘nalishli variantdan
+foydalandik.
+
+% ------------------------------------------------------------
+\section*{10-slayd --- Chuqur bi-affin baholash}
+\timing{7:20}{8:25}
+
+Endi asosiy blok. Har bir so‘z ikki rolda tasvirlanadi: \textbf{tobe} so‘z va
+\textbf{hokim} so‘z sifatida. Juftlik bahosi --- kengaytirilgan vektorlardagi
+\textbf{bilinear forma}.
+
+\textbf{Ikkinchi lemma}: U matritsani bloklarga ajratsak, bahoning bir qismi j ga
+bog‘liq emas. Softmax siljishga invariant, shuning uchun bu had ehtimollikka ta’sir
+qilmaydi. Qolgan had --- so‘zning hokim bo‘lishga moyilligi.
+
+Bahoga yana ikki had qo‘shiladi: yoy yo‘nalishi va masofa. Masofa uchun
+\textbf{Koshi yadrosi} ishlatiladi.
+
+\pointto{grafik}
+
+Grafik buni asoslaydi: yoylarning yarmidan ko‘pi qo‘shni so‘zlar orasida, lekin
+uzun yoylar ham uchraydi --- taqsimot og‘ir dumli. Yoylarning \textbf{sakson to‘rt
+foizida} hokim so‘z o‘ngda --- bu o‘zbek tilining SOV tartibi.
+
+% ------------------------------------------------------------
+\section*{11-slayd --- Sonli usul (1): Chu--Liu--Edmonds}
+\timing{8:25}{9:25}
+
+Har bir yoyga ehtimollik logarifmi og‘irlik sifatida beriladi.
+
+\say{Teorema}: model yoylar bo‘yicha faktorlansa, eng ehtimolli daraxt ---
+\textbf{maksimal og‘irlikdagi yoyiluvchi arborestsensiya}. Chu--Liu--Edmonds
+algoritmi uni aniq topadi; murakkabligi --- n kub, Tarjan amalga oshirishida --- n
+kvadrat.
+
+\pointto{sxema}
+
+Algoritm g‘oyasi: har bir so‘z uchun eng yaxshi hokimni tanlaymiz. Sikl hosil
+bo‘lsa, uni bitta uchga qisqartiramiz va masalani qayta yechamiz.
+
+\pointto{jadval}
+
+Yigirma so‘zli gap uchun daraxtlar soni o‘n ning yigirma to‘rtinchi darajasida,
+algoritm esa taxminan to‘rt yuz amal bajaradi. Muhim fakt: korpusdagi gaplarning
+\textbf{to‘qqiz foizi noproyektiv}; proyektiv usullar bunday daraxtlarni qura
+olmaydi.
+
+% ------------------------------------------------------------
+\section*{12-slayd --- Sonli usul (2): o‘qitish}
+\timing{9:25}{10:20}
+
+Yo‘qotish funksiyasi --- hokim va munosabat ehtimolliklarining manfiy logarifmi.
+Ikki korpus birlashtirilganda empirik risk ikkita riskning \textbf{qavariq
+kombinatsiyasiga} aylanadi; lambda --- birinchi korpusning ulushi.
+
+Minimallashtirish uchun \textbf{Adam} usulidan foydalandik. Uch ming qadam davomida
+yaxshilanish bo‘lmasa, AMSGrad variantiga o‘tamiz, yana uch ming qadamdan keyin
+to‘xtatamiz.
+
+\pointto{grafik}
+
+O‘qitish egri chiziqlari jurnallardan olingan. Eng yaxshi natija \textbf{sakkiz
+yuz --- bir ming uch yuz} qadamda erishiladi, keyin model haddan tashqari moslasha
+boshlaydi. Shuning uchun erta to‘xtatish zarur.
+
+% ------------------------------------------------------------
+\section*{13-slayd --- Ma’lumotlar va tajriba dizayni}
+\timing{10:20}{11:00}
+
+Tajribalar ikki korpusda o‘tkazildi. \textbf{UzUDT} --- men yaratgan korpus: olti yuz
+sakson to‘rt gap, olti annotator, kelishuv to‘qson foizdan yuqori. \textbf{UT} ---
+yangiliklar va badiiy matnlar.
+
+\pointto{grafik}
+
+Korpuslar bir-birini to‘ldiradi: UzUDT da ravishdosh qurilmalari ko‘p, UT da ---
+atoqli otlar va yordamchi fe’lli birikmalar.
+
+Tajriba rejasi --- uchta vektor turi va ikkita ma’lumot sharoitidan iborat
+faktorli dizayn.
+
+% ------------------------------------------------------------
+\section*{14-slayd --- Natijalar}
+\timing{11:00}{12:10}
+
+Jadvalda validatsiya to‘plamidagi natijalar --- e’lon qilingan modellarning eng
+yaxshi nazorat nuqtasi.
+
+\pointto{A blok}
+
+A blokda barcha modellar bir xil sharoitda. TahrirchiBERT va oxirgi qism so‘z
+operatori eng yaxshi natija berdi: LAS --- \textbf{ellik sakkiz butun yigirma uch}.
+
+Farq tasodifiy emasmi? Buni \textbf{juftlashgan bootstrap} usuli bilan tekshirdik:
+gaplar o‘n ming marta qayta tanlandi.
+
+\pointto{bootstrap bloki}
+
+Oxirgi qism so‘z operatorining ustunligi \textbf{statistik ahamiyatli}: ishonch
+oralig‘i noldan katta, p taxminan nol butun mingdan ikki.
+
+B blokda --- ikki korpus birlashmasi. Bu yerda parserga oltin morfologik teglar
+berilgan, shuning uchun A va B ni bevosita taqqoslamaymiz. Eng yuqori LAS ---
+oltmish uch butun sakson bir. Qiziq natija: morfologiya ma’lum bo‘lsa, BERT ning
+sintaktik ustunligi yo‘qoladi.
+
+% ------------------------------------------------------------
+\section*{15-slayd --- Test to‘plami: turg‘unlik va dekodlash usullari}
+\timing{12:10}{13:05}
+
+\pointto{o‘ng jadval}
+
+Bir xil test to‘plamida ikki yondashuvni solishtirdik: aniq MST dekodlashli graf
+modeli va ochko‘z o‘tish modeli. Farq --- LAS bo‘yicha \textbf{sakkiz butun yetti
+punkt}. Sababi: ochko‘z usulda bitta xato keyingi qarorlarga tarqaladi, global
+optimallashtirishda esa bunday bo‘lmaydi.
+
+\pointto{grafik}
+
+Turg‘unlikni baholash uchun \textbf{g‘alayon operatorlarini} kiritdik. Diakritik
+belgilar olib tashlansa, LAS atigi bir punkt kamayadi; rus tilidagi so‘zlarga
+model deyarli befarq. Tinish belgilari olib tashlansa esa, LAS sakkiz punktdan
+ko‘proq tushadi. Demak, tinish belgilari --- muhim tuzilmaviy signal.
+
+% ------------------------------------------------------------
+\section*{16-slayd --- Dasturiy majmua}
+\timing{13:05}{13:40}
+
+Barcha usullar dasturiy majmuada amalga oshirildi. U to‘rt qismdan iborat:
+ma’lumotlarni tayyorlash; o‘qitish --- Stanza kutubxonasiga BERT ni ulaydigan yangi
+parametrlar va spaCy uchun o‘zbek tili moduli; baholash --- metrikalar, bootstrap va
+turg‘unlik testlari; va e’lon qilish --- korpus UD tizimida, modellar HuggingFace
+platformasida ochiq.
+
+% ------------------------------------------------------------
+\section*{17-slayd --- Xulosa}
+\timing{13:40}{14:35}
+
+Xulosa qilib aytganda:
+
+\begin{itemize}
+  \item o‘zbek tili uchun oltin standart \textbf{UzUDT} korpusi yaratildi;
+  \item sintaktik tahlil masalasi \textbf{arborestsensiyalar ustidagi
+        optimallashtirish} masalasi sifatida qo‘yildi;
+  \item \textbf{«oxirgi qism so‘z»} operatori kiritildi va uning ustunligi
+        statistik tasdiqlandi;
+  \item aniq Chu--Liu--Edmonds dekodlash ochko‘z usuldan \textbf{sakkiz butun yetti
+        punkt} yuqori natija berdi;
+  \item model orfografik g‘alayonlarga turg‘un, tinish belgilariga sezgir;
+  \item dasturiy majmua yaratildi.
+\end{itemize}
+
+\pausehere
+
+Kelgusida barcha tajribalarni \textbf{yagona test to‘plamida} qayta baholash, ko‘p
+urug‘li tajribalar va global normallashgan modelni tadqiq qilish rejalashtirilgan.
+
+% ------------------------------------------------------------
+\section*{18-slayd --- Aprobatsiya va nashrlar}
+\timing{14:35}{14:50}
+
+Natijalar uchta xalqaro konferensiyada --- NLDB, IEEE EDM va TurkLang anjumanlarida
+taqdim etildi. Korpus bo‘yicha maqola Data in Brief jurnalida ko‘rib chiqilmoqda.
+
+% ------------------------------------------------------------
+\section*{19-slayd --- E’tiboringiz uchun rahmat!}
+\timing{14:50}{15:00}
+
+\say{E’tiboringiz uchun rahmat! Savollaringizga javob berishga tayyorman.}
+
+% ============================================================
+\newpage
+\section*{Ehtimoliy savollar va qisqa javoblar}
+
+\begin{itemize}
+  \item \textit{Nega har bir so‘z uchun alohida softmax (lokal normallash), global
+        ehtimollik modeli emas?} --- Lokal model o‘qitishni sodda va tez qiladi.
+        Dekodlash baribir global: MST daraxt shartini kafolatlaydi. Global model uchun
+        bo‘linish funksiyasi $Z(x)$ Kirchhoff matritsa-daraxt teoremasi bilan
+        determinant orqali $O(n^3)$ da hisoblanadi --- bu keyingi bosqich.
+  \item \textit{CLE algoritmi nega optimal?} --- Asosiy lemma (Edmonds, 1967): ochko‘z
+        tanlovdagi sikl $C$ optimal daraxtda faqat bitta kiruvchi yoy bilan almashadi;
+        qisqartirilgan grafdagi optimal daraxt asl grafdagi optimal daraxtga mos keladi.
+        Har bir kontraksiya $O(n^2)$, ular ko‘pi bilan $n$ ta $\Rightarrow O(n^3)$;
+        Tarjan (1977) --- $O(n^2)$.
+  \item \textit{Bitta ildiz sharti qanday hisobga olinadi?} --- Stanza nomzod ildizlar
+        bo‘yicha CLE ni qayta yechadi va eng katta og‘irlikli daraxtni tanlaydi. Bu
+        masalaning nazariy tahlili: Gabow va Tarjan (1984), Zmigrod va b. (2020).
+  \item \textit{Nima uchun Koshi yadrosi, Gauss emas?} --- Yoy uzunligi taqsimoti
+        og‘ir dumli (3,3\,\% yoylar 10 dan uzun). Gauss yadrosi uzun yoylarni haddan
+        tashqari jazolaydi, Koshi yadrosi esa $1/d^2$ tezlikda so‘nadi. Bu had Stanza
+        modelidan (Qi va b., 2018) olingan.
+  \item \textit{Nima uchun $\tfrac14$ koeffitsient uchta qatlam uchun?} --- Bu Stanza
+        kutubxonasining standart sozlamasi: 9--11-qatlamlar yig‘indisi 4 ga bo‘linadi.
+        O‘zgarmas masshtab keyingi chiziqli qatlamda to‘liq kompensatsiya qilinadi,
+        ya’ni model sinfi o‘zgarmaydi.
+  \item \textit{Nega BERT sozlanmagan (muzlatilgan)?} --- 781 gapda 110 mln parametrni
+        sozlash haddan tashqari moslashish xavfini oshiradi. Muzlatilgan model bilan
+        o‘qitiladigan parametrlar kam, natija barqaror.
+  \item \textit{Natijalar nega validatsiya to‘plamida?} --- Repozitoriy jurnallarida
+        o‘qitish davomida validatsiya ko‘rsatkichlari saqlangan. Test to‘plamidagi
+        baholash E2.1 va spaCy uchun bajarilgan (15-slayd); barcha modellarni yagona test
+        to‘plamida qayta baholash --- eng yaqin vazifa.
+  \item \textit{Statistik ahamiyatlilik qanday baholandi?} --- Juftlashgan bootstrap:
+        birlik --- gap (xatolar gap ichida bog‘liq), $B=10^4$, bir tomonlama
+        $p=P^{*}(\Delta^{*}\le0)$. Bitta modelning LAS ishonch oralig‘i taxminan
+        $\pm5$ punkt (48 gap), shuning uchun faqat juftlashgan taqqoslash ma’noli.
+  \item \textit{Korpuslarni birlashtirish qancha foyda beradi?} --- Birlashma
+        tajribalarida parserga oltin teglar berilgan va validatsiya to‘plamlari ham
+        farqli. Shuning uchun sof ta’sirni ajratish uchun qo‘shimcha tajriba (bir xil
+        teglar, umumiy test gaplari) rejalashtirilgan.
+  \item \textit{Nima uchun o‘tish modeli (spaCy) UPOS da yaxshi, LAS da yomon?} ---
+        spaCy transformerni teglash bilan birga sozlaydi, shuning uchun teglash yaxshi.
+        Lekin ochko‘z ketma-ket qarorlar xatoni tarqatadi va global optimal yechim
+        kafolatlanmaydi.
+  \item \textit{Katta til modellari (GPT va boshqalar) bilan taqqoslanganmi?} ---
+        Hozircha yo‘q; bu kelgusi ish. Til modelining javobida daraxt sharti
+        kafolatlanmaydi, bizning yondashuvda esa MST orqali kafolatlanadi.
+  \item \textit{Mavzuda nega «semantik» tahlil yo‘q?} --- Tadqiqot morfologik va
+        sintaktik qatlamlarga qaratilgan. Sintaktik daraxt --- semantik tahlil uchun
+        asos; semantik rollar annotatsiyasi --- keyingi bosqich.
+  \item \textit{Amaliy qo‘llanilishi?} --- Mashina tarjimasi, axborot qidirish,
+        savol-javob tizimlari, grammatik tekshiruv va ta’lim matnlarini tahlil qilish.
+\end{itemize}
+
+\end{document}
