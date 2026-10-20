@@ -1,7 +1,7 @@
 # Department seminar talk: building the PDFs
 
 LaTeX sources for the 15-minute department seminar talk (in Uzbek)
-«O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil qilishning matematik modeli va sonli usullari»,
+«O‘zbek tili gaplarini neyron tarmoqlar asosida sintaktik tahlil qilishning matematik modeli»,
 specialty 05.01.07 (Mathematical modelling, numerical methods and software).
 
 | Source file | Output | What it is |
