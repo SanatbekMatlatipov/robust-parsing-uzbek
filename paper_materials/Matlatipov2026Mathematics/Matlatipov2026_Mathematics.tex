@@ -1,0 +1,1105 @@
+%  LaTeX support: latex@mdpi.com
+%=================================================================
+\documentclass[mathematics,article,submit,pdftex,oneauthor]{Definitions/mdpi}
+
+%=================================================================
+% MDPI internal commands - do not modify
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+
+%=================================================================
+% Packages and commands of the author
+\usepackage{algpseudocode}
+\newcommand{\T}{\mathcal T}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Lh}{\hat{\mathbf L}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\tr}{\operatorname{tr}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+%=================================================================
+\Title{Exact Spanning-Tree Methods for Uzbek Dependency Parsing}
+
+\newcommand{\orcidauthorA}{0000-0002-6895-3436}
+
+\Author{Sanatbek Matlatipov \orcidA{}}
+
+\AuthorNames{Sanatbek Matlatipov}
+
+\address[1]{%
+National University of Uzbekistan named after Mirzo Ulugbek, 4 University Street, Tashkent 100174, Uzbekistan; s.matlatipov@nuu.uz}
+
+\corres{Correspondence: s.matlatipov@nuu.uz}
+
+\abstract{Dependency parsing recovers the grammatical structure of a sentence as a rooted spanning tree of its words. We study it for Uzbek, an agglutinative low-resource language, on the spanning arborescences of a complete weighted digraph. For uniformly random dependency trees we derive the covariance of total arc length and crossings and count projective trees by head-final arcs and root position. Against these laws and random reorderings of the observed trees, the 1184 gold Uzbek trees have arcs half as long as expected, about one percent of the expected crossings and a root at the last content word in 73\% of sentences. Parsing combines exact decoding by Edmonds' optimum branching algorithm with the directed matrix-tree theorem, which gives the probability that a locally trained parser outputs a well-formed tree. The tree distribution is calibrated by a convex problem solved by a safeguarded Newton method with exact second derivatives. For seven neural parsers on a contamination-free test set, exact decoding takes under 0.2 ms per sentence, calibration lowers the expected calibration error from 16.0\% to 7.3\% without changing any tree, and their calibrated mixture raises the labeled attachment score on UzUDT from 56.0\% to 57.2\% (61.6\% with gold tags).}
+
+\keyword{dependency parsing; spanning arborescence; optimum branching; matrix-tree theorem; random trees; projective trees; Lagrange inversion; probability calibration; Uzbek language}
+
+\MSC{05C05; 05A15; 05C80; 05C85; 68T50; 90C27}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Syntactic analysis tells a computer which word of a sentence is the predicate, which words are its arguments and which words modify which.
+In the dependency representation used by the Universal Dependencies (UD) project~\cite{deMarneffe2021}, this information is a rooted tree whose vertices are the words and whose arcs lead from a governing word, the head, to a dependent word, each arc carrying the name of a grammatical relation.
+Such trees are used as inputs of many downstream models; recent examples include syntax-aware graph convolutional networks for aspect-based sentiment analysis~\cite{Chen2023DualGCN,Yang2022DepPOS}, syntax- and morphology-enriched machine translation for low-resource and morphologically rich languages~\cite{Qingdaoerji2022Mongolian,Donaj2022MSD}, and mathematical models of idioms and of semantic linking for Turkic languages~\cite{Nazirova2026,Akhmedjanova2026}.
+
+From a mathematical point of view, dependency parsing is an optimization problem on graphs.
+If every ordered pair of words is joined by an arc with a weight, the analysis of a sentence is a maximum-weight spanning arborescence~\cite{McDonald2005}, the directed analogue of the minimum spanning tree problem whose algorithms and models continue to be studied in this journal~\cite{Wang2023DMST,Abdelmaguid2018MST,Luo2024MST,Hosseini2024MST}.
+This optimum branching problem is solved exactly by the algorithm found independently by Chu and Liu~\cite{ChuLiu1965} and by Edmonds~\cite{Edmonds1967}, which runs in quadratic time with the data structures of Tarjan~\cite{Tarjan1977}; the additional requirement that the root has exactly one child can be met without loss of efficiency~\cite{Zmigrod2020,Stanojevic2021}.
+The same graph admits a probabilistic treatment: by the matrix-tree theorem of Kirchhoff~\cite{Kirchhoff1847}, in the form for directed graphs due to Tutte~\cite{Tutte1948}, the sum over all spanning arborescences of the products of their arc weights is a determinant, which yields normalizing constants and arc marginals in cubic time~\cite{Koo2007,SmithSmith2007,McDonaldSatta2007,Zmigrod2021}.
+Arc weights are nowadays produced by neural networks; the deep biaffine scorer~\cite{Dozat2017} implemented in the Stanza toolkit~\cite{Qi2020} is a standard choice.
+
+For Uzbek, an agglutinative Turkic language with rich suffixal morphology, the resources needed by this approach have appeared only recently.
+The first UD treebank, UT, contains 500 sentences of news and fiction~\cite{Akhundjanova2025}, and the UzUDT treebank of 684 sentences from literary and educational texts was annotated manually by six annotators~\cite{MatlatipovDiB2026,MatlatipovLREC2026,MatlatipovUSBEREIT2026a}.
+Monolingual contextual encoders~\cite{Mamasaidov2023,Kuriyozov2024}, morphological analyzers~\cite{Salaev2024,Mengliev2021Uzbek} and text classifiers~\cite{Madatov2025Uzbek,Saidov2026Uzbek} are available, and neural parsers trained on the two treebanks were introduced in~\cite{MatlatipovNLDB2027,MatlatipovEDM2026,MatlatipovUSBEREIT2026b}.
+Those studies reported scores on development data and on test splits that differed between experiments, did not quantify how far the neural scores are from well-formed trees, and did not compare the observed trees with random ones.
+The seven parsers analyzed in this paper are the published checkpoints of those studies; here they are re-evaluated on a contamination-free test set, and the mathematical results, the comparisons with null models and the decoding and calibration experiments are new.
+
+Two questions arise when such a parser is applied to a language with little annotated data.
+The first is descriptive: how far are the observed trees from random ones, and does the answer depend on whether the random reference keeps the shape of the observed tree?
+Quantitative studies of syntax usually shuffle the words of an observed tree~\cite{FerreriCancho2004,FerreriCancho2018,FerreriCancho2022}; a decoder, in contrast, searches over all trees, so the uniform distribution on the feasible set is an equally natural reference.
+The second question is numerical: a parser trained with locally normalized scores defines a distribution over head assignments rather than over trees, and it is not obvious how much probability it wastes on ill-formed structures, how its scores should be turned into a distribution over trees and whether the resulting probabilities are reliable.
+
+This paper studies Uzbek dependency parsing as a problem of combinatorics and numerical analysis on spanning arborescences.
+Its contributions are as follows.
+\begin{enumerate}
+\item Exact laws of two null models for single-root dependency trees: uniformly random trees and random linear arrangements of a fixed tree. Known laws are collected as lemmas with short proofs adapted to the single-root setting. The new results are closed forms for the total arc length and the number of crossings of a uniformly random tree, including their covariance, and a theorem that counts projective trees by the number of head-final arcs and by the position of the root, which gives the triangle A371395 of the On-Line Encyclopedia of Integer Sequences an interpretation in terms of dependency trees. All formulas are verified by exhaustive enumeration (Section~\ref{sec:random}).
+\item A comparison of the 1184 gold Uzbek trees with both null models, which shows that their short arcs, the near absence of crossings and their head-final projective structure are not consequences of tree shape or of projectivity alone (Section~\ref{sec:randomcheck}).
+\item Numerical methods for the spanning-tree distribution: exact single-root decoding; a probabilistic interpretation of the partition function of a locally normalized model, with an exact relation between arc marginals and local probabilities; two-sided bounds for the determinant and the condition number of the Laplacian matrix along the tempered path; trace formulas for the means and covariances of additive functionals of a random tree; and a convex calibration of the tree distribution that never changes the decoded tree, reduces to the uniform null model at zero inverse temperature and is solved by a safeguarded Newton method with quadratic convergence (Sections~\ref{sec:numerical} and~\ref{sec:example}).
+\item Computational experiments with seven trained parsers, which differ in the encoder and in the aggregation of subword vectors (Section~\ref{sec:neural}), on a contamination-free test set: significance tests corrected for multiple comparisons, a comparison of decoders and of calibration methods for unlabeled and labeled arcs with bootstrap intervals, mixtures of the calibrated tree distributions of the parsers, which give the best scores of the study without retraining, and a perturbation analysis (Sections~\ref{sec:setup}--\ref{sec:discussion}).
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related Work}\label{sec:related}
+
+\subsection{Spanning Trees, Arborescences and Their Enumeration}
+The number of spanning trees of a graph is the determinant of a reduced Laplacian matrix by the matrix-tree theorem of Kirchhoff~\cite{Kirchhoff1847}, and Tutte~\cite{Tutte1948} proved the corresponding statement for the spanning arborescences of a directed graph, on which the computations of Section~\ref{sec:numerical} rest.
+In the directed setting, the minimum-cost arborescence problem has polynomial-time algorithms, while constrained variants become NP-hard and call for compact integer models~\cite{DellAmico2024Arborescence}; recent work also studies the efficient answering of many directed minimum spanning tree queries, an application of which is syntactic parsing~\cite{Wang2023DMST}.
+Exact enumeration of restricted classes of trees uses Pr\"ufer codes~\cite{Prufer1918}, Moon's formula for the number of trees that contain a given forest~\cite{Moon1970,Pitman1999}, generating functions and Lagrange inversion~\cite{FlajoletSedgewick2009}.
+Non-crossing trees on points in convex position are counted in~\cite{FlajoletNoy1999}, the number of projective dependency trees appears as sequence A006013 of the On-Line Encyclopedia of Integer Sequences~\cite{OEIS_A006013}, and mildly non-projective classes of dependency structures are studied in~\cite{Kuhlmann2013}.
+The Fuss--Catalan numbers that appear below have been studied analytically in~\cite{Qi2018FussCatalan} and combinatorially through $m$-ary trees and polygon dissections in~\cite{Selim2025Angulations}, and Catalan bounds on the number of derivation trees were recently used to restrict grammar induction~\cite{Selim2026CFG}.
+Random labeled trees have height of order $\sqrt n$~\cite{Renyi1967}, and simply generated random trees and forests are analyzed in~\cite{Huillet2025Binomial}.
+
+\subsection{Random Baselines for Syntactic Trees}
+Quantitative studies of syntax compare observed trees with random ones.
+The most common baseline keeps the tree of a sentence and places its words in a uniformly random order, a random linear arrangement.
+Under this baseline the expected distance between linked words is $(n+1)/3$~\cite{FerreriCancho2004}, the variance of the total distance is known in closed form~\cite{FerreriCancho2019}, and natural languages keep linked words much closer than the baseline predicts~\cite{FerreriCancho2022}.
+Crossing dependencies are far rarer in natural languages than in random arrangements~\cite{FerreriCancho2018}, part of this scarcity may follow from the shortness of dependencies~\cite{GomezRodriguez2017}, and random projective arrangements, a further baseline, are counted and averaged in linear time in~\cite{AlemanyPuig2022}.
+The direction of dependencies interacts with morphological richness and word order freedom across languages~\cite{Li2025Directionality}.
+Uniformly random labeled trees enter these studies mainly as a model of tree shape~\cite{FerreriCancho2018}; we derive further exact laws for single-root dependency trees, in which the arc from the root must also be taken into account, and use both baselines side by side.
+
+\subsection{Dependency Parsing for Morphologically Rich and Low-Resource Languages}
+Graph-based parsers score all arcs and search for the best tree~\cite{McDonald2005,Wu2017Transformed}; deep biaffine scoring~\cite{Dozat2017,Qi2020} remains a strong basis, higher-order information can be added with graph neural networks~\cite{Li2022SemanticDP} or graph fusion for small domain-specific samples~\cite{Li2023DATMT}, and globally normalized training with the matrix-tree theorem or with tree-structured conditional random fields is an alternative to local training~\cite{Koo2007,Zhang2020TreeCRF}.
+Projective trees can be found by dynamic programming over words~\cite{Eisner1996} or headed spans~\cite{Yang2022}, or recast as sequence tagging~\cite{Amini2023}.
+Pre-trained encoders~\cite{Devlin2019} have been fine-tuned for Arabic dependency parsing~\cite{AlGhamdi2023Arabic}, and the Turkish BOUN treebank~\cite{Turk2022} and a UD treebank of Old English~\cite{MartinArista2024UD} show how much attention the annotation of morphologically rich languages requires.
+For agglutinative languages, the segmentation of words into subword units matters: tokenizer fertility affects downstream quality~\cite{Rust2021}, morphology-aware segmentation improves Kazakh tokenization~\cite{Tukeyev2026CSE}, and stem--suffix boundaries can be learned across Turkic and Uralic languages~\cite{Ibiyev2026Segmentation}.
+Other Turkic and low-resource languages face the same scarcity of annotated data and have been served by multilingual speech recognition~\cite{Mussakhojayeva2023Turkic}, compact language models~\cite{Kadyrbek2025Kazakh}, neural part-of-speech tagging~\cite{Maimaiti2017Uyghur} and parameter-efficient adaptation of multilingual models~\cite{Sel2024Adaptation}.
+
+\subsection{Calibration and Uncertainty}
+Temperature scaling, a one-parameter rescaling of the logits fitted on held-out data, is a simple and effective remedy for overconfident neural networks~\cite{Guo2017}; weight averaging offers another route~\cite{Cao2024SWA}, and non-parametric maps such as isotonic regression recalibrate every prediction separately~\cite{Zadrozny2002}.
+Calibration is assessed by the expected calibration error, the negative log-likelihood and the Brier score~\cite{Brier1950}, whose limitations are discussed in~\cite{Kompa2021Coverage}.
+For structured outputs, calibration has been studied for sequence labeling, coreference resolution and related tasks of language processing~\cite{NguyenOConnor2015,KuleshovLiang2015,JagannathaYu2020}, mostly by recalibrating the probabilities of individual parts or events.
+Conditional random fields define globally normalized distributions over structures~\cite{Burr2015CRF}, and the matrix-tree theorem plays this role for dependency trees~\cite{Koo2007,SmithSmith2007}; tempered versions of such distributions, sharpened towards the best structure, were used for annealed minimum-risk training~\cite{SmithEisner2006}.
+The log-partition function of every exponential family is convex in its natural parameters~\cite{WainwrightJordan2008}; we use this property to calibrate a spanning-tree distribution after training while keeping it a distribution over trees.
+Finally, the reliability of language processing systems is often probed by controlled input transformations, as in metamorphic testing~\cite{Jin2022Metamorphic}, and differences between systems should be tested with resampling methods~\cite{BergKirkpatrick2012} corrected for multiple comparisons~\cite{Holm1979}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Mathematical Model}\label{sec:model}
+
+Let a sentence be a sequence of words $x=(w_1,\dots,w_n)$.
+Every word is identified with its position $i\in\{1,\dots,n\}$, and an artificial vertex $0$, the root, represents the sentence as a whole.
+Figure~\ref{fig:record} shows a sentence of the UzUDT treebank as it is stored in the corpus and the same record drawn as a tree.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_record.pdf}
+\caption{Sentence s658 of the UzUDT treebank, \textit{bu bo\textquoteleft limdagi asarlar bizga bu xazinaning eshigini ochib beradi} `the works of this section open the door of this treasure to us'. (\textbf{a}) The corpus record, in which HEAD is the position of the head of each word and DEPREL the type of the relation; (\textbf{b}) the same record as a tree with the relation types on the arcs.\label{fig:record}}
+\end{figure}
+
+\begin{Definition}[Sentence graph]\label{def:graph}
+The sentence graph is the complete weighted directed graph
+\begin{equation}\label{eq:graph}
+G_x=(V,A,\mathbf W),\quad V=\{0,1,\dots,n\},\quad A=\{(j\to i):\ i\in\{1,\dots,n\},\ j\in V\setminus\{i\}\},
+\end{equation}
+where $V$ is the set of vertices, $A$ the set of arcs, $|A|=n^2$, and $\mathbf W=(w_{ji})$ the matrix of arc weights, $w_{ji}$ being the weight of the arc from $j$ to $i$.
+\end{Definition}
+
+\begin{Definition}[Dependency tree]\label{def:tree}
+A set of arcs $y\subset A$ is a dependency tree of the sentence $x$ if
+\begin{equation}\label{eq:tree}
+\deg^-_y(i)=1\ \ (i=1,\dots,n),\qquad y\ \text{contains no cycle},\qquad \deg^+_y(0)=1,
+\end{equation}
+where $\deg^-_y(i)$ is the number of arcs of $y$ entering $i$ and $\deg^+_y(0)$ the number of arcs of $y$ leaving the root; $\deg^-_y(0)=0$ holds automatically, because $A$ contains no arc entering the root.
+\end{Definition}
+
+The first two conditions make $y$ a spanning arborescence rooted at the vertex $0$: $y$ has $n$ arcs and no cycle, so every word is reached from the root by exactly one directed path.
+The third condition is the single-root requirement of UD: exactly one word, usually the main predicate, depends on the root.
+For the unique arc $(h_i\to i)\in y$ we call $h_i$ the head of $i$ and $i$ a dependent of $h_i$; a label $r_i\in\mathcal R$, the relation type, is attached to every arc ($|\mathcal R|=39$ in our data).
+A tree is thus encoded by the head vector $h=(h_1,\dots,h_n)$ and the label vector $r=(r_1,\dots,r_n)$, and $\T(x)$ denotes the set of all dependency trees of $x$.
+An arc $(h_i\to i)$ with $h_i\neq0$ is head-final if $h_i>i$, that is, if the head follows its dependent.
+Figure~\ref{fig:graph} shows the graph of a three-word sentence and one of its trees.
+
+\begin{figure}[H]
+\includegraphics[width=0.52\textwidth]{figures/fig_graph.pdf}
+\caption{The complete weighted digraph $G_x$ of the sentence \textit{Ali kitobni o\textquoteleft qidi} `Ali read the book' with the arc probabilities of the numerical example of Section~\ref{sec:example}: the gold dependency tree (blue) and the six remaining arcs (grey).\label{fig:graph}}
+\end{figure}
+
+\begin{Lemma}\label{lem:count}
+For every $n\geqslant1$ the number of dependency trees of a sentence of $n$ words is $|\T(x)|=n^{n-1}$.
+\end{Lemma}
+\begin{proof}
+\emph{First proof.} Deleting the root and forgetting orientations maps every $y\in\T(x)$ to a labeled tree on $\{1,\dots,n\}$ together with a distinguished vertex, the child of the root.
+Conversely, a labeled tree and a distinguished vertex determine a unique orientation of the edges away from that vertex, so the map is a bijection.
+By Cayley's formula~\cite{Cayley1889,Prufer1918} there are $n^{n-2}$ labeled trees on $n$ vertices, hence $|\T(x)|=n\cdot n^{n-2}=n^{n-1}$.
+
+\emph{Second proof.} Put all arc weights equal to one in the single-root matrix-tree theorem (Theorem~\ref{thm:mt} below).
+The matrix $\Lh$ then coincides, apart from its first row of ones, with the Laplacian matrix of the complete graph $K_n$.
+Expanding the determinant along the first row gives the sum of the $n$ cofactors of that row, each of which equals the number $n^{n-2}$ of spanning trees of $K_n$ by Kirchhoff's theorem~\cite{Kirchhoff1847}; hence $|\T(x)|=\det\Lh=n^{n-1}$.
+\end{proof}
+
+The feasible set grows faster than exponentially: there are $10^{9}$ trees for $n=10$ and about $10^{11}$ for the mean sentence length $\bar n=11.4$ of the Uzbek treebanks.
+
+The arc weights are produced by a probabilistic model with parameters $\theta$.
+As in~\cite{Dozat2017}, the model is normalized locally: for every word it gives a distribution over the possible heads and, for every arc, a distribution over the labels, so that
+\begin{equation}\label{eq:factor}
+\log P_\theta(y\mid x)=\sum_{i=1}^{n}\log P_\theta(h_i\mid x)+\sum_{i=1}^{n}\log P_\theta(r_i\mid x,h_i),\qquad w_{ji}=\log P_\theta(h_i=j\mid x).
+\end{equation}
+Since the label term can be maximized separately for each chosen arc, parsing reduces to a combinatorial problem and an estimation problem.
+
+\begin{Problem}[Decoding]\label{prob:decode}
+Find $\hat y=\argmax_{y\in\T(x)}W(y)$, where $W(y)=\sum_{(j\to i)\in y}w_{ji}$, and give each arc of $\hat y$ the label $\hat r_i=\argmax_{r}P_\theta(r\mid x,\hat h_i)$.
+\end{Problem}
+
+\begin{Problem}[Estimation]\label{prob:estimate}
+Given a treebank $\mathcal D=\{(x^{(s)},y^{(s)})\}_{s=1}^{N}$, find
+\begin{equation}\label{eq:estimate}
+\hat\theta=\argmin_{\theta\in\R^{p}}\widehat R(\theta),\qquad \widehat R(\theta)=\frac{1}{N}\sum_{s=1}^{N}\mathcal L\bigl(\theta;x^{(s)},y^{(s)}\bigr),
+\end{equation}
+where $\mathcal L$ is the loss of Section~\ref{sec:estimation} and $p$ the number of trainable parameters.
+\end{Problem}
+
+The quality of the analyses of a test set with gold trees is measured by the unlabeled and labeled attachment scores
+\begin{equation}\label{eq:las}
+\mathrm{UAS}=\frac{1}{N_{\rm w}}\sum_{i}\mathbf 1[\hat h_i=h_i],\qquad
+\mathrm{LAS}=\frac{1}{N_{\rm w}}\sum_{i}\mathbf 1[\hat h_i=h_i\ \wedge\ \hat r_i=r_i],
+\end{equation}
+where the sums run over all $N_{\rm w}$ words of the test set and relation subtypes (the part after a colon, as in \textit{nmod:poss}) are ignored, as in the standard UD evaluation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exact Laws of Random Dependency Trees}\label{sec:random}
+
+This section compares the gold trees with two random references.
+Section~\ref{sec:known} collects known laws with short proofs adapted to single-root trees, Section~\ref{sec:new} contains the new results, and Section~\ref{sec:randomcheck} applies both to the Uzbek treebanks.
+
+\begin{Definition}[Null models]\label{def:null}
+Let $n\geqslant2$.
+Under the uniform model U, the tree $y$ is uniformly distributed on $\T(x)$.
+Under the random-arrangement model RLA of a fixed tree $t\in\T(x)$, a permutation $\sigma$ of $\{1,\dots,n\}$ is drawn uniformly, the word at the position $i$ is moved to the position $\sigma(i)$, and $y$ is the tree with the arcs $\sigma(h_i)\to\sigma(i)$, where $\sigma(0)=0$, so that the root stays to the left of the sentence.
+\end{Definition}
+
+U randomizes both the shape of the tree and the order of the words.
+RLA keeps the shape of the observed tree, that is, its numbers of dependents, its height and its depth profile, and randomizes only the order; it is the standard baseline of quantitative syntax~\cite{FerreriCancho2004,FerreriCancho2018,AlemanyPuig2022}.
+The two models are related: relabeling the words by a uniformly random permutation maps the uniform distribution on $\T(x)$ onto itself, so U is the mixture of the RLA models of uniformly random trees, and every expectation under U is the U-average of the corresponding RLA expectation.
+By the bijection in the first proof of Lemma~\ref{lem:count}, under U the arcs that do not leave the root form a uniformly random labeled tree on $\{1,\dots,n\}$, and the child of the root is an independent uniform word.
+Finally, U is the member $\beta=0$ of the tempered family of Section~\ref{sec:calibration}, which connects the combinatorics of this section with the numerical methods of Section~\ref{sec:numerical}.
+
+\subsection{Known Laws}\label{sec:known}
+
+\begin{Lemma}\label{lem:edge}
+Let $F$ be a forest on $\{1,\dots,n\}$ with $m$ edges whose components have $c_1,\dots,c_k$ vertices, $k=n-m$.
+Then exactly $c_1c_2\cdots c_k\,n^{k-2}$ labeled trees on $\{1,\dots,n\}$ contain $F$~\cite{Moon1970,Pitman1999}, so a uniformly random labeled tree contains $F$ with probability $c_1\cdots c_k/n^{m}$.
+In particular, under U a given pair of distinct words is joined by an arc with probability $2/n$, two given pairs without a common word are both joined with probability $4/n^2$, and two given pairs with one common word with probability $3/n^2$.
+Every arc $j\to i$ of $G_x$, the root arcs included, belongs to $y$ with probability $1/n$.
+\end{Lemma}
+\begin{proof}
+The first statement is Moon's formula~\cite{Moon1970}; a short proof is given in~\cite{Pitman1999}.
+Dividing by the $n^{n-2}$ labeled trees gives $c_1\cdots c_kn^{k-n}=c_1\cdots c_k/n^m$, and the three special cases are forests with the component sizes $(2,1,\dots,1)$, $(2,2,1,\dots,1)$ and $(3,1,\dots,1)$.
+The root arc $0\to i$ belongs to $y$ if and only if $i$ is the child of the root, which has probability $1/n$.
+The transposition of the labels $i$ and $j$ maps $\T(x)$ onto itself and the arc $j\to i$ onto $i\to j$, so the pair $\{i,j\}$, which is joined with probability $2/n$, is oriented in each direction with probability $1/n$.
+\end{proof}
+
+The length of an arc $(h_i\to i)$ with $h_i\neq0$ is the distance $d=|h_i-i|$ between the positions of the words it connects, $D(y)=\sum_{i:\,h_i\neq0}|h_i-i|$ is the total arc length of the tree, and $C(y)$ is its number of crossing pairs of arcs: two arcs with the ends $\{u_1,u_3\}$ and $\{u_2,u_4\}$ cross if $u_1<u_2<u_3<u_4$, the root arc being drawn from the position $0$ at the left of the sentence.
+
+\begin{Lemma}[\cite{FerreriCancho2004}]\label{lem:arc}
+Under U, and under RLA for every fixed tree, the length $d$ of a uniformly chosen non-root arc of $y$ has the distribution
+\begin{equation}\label{eq:arcpmf}
+P(d)=\frac{2(n-d)}{n(n-1)},\qquad d=1,\dots,n-1,
+\end{equation}
+with mean and variance
+\begin{equation}\label{eq:random_length}
+\E\,d=\frac{n+1}{3},\qquad \Var d=\frac{(n+1)(n-2)}{18}.
+\end{equation}
+\end{Lemma}
+\begin{proof}
+Exactly $n-d$ unordered pairs of words lie at the distance $d$.
+Under U, each of them is joined with probability $2/n$ by Lemma~\ref{lem:edge}, and dividing the expected number $2(n-d)/n$ of arcs of length $d$ by the $n-1$ non-root arcs gives~(\ref{eq:arcpmf}); under RLA the two ends of an arc occupy a uniformly random pair of positions, which gives the same law.
+The moments follow from $\sum_{d=1}^{n-1}d^2=(n-1)n(2n-1)/6$ and $\sum_{d=1}^{n-1}d^3=(n-1)^2n^2/4$.
+\end{proof}
+
+\begin{Lemma}\label{lem:outdeg}
+Let $b_n(k)=\binom{n-2}{k}n^{-k}(1-1/n)^{n-2-k}$ be the binomial probabilities with parameters $n-2$ and $1/n$.
+Under U, the number $k$ of dependents of a uniformly chosen word of $y$ has the distribution
+\begin{equation}\label{eq:outdeg}
+P(k)=\Bigl(1-\frac1n\Bigr)\,b_n(k)+\frac1n\,b_n(k-1),\qquad k=0,\dots,n-1,
+\end{equation}
+which converges to the Poisson law with unit mean as $n\to\infty$.
+\end{Lemma}
+\begin{proof}
+A vertex $v$ occurs $\deg(v)-1$ times in the Pr\"ufer code of a labeled tree~\cite{Prufer1918}, a uniform word of $\{1,\dots,n\}^{n-2}$, so $\deg(v)-1$ is binomial with parameters $n-2$ and $1/n$.
+The word $v$ has $\deg(v)-1$ dependents unless it is the child of the root, which happens independently with probability $1/n$ and adds one dependent.
+\end{proof}
+
+\begin{Lemma}\label{lem:rla}
+Under RLA of a fixed tree $t$ with the root word $r$, let $\deg_t(v)$ be the number of non-root arcs of $t$ at the word $v$, $k_v$ the number of dependents of $v$ and $A_t=\sum_v\deg_t(v)\bigl(\deg_t(v)-1\bigr)$. Then
+\begin{gather}
+\E D=\frac{n^2-1}{3},\qquad \Var D=\frac{(n+1)\bigl(6(n-1)(n-2)+(n-4)A_t\bigr)}{180},\label{eq:totalRLA}\\
+\E C=\frac13\Bigl(\binom{n-1}{2}-\sum_{v=1}^{n}\binom{\deg_t(v)}{2}+n-1-\deg_t(r)\Bigr),\label{eq:crossRLA}
+\end{gather}
+and $t$ is projective after the rearrangement with probability $\prod_{v=1}^{n}(k_v+1)!/n!$.
+\end{Lemma}
+\begin{proof}
+The mean follows from Lemma~\ref{lem:arc}. The lengths of two arcs of $t$ have, by direct summation over random positions, the covariance $(n+1)(n-8)/180$ if the arcs share a word and $-(n+1)/45$ otherwise; there are $A_t$ ordered pairs of arcs of the first kind and $(n-1)(n-2)-A_t$ of the second, which gives~(\ref{eq:totalRLA}), the variance of~\cite{FerreriCancho2019} in our notation.
+Two non-root arcs without a common word occupy four random positions and cross with probability $1/3$, because exactly one of the three ways to pair four points interleaves; the root arc crosses a non-root arc not incident with $r$ with the same probability, since $r$ must lie between its ends.
+Counting such pairs gives~(\ref{eq:crossRLA}), which without the root term is the expectation used in~\cite{FerreriCancho2018}.
+In a projective arrangement every subtree occupies an interval, and the interval of $v$ is the concatenation, in any of $(k_v+1)!$ orders, of $v$ and of the intervals of its dependents; this gives the count of~\cite{AlemanyPuig2022}.
+\end{proof}
+
+A tree is projective if, for every arc $(h\to i)$, all words between $h$ and $i$ are descendants of $h$; equivalently, $C(y)=0$.
+Projective trees can be decoded by dynamic programming in $O(n^3)$ time~\cite{Eisner1996}, so their number measures the size of the search space of such decoders.
+In a projective tree every subtree covers a contiguous span of words.
+A span tree, that is, a projective tree covering $k\geqslant1$ consecutive words, consists of its head word, a possibly empty sequence of span trees covering the words to the left of the head and a possibly empty sequence of span trees covering the words to its right; conversely, every such structure is a projective span tree, and a projective dependency tree is a span tree covering the whole sentence whose head is the child of the root.
+
+\begin{Lemma}\label{lem:projective}
+The number of projective single-root dependency trees on $n$ words is
+\begin{equation}\label{eq:projective}
+Q_n=\frac{1}{n}\binom{3n-2}{n-1}=1,\ 2,\ 7,\ 30,\ 143,\ 728,\ 3876,\ 21318,\ \dots,
+\end{equation}
+the Fuss--Catalan number $\frac{2}{3m+2}\binom{3m+2}{m}$ with $m=n-1$ and the term $a(n-1)$ of the sequence A006013~\cite{OEIS_A006013}.
+Moreover, $Q_{n+1}/Q_n\to 27/4$ and $Q_n/n^{n-1}\to0$ faster than any exponential.
+\end{Lemma}
+\begin{proof}
+By the span-tree decomposition, the generating function $T(z)=\sum_{n\geqslant1}Q_nz^n$ satisfies
+\begin{equation}\label{eq:gf}
+T(z)=z\,\phi\bigl(T(z)\bigr),\qquad \phi(w)=\frac{1}{(1-w)^2},
+\end{equation}
+and the Lagrange inversion theorem~\cite{FlajoletSedgewick2009} gives $Q_n=\frac1n[w^{n-1}]\phi(w)^n=\frac1n[w^{n-1}](1-w)^{-2n}=\frac1n\binom{3n-2}{n-1}$.
+The identity $\frac1n\binom{3n-2}{n-1}=\frac{2}{3n-1}\binom{3n-1}{n-1}$ gives the Fuss--Catalan form~\cite{Qi2018FussCatalan}, and Stirling's formula gives $Q_n=\Theta\bigl((27/4)^nn^{-3/2}\bigr)$.
+\end{proof}
+
+The OEIS entry~\cite{OEIS_A006013} records that $Q_n$ counts projective dependency trees, and the decomposition is the classical one for non-crossing structures~\cite{FlajoletNoy1999}.
+
+\begin{Corollary}\label{cor:projective}
+Under U, a tree is projective with probability $Q_n/n^{n-1}$, which equals $7/9$ for $n=3$, $0.0102$ for $n=8$, $1.55\cdot10^{-4}$ for $n=11$ and $9.0\cdot10^{-12}$ for $n=20$.
+\end{Corollary}
+
+Projective decoders thus search a vanishing part of the feasible set: for an eleven-word sentence, about one tree in 6400.
+
+\subsection{New Results}\label{sec:new}
+
+\begin{Proposition}\label{prop:total}
+Under U, the total arc length and the number of crossings have the moments
+\begin{gather}
+\E D=\frac{n^2-1}{3},\qquad \Var D=\frac{(n-2)(n-1)(n+1)(3n-4)}{60n},\label{eq:totalU}\\
+\E C=\frac{(n-1)^2(n-2)}{6n},\qquad \Cov(D,C)=\frac{(n-2)(n-1)(n+1)(4n-7)}{180n},\label{eq:crossU}
+\end{gather}
+and $(n-1)(n-2)/(3n)$ of the expected crossings involve the root arc.
+In particular, $D$ and $C$ are positively correlated for $n\geqslant3$, and the best linear predictor of $C$ given $D$ is $\E C+\kappa_n(D-\E D)$ with the slope
+\begin{equation}\label{eq:slope}
+\kappa_n=\frac{\Cov(D,C)}{\Var D}=\frac{4n-7}{3(3n-4)}\ \longrightarrow\ \frac49.
+\end{equation}
+\end{Proposition}
+\begin{proof}
+Write $D=\sum_pX_pd_p$ over the $\binom n2$ pairs $p$ of words, where $d_p$ is the distance of the pair and $X_p$ indicates that it is joined by an arc, and let $s_v=\sum_u|u-v|=\bigl((v-1)v+(n-v)(n-v+1)\bigr)/2$.
+With $S_1=\sum_pd_p=n(n^2-1)/6$, $S_2=\sum_pd_p^2=n^2(n^2-1)/12$ and the sum $A=\sum_v(s_v^2-\sum_u(u-v)^2)=n(n-2)(n^2-1)(7n+4)/60$ of $d_pd_q$ over the ordered pairs of distinct pairs with a common word, Lemma~\ref{lem:edge} gives $\E D=2S_1/n$ and $\E D^2=2S_2/n+3A/n^2+4(S_1^2-S_2-A)/n^2$, hence $\Var D=\bigl(2(n-2)S_2-A\bigr)/n^2$, which simplifies to~(\ref{eq:totalU}).
+Every set of four positions $u_1<u_2<u_3<u_4$ supports exactly one crossing pair of non-root arcs, $\{u_1,u_3\}$ and $\{u_2,u_4\}$, present with probability $4/n^2$; the root arc $0\to r$ crosses $\{u_1,u_2\}$ if and only if $u_1<r<u_2$, and $r$ is uniform and independent of the labeled tree.
+Hence the non-root arcs contribute $4\binom n4/n^2=(n-1)(n-2)(n-3)/(6n)$ crossings on average and the root arc $\sum_r\frac1n\sum_{u_1<r<u_2}\frac2n=(n-1)(n-2)/(3n)$.
+For the covariance, $\E[DC]$ is the sum of $d_p\,P(X_p=X_q=X_{q'}=1)$ over the pairs $p$ and the crossing pairs $(q,q')$, plus the sum of $d_p\,P(X_p=X_q=1)\,(d_q-1)/n$ over the pairs $p$ and $q$ for the root arc.
+By Lemma~\ref{lem:edge}, the first probability equals $4/n^2$ if $p\in\{q,q'\}$, $4/n^3$ if $p$ joins $q$ and $q'$, $6/n^3$ if $p$ shares exactly one end with $q\cup q'$ and $8/n^3$ otherwise, and the second equals $2/n$, $3/n^2$ and $4/n^2$ for $p=q$, for pairs with one common word and for disjoint pairs.
+Summing $d_p$ over the crossing pairs $\{u_1,u_3\},\{u_2,u_4\}$ and the pairs $p$ of each kind gives, with $B_5=\binom{n+1}{5}$, the sums $4B_5$ for $p\in\{q,q'\}$, $6B_5$ for the four pairs joining $q$ and $q'$, $\frac{20}{3}(n-4)B_5$ for the pairs with exactly one end in $q\cup q'$ and $\frac56(n-4)(n-5)B_5$ for the disjoint pairs; the sums of $(d_q-1)\,d_p$ for the root arc are, with $B_4=\binom{n+1}{4}$, $2B_4$ for $p=q$, $\frac25(7n-16)B_4$ for the pairs with one common word and $\frac{2}{15}(n-3)(5n-11)B_4$ for the disjoint pairs.
+Each is the sum of a polynomial in the positions over the simplex $u_1<u_2<u_3<u_4$ or $u_1<u_2$, which the hockey-stick identity $\sum_{u=k}^{m}\binom uk=\binom{m+1}{k+1}$ reduces to binomial coefficients~\cite{Graham1994}.
+Weighting the sums by the probabilities above gives
+\begin{align*}
+\E[DC]&=\frac{(n-3)(n-2)(n-1)^2(n+1)(5n+2)}{90n^2}\\
+&\quad+\frac{(n-2)(n-1)(n+1)(20n^2-11n-12)}{180n^2},
+\end{align*}
+and subtracting $\E D\,\E C$ gives~(\ref{eq:crossU}); dividing the covariance by $\Var D$ gives~(\ref{eq:slope}).
+All seven sums were also checked symbolically and by the enumeration of Section~\ref{sec:randomcheck}.
+\end{proof}
+
+The moments of $D$ can also be obtained by averaging Lemma~\ref{lem:rla} over U, because the RLA mean does not depend on the tree and $\E_{\rm U}A_t=3(n-1)(n-2)/n$ by the binomial law of $\deg(v)-1$; the same averaging of~(\ref{eq:crossRLA}) gives $\E C$, whose non-root part is also given in~\cite{FerreriCancho2018}.
+The root arc contributes the share $2/(n-1)$ of the expected crossings, one fifth for a sentence of eleven words.
+
+The span-tree decomposition can be refined by the direction of the arcs and by the position of the root.
+Let $N_{n,k}$ be the number of projective trees on $n$ words with exactly $k$ head-final non-root arcs, $N^{(r)}_n$ the number of projective trees whose root word is $r$, and $t_m=\frac{1}{2m+1}\binom{3m}{m}$, the number of ternary trees with $m$ internal nodes~\cite{OEIS_A001764}.
+
+\begin{Theorem}\label{thm:direction}
+For every $n\geqslant1$:
+\begin{enumerate}
+\item $N_{n,k}=\dfrac1n\dbinom{n+k-1}{k}\dbinom{2n-k-2}{n-1-k}$ for $k=0,\dots,n-1$;
+\item $N^{(r)}_n=t_{r-1}\,t_{n-r}$ for $r=1,\dots,n$;
+\item exactly $(n-1)!$ trees of $\T(x)$ have only head-final arcs, and $\frac1n\binom{2n-2}{n-1}$ of them, the Catalan number $C_{n-1}$, are projective.
+\end{enumerate}
+\end{Theorem}
+\begin{proof}
+(i) The dependents to the left of a head are joined to it by head-final arcs and the dependents to its right by head-initial arcs.
+Marking every head-final arc by $u$, the generating function $T(z,u)$ of span trees satisfies $T=z\,\phi(T)$ with $\phi(w)=(1-uw)^{-1}(1-w)^{-1}$, so Lagrange inversion gives
+\[
+\sum_kN_{n,k}u^k=\frac1n[w^{n-1}](1-uw)^{-n}(1-w)^{-n}=\frac1n\sum_{k=0}^{n-1}\binom{n+k-1}{k}u^k\binom{2n-k-2}{n-1-k}.
+\]
+(ii) No arc of a projective tree crosses the root arc $0\to r$, so no arc joins a word of $\{1,\dots,r-1\}$ to a word of $\{r+1,\dots,n\}$.
+Hence a projective tree with the root word $r$ decomposes uniquely into $r$, a sequence of span trees covering the words $1,\dots,r-1$, whose heads depend on $r$, and an independent sequence covering $r+1,\dots,n$, and the number of such trees is the product of the numbers of the two sequences.
+The sequences covering $m$ words have the generating function $H(T)=1/(1-T)$, and the Lagrange--B\"urmann formula gives $[z^m]H(T)=\frac1m[w^{m-1}]H'(w)\phi(w)^m=\frac1m[w^{m-1}](1-w)^{-2m-2}=\frac1m\binom{3m}{m-1}=t_m$ for $m\geqslant1$, with $t_0=1$.
+(iii) If all arcs are head-final, the word $n$ has no head among the words and is the child of the root, and every word $i<n$ chooses its head among $i+1,\dots,n$; every such choice is acyclic because heads increase along every path, which gives $(n-1)!$ trees, and (i) with $k=n-1$ gives $N_{n,n-1}=C_{n-1}$.
+\end{proof}
+
+The numbers $N_{n,k}$ form the row $n-1$ of the triangle A371395, where they are introduced as the graded dimensions of an operad~\cite{OEIS_A371395}; Theorem~\ref{thm:direction} shows that they count projective dependency trees by direction, with row sums $Q_n$ and Catalan numbers in the first and last columns.
+
+\begin{Corollary}\label{cor:direction}
+Let $y$ be uniformly distributed on the projective trees on $n\geqslant2$ words and let $K$ be its number of head-final arcs. Then
+\begin{equation}\label{eq:Kmoments}
+\E K=\frac{n-1}{2},\qquad \Var K=\frac{(n-1)(3n-1)}{4(2n+1)},
+\end{equation}
+which exceeds the variance $(n-1)/4$ of independent equiprobable directions.
+The root is the last word with probability $n/(3n-2)$ and the first word with the same probability, so it lies at an end of the sentence with probability $2n/(3n-2)\to2/3$; under U each end has probability $1/n$.
+All arcs are head-final with probability $\binom{2n-2}{n-1}\big/\binom{3n-2}{n-1}$.
+\end{Corollary}
+\begin{proof}
+With $N_n(u)=\sum_kN_{n,k}u^k=\frac1n[w^{n-1}](1-uw)^{-n}(1-w)^{-n}$, differentiation under the coefficient gives $N_n'(1)=[w^{n-2}](1-w)^{-2n-1}=\binom{3n-2}{n-2}$ and $N_n''(1)=(n+1)[w^{n-3}](1-w)^{-2n-2}=(n+1)\binom{3n-2}{n-3}$.
+Dividing by $N_n(1)=Q_n$ gives $\E K=(n-1)/2$ and $\E K(K-1)=(n+1)(n-1)(n-2)/\bigl(2(2n+1)\bigr)$, hence~(\ref{eq:Kmoments}).
+By Theorem~\ref{thm:direction}(ii), the root is the last word with probability $t_{n-1}/Q_n$, and $\binom{3n-2}{n-1}=\frac{3n-2}{2n-1}\binom{3n-3}{n-1}$ gives $t_{n-1}/Q_n=n/(3n-2)$; the first word is symmetric.
+The last statement is Theorem~\ref{thm:direction}(iii) divided by $Q_n$.
+\end{proof}
+
+Projectivity alone thus makes a root at an end of the sentence far more likely than under U, and it correlates the directions of the arcs.
+
+\subsection{Verification and Comparison with Uzbek Trees}\label{sec:randomcheck}
+All statements about U in Lemmas~\ref{lem:arc}--\ref{lem:projective}, Proposition~\ref{prop:total} and Theorem~\ref{thm:direction} were checked by exhaustive enumeration of the $n^{n-1}$ trees for $n=1,\dots,8$, which is 2,097,152 trees for $n=8$, generated from Pr\"ufer codes and choices of the root word: the distributions of arc lengths and dependents, the first two moments of $D$, the expected numbers of crossings, $\Cov(D,C)$, the numbers $Q_n$, $N_{n,k}$ and $N^{(r)}_n$ and the numbers of head-final trees agreed exactly, in rational arithmetic, with the formulas.
+The RLA statements of Lemma~\ref{lem:rla} were checked on 40 random trees for each $n=2,\dots,7$ against all $n!$ arrangements of every tree, and the moments~(\ref{eq:Kmoments}) against exact sums over Theorem~\ref{thm:direction}(i) for $n\leqslant39$.
+Applied to the sentence lengths of the treebanks, the exact laws also agree with a Monte Carlo sample of 236,800 random trees: the mean arc length is 5.028 (Monte Carlo 5.032), the share of words without dependents 38.5\% (38.5\%) and the share of projective trees 4.21\% (4.17\%).
+
+The data are the two UD treebanks of Uzbek.
+UzUDT (release 2.17) contains 684 sentences with 7582 words from literary and educational texts; it was annotated by six annotators with inter-annotator agreement (Cohen's $\kappa$) of 0.91--0.95 for lemmas, part-of-speech tags and morphological features~\cite{MatlatipovDiB2026,MatlatipovLREC2026}, and its text is distributed in lower case.
+UT (release 2.15) contains 500 sentences with 5930 words of news and fiction~\cite{Akhundjanova2025} and keeps the original capitalization.
+Together they give 1184 trees with 13,512 words.
+Table~\ref{tab:graph} and Figures~\ref{fig:arclength}--\ref{fig:direction} compare them with the null models.
+
+\input{tables/tab_graph}
+
+The mean length of the non-root arcs of the gold trees is 2.58, against 5.03 under both null models, and their total arc length is 0.51 of its expectation; Figure~\ref{fig:shape}a shows that the gap widens with the sentence length.
+The total arc length is below its expectation in 99.7\% of the sentences; in units of the exact standard deviations of Proposition~\ref{prop:total} and Lemma~\ref{lem:rla}, it lies on average 2.47 deviations below the mean under U and 2.39 under RLA, and more than two deviations below in 62\% and 60\% of the sentences, respectively.
+Among the 9897 arcs that are neither punctuation nor root arcs, 52.0\% join adjacent words, and 3.3\% are longer than ten words.
+To describe the shape of this distribution, we fitted laws conditioned on the sentence length: an arc of a sentence of $n$ words has the length $d$ with probability proportional to $(n-d)\,k(d)$, $d=1,\dots,n-1$, where $n-d$ is the number of word pairs at the distance $d$, so that $k\equiv1$ gives the law of U (Lemma~\ref{lem:arc}) and the kernel $k$ describes the preference for short arcs.
+Conditioning on $n$ respects the bound $d\leqslant n-1$ and avoids the spurious heavy tail produced by pooling sentences of different lengths~\cite{Clauset2009}.
+The arcs of one tree are not independent (Proposition~\ref{prop:total}), so we treat their lengths as marginally distributed by this law and use the composite likelihood of the 9897 arcs, with the Akaike information criterion as a descriptive measure of fit~\cite{Varin2011}.
+It equals 40,780 for $k\equiv1$, 35,119 for the geometric kernel $k(d)=(1-q)^{d-1}$ ($\hat q=0.26$), 34,642 for the Cauchy-type kernel $k(d)=\bigl(1+(d-1)^2/s^2\bigr)^{-1}$ ($\hat s=1.64$) and 32,989 for the power kernel $k(d)=d^{-\gamma}$ ($\hat\gamma=1.18$).
+Uzbek arc lengths thus follow the uniform law of Lemma~\ref{lem:arc} tilted by a power of the distance (Figure~\ref{fig:arclength}).
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_arclength.pdf}
+\caption{Distribution of the arc length in the Uzbek treebanks (punctuation and root arcs excluded), the laws $(n-d)\,k(d)$ fitted conditionally on the sentence length with geometric, Cauchy-type and power kernels, and the law of U (Lemma~\ref{lem:arc}, $k\equiv1$), all aggregated over the sentence lengths of the corpus.\label{fig:arclength}}
+\end{figure}
+
+The gold trees contain only 222 crossing pairs of arcs, 0.19 per sentence, against 19.5 expected under U and 17.2 under RLA, which is about one percent of the crossings expected by chance even when the shape of every tree is kept (Figure~\ref{fig:shape}c).
+Short arcs explain part of this deficit.
+By Proposition~\ref{prop:total}, crossings and total length are positively correlated in uniformly random trees, and the best linear prediction of $C$ from the observed total length of each gold tree is 8.6 crossing pairs per sentence.
+To first order, the short arcs thus account for 57\% of the missing crossings, but the prediction is still 45 times the observed value.
+Projectivity separates the distributions most sharply (Figure~\ref{fig:shape}d).
+The share of projective gold trees decreases slowly with the sentence length, from 95.1\% for 6--10 words to 81.8\% for 16--20 words and 71.4\% for 21--30 words.
+Random trees of these lengths are projective with probabilities of order $10^{-2}$, $10^{-8}$ and $10^{-13}$ under U and $10^{-1}$, $10^{-7}$ and $10^{-10}$ under RLA.
+Keeping the shape of the trees raises the probability of projectivity by one to three orders of magnitude, but it remains negligible for long sentences.
+This agrees with the scarcity of crossings observed in other languages~\cite{FerreriCancho2018}.
+Overall, 9.2\% of the gold trees are non-projective (11.0\% in UzUDT and 6.8\% in UT): projective trees are the rule, but a projective decoder cannot represent about every eleventh sentence.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_shape.pdf}
+\caption{Shape of the gold trees compared with the null models U (uniformly random trees with the same lengths) and RLA (random arrangements of the gold trees). (\textbf{a}) Mean arc length against the sentence length with 95\% confidence intervals and the expectation of Lemma~\ref{lem:arc}, common to both models; (\textbf{b}) distribution of the number of dependents of a word and the exact law of Lemma~\ref{lem:outdeg} (RLA keeps the observed distribution); (\textbf{c}) mean number of crossing pairs of arcs per sentence in bands of sentence length and the expectations of Proposition~\ref{prop:total} (U) and Lemma~\ref{lem:rla} (RLA); (\textbf{d}) share of projective trees in the same bands and the probabilities of Corollary~\ref{cor:projective} (U) and Lemma~\ref{lem:rla} (RLA). The legend of (\textbf{d}) also applies to (\textbf{c}).\label{fig:shape}}
+\end{figure}
+
+Without punctuation, the head follows its dependent in 84.6\% of the arcs (88.2\% in UzUDT and 80.4\% in UT), against one half under both null models by the reflection symmetry $i\mapsto n+1-i$; this is the head-final order of Uzbek, in line with the cross-linguistic interplay of morphology and dependency direction~\cite{Li2025Directionality}.
+Theorem~\ref{thm:direction} measures this order against projective trees.
+Punctuation tokens are leaves in UD, so deleting them leaves a tree on the content words, and 1075 of these trees are projective.
+In them, 84.8\% of the arcs are head-final; summed over the trees, the number of head-final arcs exceeds its expectation $(n-1)/2$ by 55 standard deviations of Corollary~\ref{cor:direction}, and 38.1\% of the trees are entirely head-final, against 5.1\% for uniformly random projective trees of the same lengths (Figure~\ref{fig:direction}a).
+The root is the last content word in 73.1\% of the sentences and the first word in 0.5\%.
+By Corollary~\ref{cor:direction}, a uniformly random projective tree of these lengths has its root at the last word with probability 36.8\% and at the first word with the same probability, against 13.6\% under U (Figure~\ref{fig:direction}b).
+Uzbek therefore keeps the preference for an end of the sentence that projectivity induces, and it uses only the right end.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_direction.pdf}
+\caption{Direction and root position of the projective trees on content words. (\textbf{a}) Distribution of the share of head-final arcs in the 1075 projective gold trees and in uniformly random projective trees of the same lengths (exact law of Theorem~\ref{thm:direction}); (\textbf{b}) share of sentences whose root is the first or the last word under U, for uniformly random projective trees (Corollary~\ref{cor:direction}) and in the Uzbek treebanks.\label{fig:direction}}
+\end{figure}
+
+The mean height of the gold trees is 4.33, against 6.39 for uniformly random trees, whose height grows like $\sqrt n$~\cite{Renyi1967}.
+The number of dependents departs from the law of Lemma~\ref{lem:outdeg} at both ends (Figure~\ref{fig:shape}b): 57.3\% of the words have no dependents against 38.5\%, and 7.8\% have four or more against 1.0\%.
+Of these 1051 words, 80.1\% are verbs, 13.8\% nouns and 4.5\% adjectives, that is, mostly predicates with their arguments and adjuncts.
+These findings agree with the design of the arc-weight model of the next section, whose scores contain a direction term and a heavy-tailed distance kernel, and they show that the decoder must admit non-projective trees.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Neural Model of Arc Weights}\label{sec:neural}
+
+The weights $w_{ji}$ are computed by the graph-based parser of the Stanza toolkit~\cite{Qi2020}, which follows the deep biaffine architecture~\cite{Dozat2017} with the additions of~\cite{Qi2018}.
+For Uzbek the parser was extended with a contextual channel: the vectors of a pretrained BERT encoder~\cite{Devlin2019} enter the input layer through an aggregation operator (Figure~\ref{fig:arch}).
+The extension raises the dimension of the input vector of a word from 500 to 1143 and the number of trainable parameters from 24.5 to 27.6 million; the encoder itself, about 109 million parameters, is kept frozen (Table~\ref{tab:encoders}).
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_arch.pdf}
+\caption{Architecture of the arc-weight model. The orange frame marks the contextual channel added to the Stanza parser; the blue blocks compute the weights $\mathbf W$ of the sentence graph and solve the problems of Section~\ref{sec:numerical}.\label{fig:arch}}
+\end{figure}
+
+\subsection{Subword Vectors and the Aggregation Operator}
+A BERT encoder splits every word into subword pieces; the word $i$ receives the pieces with the indices $a_i,\dots,b_i$ of the piece sequence of the sentence, $m_i=b_i-a_i+1$ is the number of its pieces and $M=\sum_im_i$ the number of pieces of the sentence.
+As in Stanza, the contextual vector of the piece $k$ is the average of upper hidden layers, $\bar{\mathbf h}_k=\frac14\sum_{\ell=9}^{11}\mathbf H^{(\ell)}_k\in\R^{768}$, where $\mathbf H^{(\ell)}_k$ is the output of layer $\ell$.
+The parser, however, needs one vector per word.
+
+\begin{Definition}[Aggregation operator]\label{def:pi}
+An aggregation operator is a matrix $\Pi=(\pi_{ik})\in\R^{n\times M}$ with $\pi_{ik}\geqslant0$, $\sum_k\pi_{ik}=1$ and $\pi_{ik}=0$ for $k\notin[a_i,b_i]$; the word vectors are $\mathbf e_i=\sum_{k}\pi_{ik}\bar{\mathbf h}_k$.
+We consider the last-piece and the mean operators
+\begin{equation}\label{eq:pooling}
+\pi^{\mathrm{last}}_{ik}=\mathbf 1[k=b_i],\qquad \pi^{\mathrm{mean}}_{ik}=\frac{\mathbf 1[a_i\leqslant k\leqslant b_i]}{m_i}.
+\end{equation}
+\end{Definition}
+
+\begin{Remark}\label{rem:pooling}
+For each word the admissible rows of $\Pi$ form a simplex whose vertices are the unit vectors with the indices $a_i,\dots,b_i$; the row of $\Pi^{\mathrm{last}}$ is the vertex $b_i$ and the row of $\Pi^{\mathrm{mean}}$ the barycenter.
+By the triangle inequality, every aggregation operator is non-expansive, $\|\mathbf e_i\|\leqslant\max_{a_i\leqslant k\leqslant b_i}\|\bar{\mathbf h}_k\|$ in any norm, and under $\Pi^{\mathrm{mean}}$ the weight of the last piece is $1/m_i$.
+\end{Remark}
+
+In Uzbek, the markers of number, possession, case and person are suffixes at the right end of the word, so the last piece tends to carry the inflectional information that syntax needs, and averaging dilutes it by the factor $1/m_i$; this motivated the last-piece operator in~\cite{MatlatipovNLDB2027}.
+The operator does not discard the stem: the input vector~(\ref{eq:input}) below also contains the embeddings of the word form and the lemma and the output of a character-level network, which represent the stem, and the BERT channel adds the contextual representation of the inflected ending.
+Table~\ref{tab:encoders} shows how the two encoders segment the 13,512 words of the treebanks; the mean number of pieces per word, the fertility of a tokenizer, is known to affect downstream quality~\cite{Rust2021}.
+TahrirchiBERT~\cite{Mamasaidov2023} uses a byte-level BPE vocabulary of 30,528 units and splits 57.4\% of the words, into 1.90 pieces on average; BERTbek~\cite{Kuriyozov2024} uses a WordPiece vocabulary of 30,000 units and keeps 68.1\% of the words whole (1.55 pieces on average).
+Among the 5620 inflected words whose form is the lemma followed by suffixes, the last piece contains the whole suffix chain in 90.2\% of the cases for TahrirchiBERT and in 79.5\% for BERTbek; for example, \textit{kitoblarimizdagi} `in our books' is split into \textit{kitob}+\textit{larimiz}+\textit{dagi} and into \textit{kitoblari}+\textit{mizda}+\textit{gi}.
+Because BERTbek splits fewer words, the mean operator keeps a larger weight on the last piece (0.81 against 0.66), which is relevant for the results of Section~\ref{sec:results}.
+For comparison, Table~\ref{tab:encoders} also lists the tokenizers of two multilingual encoders that cover Uzbek, mBERT~\cite{Devlin2019} and XLM-R~\cite{Conneau2020}, although no parser was trained with them.
+With vocabularies of 119,547 and 250,002 units shared by about a hundred languages, they split 65.7\% and 67.2\% of the Uzbek words, into 2.32 and 2.07 pieces on average, and mBERT keeps a whole suffix chain in the last piece for only 57.2\% of the inflected words; the monolingual tokenizers are therefore the better match for the last-piece operator.
+
+\input{tables/tab_encoders}
+
+\subsection{Contextual Encoder and Biaffine Scoring}
+The input vector of the word $i$ is the concatenation
+\begin{equation}\label{eq:input}
+\mathbf v_i=\Bigl[\mathbf e^{\mathrm w}_i;\ \mathbf e^{\mathrm{lem}}_i;\ \mathbf e^{\mathrm{upos}}_i+\mathbf e^{\mathrm{xpos}}_i;\ \textstyle\sum_{f}\mathbf e^{f}_i;\ \mathbf P_c\mathbf c_i;\ \mathbf e_i\Bigr]\in\R^{1143},
+\end{equation}
+of trainable embeddings of the word form (75 components), the lemma (75), the universal and language-specific part-of-speech tags (50) and the morphological features (50), the output $\mathbf c_i$ of a character-level LSTM projected to 125 components, and the aggregated BERT vector $\mathbf e_i$ (768 components).
+In the FastText variant, $\mathbf e_i$ is replaced by a projection of a pretrained 300-dimensional vector to 125 components, which gives $\mathbf v_i\in\R^{500}$.
+A three-layer bidirectional LSTM with 400 units per direction maps the sequence $(\mathbf v_1,\dots,\mathbf v_n)$ to contextual vectors $\mathbf r_i\in\R^{800}$, and two perceptrons give the representations of the word as a dependent and as a head, $\mathbf a^{d}_i=\mathrm{ReLU}(\mathbf P_d\mathbf r_i+\mathbf b_d)$ and $\mathbf a^{h}_i=\mathrm{ReLU}(\mathbf P_h\mathbf r_i+\mathbf b_h)$, both in $\R^{400}$.
+The score of the arc $j\to i$ is the biaffine form
+\begin{equation}\label{eq:biaffine}
+s_{ij}=[\mathbf a^{d}_i;1]^{\top}\,\mathbf U\,[\mathbf a^{h}_j;1],\qquad \mathbf U\in\R^{401{\times}401},
+\end{equation}
+and label scores $s_{ijr}$ are computed in the same way with one matrix $\mathbf U^{(r)}$ per label.
+
+\begin{Remark}\label{rem:biaffine}
+Writing $\mathbf U=\begin{pmatrix}\mathbf U_{11}&\mathbf u_{12}\\ \mathbf u_{21}^{\top}&u_{22}\end{pmatrix}$ with $\mathbf U_{11}\in\R^{400\times400}$ gives $s_{ij}=\mathbf a^{d\top}_i\mathbf U_{11}\mathbf a^{h}_j+\mathbf u_{21}^{\top}\mathbf a^{h}_j+c_i$ with $c_i=\mathbf a^{d\top}_i\mathbf u_{12}+u_{22}$.
+The term $c_i$ does not depend on $j$ and cancels in the distribution $P(h_i=j)\propto\exp s_{ij}$, so the biaffine form consists of a bilinear interaction between dependent and head and of a head prior $\mathbf u_{21}^{\top}\mathbf a^{h}_j$, which measures how readily the word $j$ becomes a head regardless of the dependent.
+\end{Remark}
+
+\subsection{Direction and Distance}
+Following~\cite{Qi2018}, the score is corrected by a direction term and a distance kernel,
+\begin{equation}\label{eq:corrected}
+\tilde s_{ij}=s_{ij}+\log\sigma\bigl(\lambda_{ij}\,\mathrm{sgn}(j-i)\bigr)-\log\Bigl(1+\tfrac12\bigl(|j-i|-\delta_{ij}\bigr)^2\Bigr),
+\end{equation}
+where $\sigma$ is the logistic function, $\lambda_{ij}$ a predicted direction score and $\delta_{ij}\geqslant1$ a predicted arc length, both produced by additional biaffine scorers.
+The last term is the logarithm of a Cauchy-type kernel with a slow polynomial decay.
+Both terms were introduced in~\cite{Qi2018} for all languages; Section~\ref{sec:random} supports them for Uzbek a posteriori, since Uzbek arcs are mostly head-final and their lengths follow a heavy-tailed law.
+The weights of the sentence graph are the local log-probabilities
+\begin{equation}\label{eq:weights}
+\begin{gathered}
+w_{ji}=\log P_\theta(h_i=j\mid x)=\tilde s_{ij}-\log\sum_{k\neq i}\exp\tilde s_{ik},\\
+P_\theta(r_i=r\mid x,h_i=j)=\frac{\exp s_{ijr}}{\sum_{r'}\exp s_{ijr'}}.
+\end{gathered}
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Numerical Methods}\label{sec:numerical}
+
+\subsection{Exact Decoding}
+The decoding Problem~\ref{prob:decode} is an optimum branching problem with the additional single-root constraint.
+It is solved by the algorithm found independently by Chu and Liu~\cite{ChuLiu1965} and by Edmonds~\cite{Edmonds1967}, often called the Chu--Liu/Edmonds (CLE) algorithm.
+
+\begin{Theorem}[Chu and Liu~\cite{ChuLiu1965}; Edmonds~\cite{Edmonds1967}]\label{thm:cle}
+Let $G$ be a directed graph with real arc weights and a root from which every vertex can be reached.
+Steps 1--4 of Algorithm~\ref{alg:cle} return a spanning arborescence of $G$ of maximum total weight.
+\end{Theorem}
+
+\begin{Algorithm}[Optimum branching with root preselection]\label{alg:cle}
+\normalfont
+\begin{algorithmic}[1]
+\Require weight matrix $\mathbf W=(w_{ji})$ of the sentence graph $G_x$
+\Ensure dependency tree $\hat y\in\T(x)$
+\State for every word $i$ choose the heaviest entering arc, $h_i=\argmax_{j\neq i}w_{ji}$
+\State if the arcs $\{h_i\to i\}$ contain no cycle, they form the optimal arborescence; go to step 5
+\State otherwise contract a cycle $C$ into one vertex $c$ with $w'_{j\to c}=\max_{i\in C}\bigl(w_{ji}-w_{h_ii}\bigr)$ and $w'_{c\to k}=\max_{i\in C}w_{ik}$, and solve the contracted problem by steps 1--4
+\State expand $c$: the arc entering $c$ enters the vertex $i^*\in C$ at which its maximum is attained, the arc $h_{i^*}\to i^*$ is removed and the other arcs of $C$ are kept
+\State if the root has more than one child, then for every child $r$ of the root solve steps 1--4 with $0\to r$ as the only arc leaving the root, and keep the heaviest tree
+\State \Return $\hat y$
+\end{algorithmic}
+\end{Algorithm}
+
+The contraction weight $w'_{j\to c}$ is the gain of entering the cycle through $j\to i$ instead of through the cycle arc $h_i\to i$.
+Step 5, which Stanza and other neural parsers use, tries only the words attached to the root in the unrestricted solution.
+Stanojevi\'c and Cohen~\cite{Stanojevic2021} proved, with an extension of the augmentation theorem of Gabow and Tarjan to directed graphs, that the root arc of an optimal single-root tree is one of the root arcs of an optimal unrestricted arborescence, so this root preselection is exact.
+They also showed that lowering the weights of all root arcs by a constant $c>n\,(\max w-\min w)$ makes every optimal arborescence single-rooted, so that one unrestricted run of steps 1--4 solves the constrained problem; \cite{Zmigrod2020} attains the same cost with the algorithm of Gabow and Tarjan.
+We implemented both variants.
+They returned the same optimum on all 2191 weight matrices of the test sets of Section~\ref{sec:results} and on 300 random problems with $n\leqslant7$ checked by exhaustive search.
+On the trained models root preselection was faster, 0.075 against 0.70 ms per sentence in the same measurement, because the unrestricted optimum already has a single child of the root in about 97\% of the sentences; with lowered root weights every word first chooses a non-root head, so the greedy graph always contains a cycle and more contractions are needed.
+
+\begin{Proposition}[Complexity]\label{prop:complexity}
+Exhaustive search that evaluates every tree of $\T(x)$ requires $\Theta(n^{n})$ operations.
+One iteration of steps 1--4 of Algorithm~\ref{alg:cle} requires $O(n^2)$ operations and at most $n$ iterations are needed, so steps 1--4 cost $O(n^3)$ operations, or $O(n^2)$ with the data structures of~\cite{Tarjan1977}.
+Step 5 multiplies these bounds by the number of children of the root in the unrestricted solution; with the lowered root weights a single run suffices, so the single-root problem is solved in $O(n^3)$ operations, or $O(n^2)$ with~\cite{Tarjan1977}, in the worst case.
+\end{Proposition}
+\begin{proof}
+By Lemma~\ref{lem:count} there are $n^{n-1}$ trees, each evaluated in $\Theta(n)$ operations.
+The greedy step and the contraction examine each entry of $\mathbf W$ once, and a cycle of the functional graph $i\mapsto h_i$ is found by a depth-first search in $O(n)$; every contraction removes at least one vertex.
+\end{proof}
+
+For comparison we use greedy head selection, which costs $O(n^2)$ operations but may violate~(\ref{eq:tree}), and Eisner's dynamic programming~\cite{Eisner1996}, which finds the best projective tree in $O(n^3)$ operations and was adapted to the single-root requirement by choosing the best child of the root at the end.
+
+\subsection{Global Normalization}
+Let $\psi_{ji}=\exp w_{ji}>0$ be the factor of the arc $j\to i$.
+For a matrix $\boldsymbol\phi=(\phi_{ji})$ of factors on the arcs, let $\Lh[\boldsymbol\phi]\in\R^{n\times n}$, with rows indexed by heads and columns by dependents, be the matrix
+\begin{equation}\label{eq:laplacian}
+\hat L_{ji}[\boldsymbol\phi]=
+\begin{cases}
+\phi_{0i}, & j=1,\\
+\sum_{k=1,\,k\neq i}^{n}\phi_{ki}, & j=i\neq1,\\
+-\phi_{ji}, & j\neq i,\ j\neq1.
+\end{cases}
+\end{equation}
+It depends linearly on the factors, and we write $\Lh=\Lh[\boldsymbol\psi]$.
+
+\begin{Theorem}[Single-root matrix-tree theorem~\cite{Tutte1948,Koo2007}]\label{thm:mt}
+\begin{equation}\label{eq:partition}
+Z(x)=\sum_{y\in\T(x)}\ \prod_{(j\to i)\in y}\psi_{ji}=\det\Lh.
+\end{equation}
+\end{Theorem}
+\begin{proof}
+Let $\mathbf L$ be the matrix given by the second and third lines of~(\ref{eq:laplacian}) in all rows, the in-degree Laplacian matrix of the graph of the words without the root.
+Its columns sum to zero, so its adjugate has rows proportional to $(1,\dots,1)$ and all cofactors in a column are equal, $C_{1i}=C_{ii}$; by the directed matrix-tree theorem of Tutte~\cite{Tutte1948}, $C_{ii}$ is the sum of the weights of the spanning arborescences of the words directed away from $i$.
+The matrix $\Lh$ differs from $\mathbf L$ only in its first row, which carries the root factors, so the expansion along that row gives $\det\Lh=\sum_i\psi_{0i}C_{1i}=\sum_i\psi_{0i}C_{ii}$, the sum over the child $i$ of the root of the weights of the trees in which $i$ is the only child of the root.
+The diagonal of $\Lh$ omits the root factors because these arborescences do not use the root, and any row could replace the first one.
+\end{proof}
+
+The globally normalized distribution $P_G(y\mid x)=Z(x)^{-1}\prod_{(j\to i)\in y}\psi_{ji}$ has the arc marginals $\mu_{ji}=P_G\bigl((j\to i)\in y\bigr)=\partial\log Z/\partial\log\psi_{ji}$.
+Since $\partial\log\det\Lh/\partial\hat L_{ab}=[\Lh^{-1}]_{ba}$,
+\begin{equation}\label{eq:marginals}
+\mu_{0i}=\psi_{0i}\,[\Lh^{-1}]_{i1},\qquad
+\mu_{ji}=\psi_{ji}\Bigl(\mathbf 1[i\neq1]\,[\Lh^{-1}]_{ii}-\mathbf 1[j\neq1]\,[\Lh^{-1}]_{ij}\Bigr),\quad j\geqslant1,
+\end{equation}
+and the entropy of the distribution of trees is
+\begin{equation}\label{eq:entropy}
+H(x)=-\sum_{y\in\T(x)}P_G(y\mid x)\log P_G(y\mid x)=\log Z(x)-\sum_{(j\to i)\in A}\mu_{ji}\log\psi_{ji}.
+\end{equation}
+The minimum-Bayes-risk (MBR) tree maximizes the expected number of correct heads, $\hat y_{\mathrm{MBR}}=\argmax_{y\in\T(x)}\sum_{(j\to i)\in y}\mu_{ji}$, and is found by Algorithm~\ref{alg:cle} with the marginals as weights.
+The same holds for mixtures: marginals are linear in the distribution, so the uniform mixture $\bar P=M^{-1}\sum_{m=1}^{M}P^{(m)}$ of the tree distributions of $M$ models has the marginals $\bar\mu=M^{-1}\sum_m\mu^{(m)}$, and its MBR tree is the tree of Algorithm~\ref{alg:cle} with the weights $\bar\mu$.
+With calibrated components (Section~\ref{sec:calibration}), such a mixture combines models whose scores live on different scales without any further parameter.
+One LU factorization of $\Lh$ with partial pivoting gives $\log|\det\Lh|$ and $\Lh^{-1}$ in $O(n^3)$ operations, after which~(\ref{eq:marginals}) and~(\ref{eq:entropy}) take $O(n^2)$ more.
+
+\begin{Lemma}\label{lem:scaling}
+Let $c_1,\dots,c_n>0$ and $\psi'_{ji}=c_i\psi_{ji}$ for all arcs.
+Then $Z'(x)=c_1\cdots c_n\,Z(x)$, and $P_G$, the marginals and the entropy do not change.
+\end{Lemma}
+\begin{proof}
+Every tree contains exactly one arc entering each word, so the product of the factors of every tree is multiplied by $c_1\cdots c_n$.
+For the entropy, $\log Z'-\sum\mu_{ji}\log\psi'_{ji}=\log Z+\sum_i\log c_i-\sum\mu_{ji}\log\psi_{ji}-\sum_i\log c_i\sum_j\mu_{ji}$, and $\sum_j\mu_{ji}=1$.
+\end{proof}
+
+In floating-point arithmetic we take $c_i=1/\max_j\psi_{ji}$, so that the largest factor entering each word equals one.
+This is the matrix analogue of the shift used to evaluate a log-sum-exp, and it also justifies the renormalization of the Stanza scores in Section~\ref{sec:calibdata}.
+The conditioning of the scaled matrix along the tempered factors $\psi_{ji}^\beta$ of Section~\ref{sec:calibration} is governed by the loss of the best tree against the greedy choice of heads,
+\begin{equation}\label{eq:delta}
+\Delta=\sum_{i=1}^{n}\max_{j\neq i}w_{ji}-\max_{y\in\T(x)}W(y)\geqslant0,
+\end{equation}
+which is zero exactly when the greedy heads form a single-root tree and is otherwise the total loss accumulated by the contractions and the root step of Algorithm~\ref{alg:cle}.
+
+\begin{Lemma}\label{lem:conditioning}
+For $\beta\geqslant0$ let $\Lh_\beta$ be the matrix~(\ref{eq:laplacian}) of the factors $\psi_{ji}^\beta$ scaled by $c_i=1/\max_j\psi_{ji}^\beta$. Then
+\begin{equation}\label{eq:detbounds}
+e^{-\beta\Delta}\leqslant\det\Lh_\beta\leqslant n^{n-1}e^{-\beta\Delta},\qquad
+\frac{e^{\beta\Delta/n}}{n}\leqslant\kappa_2(\Lh_\beta)\leqslant n^{3n/2}e^{\beta\Delta},
+\end{equation}
+where $\kappa_2$ is the spectral condition number.
+\end{Lemma}
+\begin{proof}
+The scaled factors are $\exp\bigl(\beta(w_{ji}-\max_kw_{ki})\bigr)\in(0,1]$, so by Theorem~\ref{thm:mt} the determinant is $\sum_y\exp\bigl(\beta(W(y)-\sum_i\max_kw_{ki})\bigr)$, a sum of $n^{n-1}$ terms whose largest term is $e^{-\beta\Delta}$.
+All entries of $\Lh_\beta$ lie in $[-1,n-1]$, and only the $n-1$ diagonal entries of the rows $2,\dots,n$ can exceed one in modulus, so its largest singular value satisfies $\sigma_{\max}\leqslant\|\Lh_\beta\|_F\leqslant(n^3-2n^2+2n)^{1/2}<n^{3/2}$; every column contains an entry of modulus at least one, coming from the largest factor entering the word, so $\sigma_{\max}\geqslant1$.
+The smallest singular value satisfies $\sigma_{\min}\leqslant(\det\Lh_\beta)^{1/n}$ and $\sigma_{\min}\geqslant\det\Lh_\beta/\sigma_{\max}^{n-1}$, which gives the bounds for $\kappa_2=\sigma_{\max}/\sigma_{\min}$.
+\end{proof}
+
+The determinant is therefore bounded away from zero for every $\beta$ when the greedy heads form a tree, and the conditioning deteriorates exponentially in $\beta$ otherwise.
+Since $n^{-1}\kappa_1\leqslant\kappa_2\leqslant n\,\kappa_1$ for $n\times n$ matrices~\cite{Higham2002}, the same exponential bounds hold, up to a factor $n$, for the 1-norm condition number $\kappa_1$ that is estimated in practice.
+On the 2191 test weight matrices, $\Delta=0$ for 90.5\% of the sentences and $\Delta\leqslant4.2$ nats for the others.
+The condition number $\kappa_1(\Lh_\beta)$ never exceeded 227 for $\beta\leqslant0.5$ and 649 for $\beta=1$, with medians between 10 and 20; at the upper end $\beta=5$ of the bracket used in Section~\ref{sec:calibration} it reached $6.4\cdot10^{7}$, where an LU factorization in double precision still retains about eight significant digits.
+
+\begin{Proposition}\label{prop:moments}
+Let $f=(f_{ji})$ and $g=(g_{ji})$ be real functions on the arcs, $F(y)=\sum_{(j\to i)\in y}f_{ji}$ and $G(y)=\sum_{(j\to i)\in y}g_{ji}$, and let $f\circ\boldsymbol\psi$ denote the entrywise product.
+Under $P_G$,
+\begin{equation}\label{eq:moments}
+\E F=\tr\bigl(\Lh^{-1}\Lh[f\circ\boldsymbol\psi]\bigr),\qquad
+\Cov(F,G)=\tr\bigl(\Lh^{-1}\Lh[f\circ g\circ\boldsymbol\psi]\bigr)-\tr\bigl(\Lh^{-1}\Lh[f\circ\boldsymbol\psi]\,\Lh^{-1}\Lh[g\circ\boldsymbol\psi]\bigr).
+\end{equation}
+Given $\Lh^{-1}$, a mean costs $O(n^2)$ operations, and $K$ means with their $K\times K$ covariance matrix cost $O(Kn^3+K^2n^2)$.
+\end{Proposition}
+\begin{proof}
+For real $s$ and $t$, the factors $\psi_{ji}e^{sf_{ji}+tg_{ji}}$ give the partition function $Z(s,t)=\sum_y\prod_{(j\to i)\in y}\psi_{ji}\,e^{sF(y)+tG(y)}$, so that $\partial_s\log Z=\E F$ and $\partial_t\partial_s\log Z=\Cov(F,G)$ at $s=t=0$.
+By Theorem~\ref{thm:mt}, $\log Z(s,t)=\log\det\Lh(s,t)$, and by the linearity of $\Lh[\cdot]$ the derivatives of $\Lh(s,t)$ at the origin are $\partial_s\Lh=\Lh[f\circ\boldsymbol\psi]$, $\partial_t\Lh=\Lh[g\circ\boldsymbol\psi]$ and $\partial_t\partial_s\Lh=\Lh[f\circ g\circ\boldsymbol\psi]$.
+Jacobi's formula $\partial\log\det\Lh=\tr(\Lh^{-1}\partial\Lh)$ and the identity $\partial\Lh^{-1}=-\Lh^{-1}(\partial\Lh)\Lh^{-1}$ give~(\ref{eq:moments}).
+A trace $\tr(\Lh^{-1}\mathbf B)$ is an entrywise sum, $O(n^2)$; each covariance needs the products $\Lh^{-1}\Lh[f\circ\boldsymbol\psi]$, $O(n^3)$ each, after which every trace of a product of two matrices is again an entrywise sum.
+\end{proof}
+
+The first formula is the identity $\E F=\sum\mu_{ji}f_{ji}$ written without marginals.
+The covariances of pairs of arc indicators can also be read off $\Lh^{-1}$, as in the determinantal descriptions of random spanning trees and in the expectation semirings of~\cite{Zmigrod2021}, but summing them over all pairs of arcs costs $O(n^4)$ operations; the trace form gives the variance of an additive functional at the cost of one matrix product.
+The variance of the tree weight, $F=G=W$, is what Newton's method needs in Section~\ref{sec:calibration}.
+
+\begin{Proposition}\label{prop:Z}
+Let the model be locally normalized, $\sum_{j\neq i}\psi_{ji}=1$ for every word $i$, and let $\eta=(\eta_1,\dots,\eta_n)$ be drawn with independent heads, $P(\eta_i=j)=\psi_{ji}$.
+Then (i) $Z(x)=P(\eta\in\T(x))$; (ii) the global distribution is the local one conditioned on well-formedness, $P_G(y\mid x)=P(\eta=y\mid\eta\in\T(x))$, and $P_G(y\mid x)\geqslant P_\theta(y\mid x)$ for every tree, with equality for all trees if and only if $Z(x)=1$; (iii) for every arc,
+\begin{equation}\label{eq:muratio}
+\mu_{ji}=\psi_{ji}\,\frac{Z(x\mid\eta_i=j)}{Z(x)},\qquad Z(x\mid\eta_i=j)=P\bigl(\eta\in\T(x)\mid\eta_i=j\bigr),
+\end{equation}
+so $\mu_{ji}>\psi_{ji}$ exactly when fixing the head $j$ of the word $i$ makes a well-formed output more likely.
+\end{Proposition}
+\begin{proof}
+By independence, $P(\eta=y)=\prod_{(j\to i)\in y}\psi_{ji}$ for every head vector $y$; summing over $y\in\T(x)$ gives (i) by~(\ref{eq:partition}), and dividing by $Z(x)$ gives the conditional law in (ii).
+Moreover, $P_G(y\mid x)=P_\theta(y\mid x)/Z(x)$ with $Z(x)\leqslant1$.
+For (iii), Bayes' rule gives $\mu_{ji}=P(\eta_i=j\mid\eta\in\T(x))=P(\eta_i=j)\,P(\eta\in\T(x)\mid\eta_i=j)/P(\eta\in\T(x))$; the conditional probability is the matrix-tree determinant in which the factors entering $i$ are replaced by the indicator of $j$.
+\end{proof}
+
+Proposition~\ref{prop:Z} turns the determinant into a diagnostic: $1-Z(x)$ is the probability mass that the trained model wastes on structures with cycles or with several children of the root, and it equals the probability that sampling the heads independently produces an ill-formed output.
+It also shows that the global distribution raises the probability of every tree, and part (iii) states which marginals rise: those of the arcs that make a well-formed output more likely, typically the arcs of the decoded tree.
+Section~\ref{sec:results} shows that this makes an overconfident local model slightly more overconfident.
+
+\subsection{Temperature Calibration of the Tree Distribution}\label{sec:calibration}
+For an inverse temperature $\beta\geqslant0$, consider the tempered local and global models
+\begin{equation}\label{eq:tempered}
+\begin{gathered}
+p_\beta(h_i=j\mid x)=\frac{\exp(\beta w_{ji})}{\sum_{k\neq i}\exp(\beta w_{ki})},\\
+P_\beta(y\mid x)=\frac{\exp\bigl(\beta W(y)\bigr)}{Z_\beta(x)},\qquad Z_\beta(x)=\sum_{y\in\T(x)}\exp\bigl(\beta W(y)\bigr),
+\end{gathered}
+\end{equation}
+where $Z_\beta(x)$ is computed by Theorem~\ref{thm:mt} with the factors $\psi_{ji}^{\beta}$.
+For $\beta=1$, $P_\beta=P_G$; as $\beta\to\infty$, $P_\beta$ concentrates on the trees of maximum weight; and for $\beta=0$ it is the uniform model U of Section~\ref{sec:random}, whose arc marginals all equal $1/n$ by Lemma~\ref{lem:edge}.
+The parameter thus moves the distribution along a path from the null model of Section~\ref{sec:random} to the decoder of Algorithm~\ref{alg:cle}.
+On a development set $\{(x^{(s)},y^{(s)})\}$ with sentence lengths $n_s$ we choose $\beta$ by minimizing the negative log-likelihood of the gold trees,
+\begin{equation}\label{eq:nll}
+F(\beta)=\sum_{s}\Bigl(\log Z_\beta(x^{(s)})-\beta\,W\bigl(y^{(s)}\bigr)\Bigr).
+\end{equation}
+
+\begin{Proposition}\label{prop:calibration}
+The function $F$ is convex and infinitely differentiable on $\R$, with
+\begin{equation}\label{eq:nllgrad}
+F'(\beta)=\sum_s\Bigl(\E_\beta W-W\bigl(y^{(s)}\bigr)\Bigr),\qquad F''(\beta)=\sum_s\Var_\beta W\geqslant0,
+\end{equation}
+where $\E_\beta$ and $\Var_\beta$ refer to $P_\beta(\cdot\mid x^{(s)})$ and are given by Proposition~\ref{prop:moments} with the factors $\psi_{ji}^\beta$; in particular,
+\begin{equation}\label{eq:F0}
+F'(0)=\sum_s\Bigl(\frac{1}{n_s}\sum_{(j\to i)\in A_s}w_{ji}-W\bigl(y^{(s)}\bigr)\Bigr),
+\end{equation}
+where $A_s$ is the arc set of the graph of $x^{(s)}$.
+If at least one gold tree has a smaller weight than the best tree of its sentence, then $F(\beta)\to\infty$ as $\beta\to\infty$; if, moreover, $F'(0)<0$, that is, if the gold trees are on average heavier than uniformly random trees, then $F$ attains its minimum on $[0,\infty)$ at a unique point $\hat\beta>0$.
+For every $\beta>0$ the most probable tree under $P_\beta$ is the tree of Algorithm~\ref{alg:cle}.
+\end{Proposition}
+\begin{proof}
+For each sentence, $\log Z_\beta=\log\sum_y\exp(\beta W(y))$ is, up to an additive constant, the cumulant generating function of $W(Y)$ for $Y$ uniform on $\T(x)$, so its first and second derivatives are the mean and the variance of $W$ under $P_\beta$; this gives~(\ref{eq:nllgrad}) and convexity~\cite{WainwrightJordan2008}.
+At $\beta=0$ the marginals equal $1/n_s$ by Lemma~\ref{lem:edge}, so $\E_0W=n_s^{-1}\sum_{(j\to i)\in A_s}w_{ji}$, which gives~(\ref{eq:F0}).
+Every term of~(\ref{eq:nll}) is non-negative, because $Z_\beta\geqslant\exp(\beta W(y^{(s)}))$, and as $\beta\to\infty$, $\log Z_\beta=\beta\max_yW(y)+O(1)$, so a sentence whose gold tree is not optimal contributes a term that grows linearly in $\beta$.
+Hence $F$ has a minimizer on $[0,\infty)$, which is positive because $F'(0)<0$.
+If $W$ were constant on every $\T(x^{(s)})$, then $F'(0)=0$; hence $W$ is not constant for some sentence, for which $\Var_\beta W>0$ at every $\beta$ because $P_\beta$ has full support, so $F$ is strictly convex and the minimizer is unique.
+Finally, $\exp(\beta W(y))$ is increasing in $W(y)$ for $\beta>0$.
+\end{proof}
+
+\begin{Algorithm}[Safeguarded Newton calibration]\label{alg:calib}
+\normalfont
+\begin{algorithmic}[1]
+\Require development weight matrices and gold trees; an initial bracket $[\beta_{\min},\beta_{\max}]$, a start $\beta_0$ and a tolerance $\tau$
+\Ensure inverse temperature $\hat\beta$
+\State while $F'(\beta_{\min})\geqslant0$ set $\beta_{\min}\gets\beta_{\min}/2$; while $F'(\beta_{\max})\leqslant0$ set $\beta_{\max}\gets2\beta_{\max}$; project $\beta_0$ onto the bracket
+\For{$k=0,1,2,\dots$}
+\State compute $F'(\beta_k)$ and $F''(\beta_k)$ by~(\ref{eq:nllgrad}) and~(\ref{eq:moments}), with one LU factorization per sentence
+\State if $F'(\beta_k)<0$ set $\beta_{\min}\gets\beta_k$, otherwise $\beta_{\max}\gets\beta_k$
+\State $\delta\gets F'(\beta_k)/F''(\beta_k)$; if $|\delta|<\tau$, \Return $\hat\beta$, the projection of $\beta_k-\delta$ onto $[\beta_{\min},\beta_{\max}]$
+\State $\beta_{k+1}\gets\beta_k-\delta$ if $\beta_k-\delta\in[\beta_{\min},\beta_{\max}]$, otherwise $\beta_{k+1}\gets(\beta_{\min}+\beta_{\max})/2$
+\EndFor
+\end{algorithmic}
+\end{Algorithm}
+
+Step 1 guarantees $F'(\beta_{\min})<0<F'(\beta_{\max})$ under the conditions of Proposition~\ref{prop:calibration}, which make $F'$ negative near zero and positive for large $\beta$~\cite{Nocedal2006}.
+Because $F'$ is non-decreasing, the bracket then always contains $\hat\beta$, so the iterates cannot leave the region where the solution lies; near $\hat\beta$, where $F''>0$, the Newton steps are accepted and converge quadratically.
+Bisection on $F'$ needs no second derivative but only halves the bracket at every step, so 50 steps are needed to reduce $[0.05,5]$ below $10^{-14}$.
+The tempered local model is calibrated in the same way with the per-word negative log-likelihood, whose second derivative is the sum over the words of the variances of the head weights under the tempered local distributions.
+Calibration changes the probabilities but not the decoded tree.
+
+Temperature scaling is the one-parameter case of a log-linear recalibration.
+For arc functions $f^{(1)},\dots,f^{(K)}$ with tree sums $F_k(y)$, the distributions $P_\varphi(y\mid x)\propto\exp\sum_k\varphi_kF_k(y)$ form an exponential family.
+We use the three functions suggested by Section~\ref{sec:random},
+\begin{equation}\label{eq:loglinear}
+P_\varphi(y\mid x)\propto\exp\bigl(\varphi_1W(y)+\varphi_2\,\mathrm{Dir}(y)+\varphi_3\,\mathrm{Len}(y)\bigr),
+\end{equation}
+where $\mathrm{Dir}(y)$ is the number of head-final arcs of $y$ and $\mathrm{Len}(y)=\sum\log\bigl(1+(d-1)^2\bigr)$, summed over the non-root arcs, is the logarithm of a Cauchy-type kernel of the arc length.
+
+\begin{Proposition}\label{prop:loglinear}
+Let $\boldsymbol\Phi(y)=\bigl(W(y),\mathrm{Dir}(y),\mathrm{Len}(y)\bigr)^\top$ be the statistics of the family~(\ref{eq:loglinear}).
+Its negative log-likelihood $J(\varphi)=\sum_s\bigl(\log Z_\varphi(x^{(s)})-\varphi^\top\boldsymbol\Phi(y^{(s)})\bigr)$ is convex, with the gradient $\sum_s\bigl(\E_\varphi\boldsymbol\Phi-\boldsymbol\Phi(y^{(s)})\bigr)$ and the Hessian $\sum_s\Cov_\varphi\boldsymbol\Phi$ given by Proposition~\ref{prop:moments}.
+The Hessian is positive definite at every $\varphi$ if and only if no non-zero $\mathbf c\in\R^3$ makes $\mathbf c^\top\boldsymbol\Phi(y)$ constant on $\T(x^{(s)})$ for every $s$.
+In that case $J$ is strictly convex, and it attains its minimum, at a unique point, if and only if the observed statistic $\sum_s\boldsymbol\Phi(y^{(s)})$ lies in the interior of the set $\mathcal C=\sum_s\mathrm{conv}\{\boldsymbol\Phi(y):y\in\T(x^{(s)})\}$, the Minkowski sum of the convex hulls of the statistics of the sentences.
+\end{Proposition}
+\begin{proof}
+Convexity, the gradient and the Hessian follow as in Proposition~\ref{prop:calibration}, since $\log Z_\varphi$ is the cumulant generating function of $\boldsymbol\Phi$~\cite{WainwrightJordan2008}.
+For $\mathbf c\neq0$, $\mathbf c^\top\Cov_\varphi\boldsymbol\Phi\,\mathbf c=\Var_\varphi(\mathbf c^\top\boldsymbol\Phi)$, which vanishes if and only if $\mathbf c^\top\boldsymbol\Phi$ is constant on the support $\T(x^{(s)})$ of $P_\varphi$; summing over $s$ gives the criterion.
+The sentences are independent, so the family of joint distributions is a full exponential family with the sufficient statistic $\sum_s\boldsymbol\Phi(y^{(s)})$, whose convex support is $\mathcal C$, and its likelihood has a maximizer if and only if the observed statistic lies in the interior of the convex support~\cite{BarndorffNielsen1978}; strict convexity makes the maximizer unique.
+\end{proof}
+
+We fit $\varphi$ by Newton's method with a backtracking line search.
+On every development set the iteration converged to a point where the gradient is below $10^{-7}$, which by Proposition~\ref{prop:loglinear} is the unique minimizer.
+At the fitted values, the smallest eigenvalue of the Hessian lies between 38.8 and 66.8 and its condition number between 56 and 234, so the three statistics are far from collinear.
+Unlike temperature scaling, this family can change the most probable tree.
+Both calibration problems are restrictions of the global matrix-tree likelihood~\cite{Koo2007,Zhang2020TreeCRF} to a few parameters, fitted after local training.
+Temperature scaling of a classifier~\cite{Guo2017} is the case of a single word with a softmax over its heads, and tempered tree distributions were used during training in~\cite{SmithEisner2006}; here the family is fitted after training, and because it remains a distribution over trees, its arc marginals stay mutually consistent, which per-arc maps such as isotonic regression~\cite{Zadrozny2002} do not guarantee.
+
+\subsection{Parameter Estimation}\label{sec:estimation}
+The loss in~(\ref{eq:estimate}) is the mean negative log-likelihood per word of the factorization~(\ref{eq:factor}) plus the losses $\mathcal L_{\mathrm{dir}}$ and $\mathcal L_{\mathrm{dist}}$ of the direction and distance predictors of~(\ref{eq:corrected}).
+When two treebanks are merged, the empirical risk, averaged over words, is the convex combination
+\begin{equation}\label{eq:mixture}
+\widehat R(\theta)=\lambda\,\widehat R_{\mathrm{UzUDT}}(\theta)+(1-\lambda)\,\widehat R_{\mathrm{UT}}(\theta),\qquad \lambda=\frac{5148}{9251}\approx0.556,
+\end{equation}
+where $\lambda$ is the share of UzUDT among the 9251 training words.
+The risk is minimized by Adam~\cite{Kingma2015}:
+\begin{equation}\label{eq:adam}
+\begin{gathered}
+\mathbf g_t=\nabla_\theta\widehat R_{B_t}(\theta_{t-1})\min\bigl(1,\,1/\|\nabla_\theta\widehat R_{B_t}(\theta_{t-1})\|_2\bigr),\\
+\mathbf m_t=\rho_1\mathbf m_{t-1}+(1-\rho_1)\mathbf g_t,\qquad
+\mathbf v_t=\rho_2\mathbf v_{t-1}+(1-\rho_2)\mathbf g_t^{2},\\
+\theta_t=\theta_{t-1}-\alpha\,\frac{\mathbf m_t/(1-\rho_1^{t})}{\sqrt{\mathbf v_t/(1-\rho_2^{t})}+\varepsilon},
+\end{gathered}
+\end{equation}
+where $\widehat R_{B_t}$ is the risk on a random mini-batch $B_t$ of at most 5000 words, squares and roots are taken componentwise, $\alpha=3\cdot10^{-3}$, $\rho_1=0.9$, $\rho_2=0.95$ (denoted $\beta_1$ and $\beta_2$ in~\cite{Kingma2015}) and $\varepsilon=10^{-6}$.
+Dropout with rate 0.5 and word dropout with rate 0.33 regularize the network.
+Every 100 steps the LAS on the development set is computed and the best parameters are stored; after 3000 steps without improvement the method switches to AMSGrad~\cite{Reddi2018}, which replaces $\mathbf v_t$ in the denominator by the running maximum $\hat{\mathbf v}_t=\max(\hat{\mathbf v}_{t-1},\mathbf v_t)$ so that the effective step size cannot grow, and after another 3000 steps without improvement training stops.
+Because the encoder is frozen, the gradient involves only the 27.6 million parameters of the parser, five times fewer than the 137 million parameters of the whole network.
+
+\subsection{Verification of the Implementation}\label{sec:verification}
+All decoders and the matrix-tree routine were compared with exhaustive enumeration of $\T(x)$ on 880 random problems with $n=2,\dots,7$.
+The number of enumerated trees was $n^{n-1}$ in every case; both versions of CLE, Eisner's algorithm (against the best projective tree) and the MBR decoder returned optimal trees in all problems; the values of $\log Z$, $\mu$ and $H$ differed from the enumerated ones by at most $1.3\cdot10^{-15}$, $9.1\cdot10^{-15}$ and $3.6\cdot10^{-15}$; for unit weights $\det\Lh=n^{n-1}$ held exactly for $n=1,\dots,12$, which is the second proof of Lemma~\ref{lem:count} in numerical form; and $\mu_{ji}=\partial\log Z/\partial w_{ji}$ held to $4.4\cdot10^{-10}$ under central finite differences.
+The trace formulas~(\ref{eq:moments}) agreed with enumeration on 60 random problems with $n=2,\dots,6$ and the three arc functions of~(\ref{eq:loglinear}) to within $4\cdot10^{-14}$ for the means and $5\cdot10^{-13}$ for the covariances, and the variance of $W$ agreed with central differences of its mean to within $5\cdot10^{-9}$.
+The determinant bounds~(\ref{eq:detbounds}) held on all test matrices for $\beta\in\{0.05,0.25,0.5,1,2,5\}$.
+Another 1560 random problems confirmed the optimality of CLE in the timing experiment of Section~\ref{sec:results}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Numerical Example}\label{sec:example}
+
+Consider the sentence \textit{Ali kitobni o\textquoteleft qidi} `Ali read the book' of Figure~\ref{fig:graph}, $n=3$, and suppose that the model gives the following head distributions, where the row $i$ is the distribution of the head of the word $i$ over $j=0,1,2,3$:
+\begin{equation}\label{eq:example}
+\bigl(P_\theta(h_i=j\mid x)\bigr)=
+\begin{pmatrix}
+0.05 & \cdot & 0.15 & 0.80\\
+0.05 & 0.10 & \cdot & 0.85\\
+0.40 & 0.10 & 0.50 & \cdot
+\end{pmatrix},\qquad w_{ji}=\log P_\theta(h_i=j\mid x).
+\end{equation}
+
+\textbf{Decoding.}
+The greedy step of Algorithm~\ref{alg:cle} chooses $h=(3,3,2)$ (Figure~\ref{fig:cle}a).
+The arcs $3\to2$ and $2\to3$ form the cycle $C=\{2,3\}$ and no word is attached to the root, so the greedy result is not a tree.
+The cycle is contracted into a vertex $c$ (Figure~\ref{fig:cle}b) with the entering weights
+\begin{align*}
+w'_{0\to c}&=\max\Bigl(\log\frac{0.05}{0.85},\ \log\frac{0.40}{0.50}\Bigr)=\max(-2.833,\,-0.223)=-0.223,\\
+w'_{1\to c}&=\max\Bigl(\log\frac{0.10}{0.85},\ \log\frac{0.10}{0.50}\Bigr)=\max(-2.140,\,-1.609)=-1.609,
+\end{align*}
+both attained at the vertex 3, and the arc from $c$ to the word 1 has the weight $\max(w_{21},w_{31})=\log0.80=-0.223$.
+In the contracted graph the greedy step chooses $0\to c$ and $c\to1$, and there is no cycle.
+Expanding $c$, the arc $0\to c$ enters the vertex 3, so the cycle arc $2\to3$ is removed and $3\to2$ kept, and $c\to1$ leaves the vertex 3.
+The result is $h=(3,3,0)$ (Figure~\ref{fig:cle}c), which coincides with the gold analysis, with the weight $\log(0.80\cdot0.85\cdot0.40)=\log0.272$.
+The loss~(\ref{eq:delta}) of this tree against the greedy heads is $\Delta=\log(0.50/0.40)=0.223$, the contraction weight $w'_{0\to c}$ with the opposite sign.
+Table~\ref{tab:example} lists all $3^2=9$ trees of Lemma~\ref{lem:count}; the tree found is the first one, the maximum.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_cle.pdf}
+\caption{Algorithm~\ref{alg:cle} on the numerical example. (\textbf{a}) Greedy heads with the cycle $C=\{2,3\}$ (orange); (\textbf{b}) the contracted graph with the arc weights of the text, the chosen arcs in blue; (\textbf{c}) the expanded optimal tree.\label{fig:cle}}
+\end{figure}
+
+\input{tables/tab_example}
+
+\textbf{Normalization.}
+With $\psi_{ji}=P_\theta(h_i=j\mid x)$, Theorem~\ref{thm:mt} gives
+\begin{gather*}
+\Lh=
+\begin{pmatrix}
+\phantom{-}0.05 & \phantom{-}0.05 & \phantom{-}0.40\\
+-0.15 & \phantom{-}0.95 & -0.50\\
+-0.80 & -0.85 & \phantom{-}0.60
+\end{pmatrix},\\
+\det\Lh=0.05\cdot0.145+0.05\cdot0.490+0.40\cdot0.8875=0.38675,
+\end{gather*}
+which equals the sum $Z$ in Table~\ref{tab:example}.
+By Proposition~\ref{prop:Z}, independent sampling of the three heads produces a well-formed tree with probability 0.387 only, and under the global distribution the gold tree has the probability $0.272/0.38675=0.703$.
+Formula~(\ref{eq:marginals}) gives the marginals $\mu_{03}=0.918$, $\mu_{31}=0.838$ and $\mu_{32}=0.846$; for example, $\mu_{31}$ is the total probability of the trees $T_1$, $T_3$ and $T_4$ in which the word 1 depends on the word 3.
+The MBR tree coincides with the tree found above, and the entropy~(\ref{eq:entropy}) is $H=1.02$ nats.
+
+\textbf{Moments and calibration.}
+At $\beta=0$ all nine trees of Table~\ref{tab:example} are equally likely, and each of the nine arcs lies in exactly three of them, so all marginals equal $1/3$, as Lemma~\ref{lem:edge} states.
+At $\beta=1$, Proposition~\ref{prop:moments} gives the mean $-1.972$ and the variance $1.281$ of the weight of a random tree, the values of the direct sums over Table~\ref{tab:example}.
+The gold tree is the heaviest tree, so $F'(\beta)=\E_\beta W-W(y)<0$ for every $\beta$: calibrating on this sentence alone would drive $\beta$ to infinity, which is why Proposition~\ref{prop:calibration} requires gold trees that the model does not rank first.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experimental Setup and Software}\label{sec:setup}
+
+\subsection{Models and Test Sets}
+Seven trained models were evaluated (Table~\ref{tab:accuracy}).
+They are the published checkpoints of~\cite{MatlatipovNLDB2027,MatlatipovEDM2026,MatlatipovUSBEREIT2026b}, and their identifiers follow those studies, in which the configuration E4, BERTbek with the last-piece operator, was not trained.
+The experiments are therefore a post-hoc evaluation of existing checkpoints with the methods of Section~\ref{sec:numerical}, not a full factorial design; the comparisons of encoders, operators and training data are restricted to the pairs of models that differ in one of these factors.
+The models E1.1, E2.1, E3.1 and E5.1 were trained on 435 UzUDT sentences of an earlier split of the treebank with FastText vectors, with TahrirchiBERT and the last-piece operator, with TahrirchiBERT and the mean operator, and with BERTbek and the mean operator, respectively.
+The models E1.2, E2.2 and E3.2 were trained on the 781 sentences of the merged UzUDT and UT training sets with the first three encoders, with gold tags, and their training files store the Uzbek apostrophes in a different character encoding (UTF-8 bytes read as Windows-1252); the other models were trained with the tags of a separate tagger.
+Every parser is paired with a tagger trained in the same configuration.
+Each checkpoint was first applied to the development set of its training run, and the six models with training logs reproduced their best logged development LAS exactly (55.28, 58.23, 55.90, 60.56, 62.87 and 63.81).
+
+The two versions of the UzUDT split used by the models have different test parts.
+A contamination-free test set was therefore formed from the sentences that belong to the test parts of both versions and have neither exact nor near duplicates (token Jaccard similarity of at least 0.8) in any training or development file: 176 sentences with 1843 words remained after one near duplicate had been removed.
+The UT test set of 137 sentences and 1421 words has no such overlaps; it belongs to the training genre of the merged models and to a new genre for the other models.
+Two conditions are reported: tags predicted by the paired tagger, which is an end-to-end analysis of tokenized text, and gold tags.
+All models read clean text; Section~\ref{sec:results} also reports the merged models on input in the encoding of their training files.
+Differences between models are tested by the paired bootstrap over sentences~\cite{BergKirkpatrick2012} with $B=10^4$ resamples; one-sided $p$-values are adjusted by Holm's method~\cite{Holm1979} over 16 tests, and a pooled estimate is computed for each factor by stratified resampling.
+
+\subsection{Probabilities and Calibration Data}\label{sec:calibdata}
+At inference time, Stanza applies the head softmax over the padded length of a batch, so the stored log-probabilities of a word sum over its real heads to slightly less than one (0.95 on average).
+Because training masks the padding, we renormalize every row over the $n$ real candidate heads before computing local probabilities and $Z(x)$; by Lemma~\ref{lem:scaling}, decoding, marginals and entropies are invariant under this scaling.
+The inverse temperatures of Section~\ref{sec:calibration} were fitted by Algorithm~\ref{alg:calib} with the bracket $[0.05,5]$, the start $\beta_0=1$ and the tolerance $\tau=10^{-10}$ on the development set of each model (48 sentences with 644 words for the first four models, 78 sentences with 851 words for the merged models, in clean text), with tags predicted by the paired tagger, and then applied to the test sets; their uncertainty was estimated from 1000 bootstrap resamples of the development sentences.
+Labels are calibrated in the same way with a separate inverse temperature for the label distributions~(\ref{eq:weights}), fitted on the gold arcs of the development sets.
+The expected calibration error (ECE) is the weighted mean, over ten equal-width probability bins, of the absolute difference between the mean predicted probability and the share of correct predictions; it is computed on the arcs of the decoded trees and, to check the influence of the binning, also with ten equal-mass bins.
+We also report the Brier score~\cite{Brier1950}, both on the decoded arcs and over all candidate heads of every word, and the negative log-likelihood of the gold trees; intervals for the test values come from 2000 bootstrap resamples of the test sentences.
+For comparison, the three-parameter family~(\ref{eq:loglinear}) and isotonic regression of the marginals of the decoded arcs, computed by the pool-adjacent-violators algorithm~\cite{Zadrozny2002}, were fitted on the same development data.
+
+\subsection{Software Complex}
+The methods are implemented as a software complex in Python (Figure~\ref{fig:software}).
+The training part is based on the tagger and parser of Stanza~\cite{Qi2020}: the parser received the contextual channel of Figure~\ref{fig:arch} with a zero vector for the root, the routine that extracts BERT vectors was extended with both operators~(\ref{eq:pooling}), the data loader and trainer pass the raw word sequence to the encoder, the tagger received the same channel, and the training scripts record the loss and the development scores; in total about 570 lines in 20 source files were changed.
+A separate spaCy module provides Uzbek tokenization rules and a transition-based pipeline compared with the graph-based parser in~\cite{MatlatipovEDM2026}.
+The decoding part contains the decoders of Section~\ref{sec:numerical}, the matrix-tree routine, the moment formulas and the calibration methods, together with unit tests against exhaustive enumeration, and the analysis part contains the exact baselines of Section~\ref{sec:random}, the bootstrap, the perturbation operators and the timing experiments.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_software.pdf}
+\caption{Structure of the software complex.\label{fig:software}}
+\end{figure}
+
+Training used Python 3.11 and PyTorch 2.6 (CUDA 12.4) on an NVIDIA RTX A6000 graphics processor; inference, calibration and timing used Python 3.12, PyTorch 2.14 and NumPy 2.5 on an Apple M2 Max processor without a graphics card.
+The encoder libraries must be pinned to the versions used in training, transformers 5.2.0 and tokenizers 0.22.2: with the later release 5.20.2 the development LAS of the BERT-based parsers differed from the training logs by up to 1.6 points, and with the pinned versions every checkpoint reproduced its logged score exactly.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results}\label{sec:results}
+
+\subsection{Accuracy and Statistical Significance}
+The best end-to-end model is E2.2 (TahrirchiBERT, last-piece operator, merged data), with LAS 56.00 on UzUDT and 53.84 on UT, and 60.44 and 59.32 with gold tags (Table~\ref{tab:accuracy}); among the models trained on UzUDT alone the best is E5.1 with BERTbek (54.64 and 47.71).
+Figure~\ref{fig:las} shows the 95\% bootstrap intervals, about $\pm3$ points for a single model, and Table~\ref{tab:bootstrap} the paired comparisons.
+
+\input{tables/tab_accuracy}
+
+\begin{figure}[H]
+\includegraphics[width=0.85\textwidth]{figures/fig_las.pdf}
+\caption{LAS of the seven models on the two test sets with 95\% percentile bootstrap intervals over sentences (predicted tags, exact decoding). Colors mark the encoder (grey: FastText; blue: TahrirchiBERT with the last-piece operator; orange: TahrirchiBERT with the mean operator; green: BERTbek with the mean operator); circles mark models trained on UzUDT and squares models trained on UzUDT+UT.\label{fig:las}}
+\end{figure}
+
+The contextual encoders raise LAS over FastText by 3.69 and 4.61 points on UzUDT, and BERTbek exceeds TahrirchiBERT with the same mean operator by 5.56 points on UT; these differences remain significant after the adjustment, and the pooled encoder effect is $+3.55$ points with the 95\% interval $[2.68;\,4.43]$.
+The last-piece operator is better than the mean operator in all four comparisons ($+0.05$ to $+2.60$ points), none of which is significant on its own after the adjustment; the pooled effect, $+1.30$ points with the interval $[0.33;\,2.26]$ and $p=0.005$, indicates a small advantage, in agreement with the suffix analysis of Section~\ref{sec:neural}, and it is several times smaller than the encoder and data effects.
+Training on the merged treebanks raises LAS on UT by 9.1--9.9 points for all three encoders and on UzUDT by 1.8--2.9 points, with a pooled effect of $+5.39$ points $[4.27;\,6.55]$; this effect combines more data with a different source of training tags, since the merged parsers were trained on gold tags.
+The comparison with gold tags at test time, where all models receive the same input, isolates the effect of the data: merging raises LAS by 2.23--2.60 points on UzUDT and by 12.59--14.01 points on UT (Table~\ref{tab:accuracy}).
+When the merged models read input in the encoding of their training files, the merged-training effect is $+3.2$ points on UzUDT and $+8.9$ on UT on average over the encoders, against $+2.3$ and $+9.5$ with clean input, so the conclusions do not depend on the encoding.
+The change is concentrated in the FastText model E1.2 ($+2.2$ points on UzUDT and $-1.6$ on UT), whose word-level input depends on the exact form of the words with apostrophes; the TahrirchiBERT models E2.2 and E3.2 change by at most 0.6 points, in line with their insensitivity to missing apostrophes in Section~\ref{sec:robustness}.
+For orientation, the best systems of the CoNLL 2018 shared task, which parsed raw text and are therefore not directly comparable, reached LAS 66.44 for Turkish and 67.05 for Uyghur, with treebanks several times larger than UzUDT, and at most 37.01 for treebanks with a few hundred or fewer training sentences such as Armenian and Kazakh~\cite{Zeman2018}.
+Predicted tags cost 4.4--6.1 LAS points on UzUDT and 2.3--8.9 points on UT compared with gold tags, so tagging errors propagate into the trees.
+The development scores reported earlier for these models are higher than the present test scores (63.81 against 56.00 for E2.2), mainly because the merged development set was parsed with gold tags; the present values are the appropriate estimates of real-world performance.
+
+\input{tables/tab_bootstrap}
+
+\subsection{Exact versus Approximate Decoding}
+Table~\ref{tab:decoders} compares the decoders on the same weight matrices.
+Greedy head selection leaves 8.6\% of the UzUDT sentences and 10.7\% of the UT sentences without a valid tree on average, and up to 20.4\% for E2.2 on UT; CLE without the single-root step still produces several children of the root in 2.2\% and 4.2\% of the sentences.
+The single-root CLE always returns a valid tree with the accuracy of greedy selection (within 0.1 points) in 0.065 ms per sentence on average, so the whole test set of 313 sentences is decoded in about 20 ms.
+Eisner's algorithm is 3.8 times slower and represents only projective trees; its slightly higher mean LAS reflects the fact that most predicted trees are projective, but on the 27 gold non-projective test sentences CLE is more accurate (44.63 against 44.20 on UzUDT and 44.09 against 43.72 on UT).
+The MBR decoder gives the accuracy of CLE within 0.1 points.
+Decoding the MBR tree from the calibrated marginals changes few heads and does not improve the accuracy (LAS 53.09 on UzUDT and 47.05 on UT, against 53.14 and 47.28 at $\beta=1$); with the marginals of the three-parameter family~(\ref{eq:loglinear}) LAS falls to 52.05 and 46.47.
+
+\input{tables/tab_decoders}
+
+Figure~\ref{fig:time} shows the time per sentence against the sentence length.
+Exhaustive enumeration needed 1.5 ms for $n=5$ and 8.9 s for $n=8$; extrapolated with the measured cost of 0.52~$\mu$s per head assignment, it would need about 1.7 days for $n=11$, 7200 years for $n=15$ and $3.2\cdot10^{10}$ years for $n=19$, longer than the age of the Universe.
+CLE needs at most 0.18 ms per sentence on the matrices of the trained models and about 2 ms for random matrices with $n=40$, which contain more cycles (on average 0.9 for $n=11$ and 2.2 for $n=100$ in the greedy step).
+In this range of lengths the measured times of the Python implementations are dominated by a constant overhead per call, so they do not reveal the asymptotic orders, which are those of Proposition~\ref{prop:complexity} and $O(n^3)$ for Eisner's algorithm.
+The reduction of the search from $n^{n-1}$ candidates to a polynomial number of operations thus turns an infeasible problem into one solved in real time.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_time.pdf}
+\caption{Time needed to find the best tree of one sentence: exhaustive search (measured up to $n=8$ and extrapolated), CLE on the matrices of the trained models and on random weight matrices, and Eisner's projective algorithm on the matrices of the trained models.\label{fig:time}}
+\end{figure}
+
+\subsection{Matrix-Tree Diagnostics and Calibration}
+The mean value of $Z(x)$ is 0.84 on UzUDT and 0.81 on UT (medians 0.93 and 0.88): by Proposition~\ref{prop:Z}, the locally trained models spend 16--19\% of their probability mass on ill-formed structures, which explains the failures of greedy selection.
+The models differ in this respect (Table~\ref{tab:calibration}): averaged over the two test sets, the value is lowest for the FastText model E1.1 (0.77) and highest for the BERTbek model E5.1 (0.91 and 0.92).
+
+\input{tables/tab_calibration}
+
+Both the local probabilities and the global marginals overestimate the accuracy (Figure~\ref{fig:calibration}); for E2.2 on UzUDT, for example, the mean local probability of a decoded arc is 0.82 and the mean marginal 0.83, while 73.1\% of the arcs are correct.
+Pooled over all models, the ECE is 15.0\% for the local probabilities and 16.0\% for the global marginals.
+Conditioning on well-formedness raises the marginal above the local probability for 78.6\% of the decoded arcs, so, in agreement with Proposition~\ref{prop:Z}(iii), global normalization makes an overconfident local model slightly more overconfident.
+The fitted inverse temperatures of the tree distribution lie between 0.27 and 0.46, and their bootstrap intervals, which lie between 0.21 and 0.56, exclude one for every model (Table~\ref{tab:calibration}): the models are too sharp; the local inverse temperatures are similar, 0.28--0.49.
+Started from $\beta_0=1$, Algorithm~\ref{alg:calib} reached the solution of bisection to within $2\cdot10^{-15}$ after six or seven evaluations of $F'$ and $F''$, with the errors $5.6\cdot10^{-1}$, $8.5\cdot10^{-2}$, $1.9\cdot10^{-2}$, $8.7\cdot10^{-4}$, $1.8\cdot10^{-6}$ and $8.2\cdot10^{-12}$ for E1.1, and in 0.02--0.03 s per model against 0.3 s for the 50 steps of bisection (Figure~\ref{fig:newton}).
+
+\begin{figure}[H]
+\includegraphics[width=0.62\textwidth]{figures/fig_newton.pdf}
+\caption{Convergence of Algorithm~\ref{alg:calib} for the seven models, started from $\beta_0=1$, and the error bound of bisection on the bracket $[0.05,5]$. The errors are measured against the bisection solution after 50 steps; values below $10^{-16}$ are drawn at $10^{-16}$.\label{fig:newton}}
+\end{figure}
+
+Calibration lowers the ECE in all 14 combinations of model and test set: pooled, from 15.0\% to 6.4\% for the local probabilities and from 16.0\% to 7.3\% for the global marginals.
+For the global marginals, the 95\% bootstrap intervals over the test sentences are $[14.4;\,17.8]$ before and $[6.2;\,8.5]$ after calibration, the interval of the reduction is $[6.4;\,10.9]$ points, and propagating the uncertainty of $\hat\beta$ through the development bootstrap gives $[6.7;\,8.4]$ for the calibrated value.
+Equal-mass binning gives practically the same values, 16.0\% and 7.5\%, and the Brier score of the decoded arcs falls from 0.217 to 0.196.
+The improvement is not limited to the decoded arcs: the Brier score over all candidate heads of every word, a proper scoring rule for the whole head distribution, falls from 0.503 to 0.476 for the global marginals and from 0.497 to 0.469 for the local probabilities.
+The negative log-likelihood of the gold trees falls from 1.30 to 0.93 nats per word on UzUDT and from 1.71 to 1.08 on UT, and on average over the models it is lower for the calibrated tree distribution than for the calibrated local model, 0.93 against 0.98 on UzUDT and 1.08 against 1.15 on UT.
+By Proposition~\ref{prop:calibration}, none of these changes alters a single decoded tree.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_calibration.pdf}
+\caption{Reliability of the probabilities of the decoded arcs before and after temperature calibration (seven models, both test sets, 22,848 arcs): share of correct arcs in ten probability bins for (\textbf{a}) the local probabilities and (\textbf{b}) the global marginals; the diagonal corresponds to perfect calibration.\label{fig:calibration}}
+\end{figure}
+
+The label distributions are overconfident as well: their fitted inverse temperatures lie between 0.27 and 0.44.
+For a labeled arc of the decoded tree, the probability of a correct head and label is the product of the head marginal and the probability of the label; before calibration its mean is 0.755, against a share of 50.6\% of correct labeled arcs, and calibrating both distributions lowers the ECE of the labeled arcs from 24.9\% to 8.9\% and their Brier score from 0.277 to 0.214.
+
+Table~\ref{tab:calmethods} compares the calibration methods.
+Isotonic regression reaches the lowest pooled ECE, 3.8\%, but it does not define a distribution over trees, so it gives neither tree probabilities nor a likelihood, and it transfers less well to a new genre: on UT, for the four models trained on UzUDT alone, its ECE is 10.9\% on average against 9.7\% for temperature scaling.
+The three-parameter family~(\ref{eq:loglinear}) lowers the negative log-likelihood further, to 0.89 and 1.05, and the ECE to 5.2\%.
+Its fitted coefficients favour head-final arcs ($\varphi_2$ between $-0.08$ and $0.29$, positive for six models) and penalize long arcs ($\varphi_3$ between $-0.37$ and $-0.20$), which moves the most probable trees towards shorter arcs and lowers UAS by about one point (70.2 against 71.2 on UzUDT and 61.9 against 62.9 on UT).
+The arc scores~(\ref{eq:corrected}) already contain direction and distance terms for every pair of words, so the global terms of~(\ref{eq:loglinear}) count these preferences twice and override long arcs that the network predicts correctly.
+Temperature scaling of the tree distribution is therefore the method of choice when the decoded trees must stay unchanged, and the log-linear family is preferable when only probabilities are needed.
+
+\input{tables/tab_calmethods}
+
+The tree entropy~(\ref{eq:entropy}) is a useful indicator of difficult sentences: its Spearman correlation with the share of wrong heads in a sentence, averaged over the models, is 0.52 on UzUDT and 0.43 on UT, higher than that of the sentence length (0.46 and 0.34), so the entropy can be used to select sentences for manual checking.
+
+\subsection{Mixtures of the Parsers}\label{sec:mixture}
+The seven parsers can be combined without retraining.
+Two mixtures of the calibrated tree distributions were fixed in advance, one of all seven models and one of the three models trained on UzUDT+UT, and their MBR trees were decoded with the averaged marginals (Section~\ref{sec:numerical}); the label of each chosen arc is the label that most models rank first for it.
+Table~\ref{tab:accuracy} lists the results, and the paired bootstrap of Section~\ref{sec:setup} compares them with E2.2, the best single model.
+With predicted tags, the mixture of all seven models gives the best UzUDT scores of this study, UAS 74.2 and LAS 57.2, against 73.1 and 56.0 for E2.2 (a gain of 1.2 points with the 95\% interval $[-0.7;\,3.1]$); with gold tags it reaches UAS 76.4 and LAS 61.6, against 74.2 and 60.4 ($p=0.06$).
+On UT, where the four models trained on UzUDT alone are much weaker, this mixture falls below E2.2.
+The mixture of the merged models matches E2.2 on UT with predicted tags (LAS 53.6 against 53.8) and exceeds it with gold tags, LAS 60.7 against 59.3, a gain of 1.3 points with the interval $[0.0;\,2.7]$ and $p=0.03$.
+Averaging tree distributions thus pays off when the components are of comparable quality on the test domain, at the cost of one matrix-tree computation per model and sentence.
+
+\subsection{Training Dynamics}
+Figure~\ref{fig:training} shows the training curves of the six models with training logs.
+The loss per word decreases from 11.7--15.1 after 100 steps to 3.4--5.8 at the step with the best development LAS, reached after 800--1500 steps or 2.6--13.6 min of training.
+Afterwards the training loss keeps decreasing, down to 1.7--4.3, and the development LAS falls by 0.5--4.4 points: the network starts to fit the small training sets, and only the validation-based selection of the parameters protects the model.
+The switch to AMSGrad took place after 3800--4500 steps and training stopped after 6800--7500 steps, 22--104 min in total, with 0.2--0.9 s per step.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/fig_training.pdf}
+\caption{Training of the parsers by the stochastic method~(\ref{eq:adam}): (\textbf{a}) training loss per word; (\textbf{b}) LAS on the development set, with dots at the stored best parameters. Colors mark the encoder and dashed lines the models trained on UzUDT+UT.\label{fig:training}}
+\end{figure}
+
+\subsection{Robustness}\label{sec:robustness}
+Five perturbation operators $\chi$ were applied to the words of the UzUDT test set: removal of the apostrophes of \textit{o\textquoteleft} and \textit{g\textquoteleft} (8.6\% of the tokens changed), replacement of some function words by Russian equivalents (0.3\%), random change of the case of letters (53.3\%), removal of punctuation (19.5\%), and lower-casing combined with the removal of punctuation (19.6\%).
+The sensitivity of a model is $S_\chi=\mathrm{LAS}(\mathcal D)-\mathrm{LAS}(\chi(\mathcal D))$, where $\mathcal D$ is the test set (Table~\ref{tab:robust}).
+The BERT-based models are insensitive to the missing apostrophes ($-0.5$ to $+0.2$ points), the FastText model trained on UzUDT alone loses 1.3 points, and the Russian words practically do not matter.
+Punctuation is an important structural signal: without it LAS falls by 4.8--10.1 points.
+The largest differences appear under random case changes: the models trained on UzUDT alone lose 4.7--5.6 points, BERTbek with its cased vocabulary 10.7 points, and the models trained on the merged data 16.3--17.9 points.
+The reason lies in the data: UzUDT is distributed in lower case and UT keeps the capitalization (96.6\% of its sentences begin with a capital letter against 0.4\% in UzUDT), so in the merged training data capital letters mark a genre and proper names, and random capitals shift the input towards that domain.
+
+\input{tables/tab_robust}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion}\label{sec:discussion}
+
+The exact laws of Section~\ref{sec:random} give the structure of Uzbek syntax a precise scale.
+Arcs half as long as chance and a head-final order were expected for a verb-final agglutinative language.
+The new laws show what the tree shape and projectivity explain and what they do not.
+Random reorderings of the gold trees would contain 17 crossing pairs of arcs per sentence and would be projective with a probability of order $10^{-10}$ for sentences of 21--30 words; the gold trees contain 0.19 crossing pairs per sentence and are projective in 71\% of such sentences.
+The covariance of Proposition~\ref{prop:total} attributes, to first order, somewhat more than half of the missing crossings to the short arcs.
+Theorem~\ref{thm:direction} shows that projectivity alone places the root at an end of the sentence two times in three; Uzbek trees keep this preference for the right end only and are entirely head-final seven times more often than random projective trees.
+Projective decoders therefore search a tiny but linguistically relevant part of the feasible set, while the 9.2\% of non-projective gold trees justify an exact non-projective decoder.
+The two null models are complementary: U is the reference of a decoder that searches all trees and the starting point $\beta=0$ of the tempered family, and RLA separates the effect of word order from the effect of tree shape.
+
+The experiments also separate the role of exactness from the role of representation.
+Exact decoding does not make the trees more accurate than greedy selection, but it guarantees that every output is a tree at a cost of a fraction of a millisecond, which matters for models that use the trees further, such as syntax-aware sentiment classifiers~\cite{Chen2023DualGCN,Yang2022DepPOS} or template-based idiom extraction~\cite{Nazirova2026}.
+Global normalization provides quantitative measures of uncertainty, the mass $Z(x)$ of well-formed trees and the tree entropy, at the price of one determinant per sentence, and Proposition~\ref{prop:Z} explains why it raises the confidence of a locally trained model.
+Temperature calibration removes most of this overconfidence for heads and labels with one parameter each, fitted by a convergent Newton method in a few iterations, and it leaves the decoded trees untouched, which makes the calibrated marginals usable as confidence scores for annotation and for downstream models.
+Richer recalibration maps can reach a lower calibration error, but either they give up the distribution over trees, as isotonic regression does, or they change the decoded trees, as the log-linear family does.
+Calibrated tree distributions can also be averaged, and the mixture of the seven parsers gives the best UzUDT scores of the study without any retraining.
+The accuracy itself is governed by the encoder and the amount of training data, and the aggregation operator brings a small gain.
+
+The study has several limitations.
+The merged models were trained on gold tags, the other models on tags of a different tagger; the test sets are small, and a single LAS value has an interval of about $\pm3$ points; the encoders were not fine-tuned; and the network parameters were estimated with the local objective, the global distribution being fitted only through the calibration parameters.
+The inverse temperatures were fitted on 48 or 78 development sentences; their bootstrap intervals exclude one for every model but are about $\pm0.08$ wide.
+Finally, the effect of short arcs on crossings was estimated by a linear prediction under U, not by a null model that conditions on the arc lengths.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusions}\label{sec:conclusions}
+
+This paper treats Uzbek dependency parsing as a problem on spanning arborescences.
+The feasible analyses of a sentence of $n$ words are the $n^{n-1}$ single-root arborescences of a complete digraph.
+For their uniform distribution we derived the covariance of total arc length and crossings, and we counted projective trees by the number of head-final arcs and by the position of the root.
+Against these laws and random arrangements of the observed trees, the 1184 gold Uzbek trees have short arcs, are head-final and shallow, contain almost no crossings, and their root is the last content word in 73\% of the sentences.
+Edmonds' optimum branching algorithm with root preselection decodes a sentence exactly in less than 0.2 ms, and greedy selection leaves up to 20\% of the sentences without a valid tree.
+The matrix-tree theorem measures the probability mass that a locally trained model wastes on ill-formed structures and yields the moments that make Newton's method applicable to calibration; the determinant and the condition number of the Laplacian matrix are controlled along the tempered path by the contraction loss of the decoder.
+A convex one-parameter calibration, which reduces to the uniform model at zero inverse temperature, halves the calibration error of the tree marginals without changing any tree, and a second temperature does the same for the labels.
+On a contamination-free test set, contextual encoders, the last-piece operator and cross-treebank training raise LAS by 3.6, 1.3 and 5.4 points, and the mixture of the calibrated parsers reaches LAS 57.2 and UAS 74.2 on UzUDT end to end, and LAS 61.6 and UAS 76.4 with gold tags.
+Future work will estimate all parameters with the globally normalized objective given by the matrix-tree theorem~\cite{Koo2007,Zhang2020TreeCRF}, compare monolingual with multilingual encoders, extend the exact laws to mildly non-projective classes of trees~\cite{Kuhlmann2013} and to null models that keep the arc lengths, and connect the calibrated parser with lexical and semantic models of Turkic languages.
+
+\vspace{6pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\authorcontributions{The author is solely responsible for the conceptualization, methodology, software, validation, formal analysis, investigation, data curation, writing---original draft preparation, writing---review and editing, and visualization. The author has read and agreed to the published version of the manuscript.}
+
+\funding{This research received no external funding.}
+
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{Both treebanks are distributed by the Universal Dependencies project (\url{https://universaldependencies.org}, accessed on 25 October 2026). The trained models are available at \url{https://huggingface.co/Sanatbek/uzudt} and the source code, including the scripts that produce every number, table and figure of this paper, at \url{https://github.com/SanatbekMatlatipov/robust-parsing-uzbek} (both accessed on 25 October 2026).}
+
+\acknowledgments{During the preparation of this manuscript, the author used Claude (Anthropic) for the purposes of drafting and editing the text, writing analysis and plotting scripts, and checking bibliographic metadata. The author has reviewed and edited the output and takes full responsibility for the content of this publication.}
+
+\conflictsofinterest{The author declares no conflicts of interest.}
+
+\abbreviations{Abbreviations}{%
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabular}{@{}ll}
+AIC & Akaike information criterion\\
+BERT & Bidirectional encoder representations from transformers\\
+BPE & Byte-pair encoding\\
+CLE & Chu--Liu/Edmonds optimum branching algorithm\\
+ECE & Expected calibration error\\
+LAS & Labeled attachment score\\
+MBR & Minimum Bayes risk\\
+NLL & Negative log-likelihood\\
+OEIS & On-Line Encyclopedia of Integer Sequences\\
+RLA & Random linear arrangement\\
+UAS & Unlabeled attachment score\\
+UD & Universal Dependencies
+\end{tabular}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{adjustwidth}{-\extralength}{0cm}
+
+\reftitle{References}
+
+\bibliography{references_core,references_mdpi}
+
+\PublishersNote{}
+\end{adjustwidth}
+\end{document}

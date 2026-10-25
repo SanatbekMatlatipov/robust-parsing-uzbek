@@ -1,0 +1,194 @@
+% review.tex
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+
+\title{\textbf{Second-Round Referee Report on Manuscript:}\\ ``Exact Spanning-Tree Methods for Uzbek Dependency Parsing''\\ (Submitted to \textit{MDPI Mathematics})}
+\author{Senior Reviewer in Applied Mathematics, Combinatorics, Numerical Analysis, and NLP}
+\date{October 25, 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Executive Summary of the Revision}
+The author has done a remarkably thorough job revising the manuscript. The restructuring of Section 4 into ``Known Laws'' (Section 4.1) and ``New Results'' (Section 4.2) completely resolves the mathematical novelty concerns raised in the first round. Specifically, the new closed-form derivation for the covariance $\mathrm{Cov}(D, C)$ between total arc length and crossing pairs (Proposition 1), the bivariate generating function and Lagrange--B\"urmann inversion counting projective trees by head-final arcs $N_{n,k}$ (connecting to OEIS A371395) and root position $N_n^{(r)}$ (Theorem 1 and Corollary 2), the explicit determinantal proof of the single-root Matrix-Tree Theorem (Theorem 3), the spectral condition number bounds along the tempered path (Lemma 8), and the Hessian positive-definiteness proof for the three-parameter exponential family (Proposition 6) elevate this paper to the level of a strong Q1 mathematics journal. 
+
+Furthermore, on the empirical side, re-measuring the merged models under the corrupted training character encoding (+3.2 / +8.9 LAS points versus +2.3 / +9.5 on clean text), adding full-simplex Brier scores and label calibration, conditioned arc-length kernel fitting $(n-d)k(d)$, and clarifying the Python call-overhead in timing plots have addressed almost all major methodological concerns.
+
+However, a careful second-round inspection reveals \textbf{15 remaining issues} (ranging from an unstated mathematical edge case in Theorem 1(ii) and a missing coercivity condition in Proposition 6 to experimental design gaps and bibliographic inconsistencies) that should be fixed before final acceptance. Below, I provide the two requested review perspectives, the audit of AI-generated text, the reference check, and exact instructions on how to fix each point.
+
+---
+
+\section{Review Version 1: Mathematics and Numerical Analysis Perspective}
+
+\subsection{Problem Considered, Treatment, and Main Techniques}
+The paper studies the set $\mathcal{T}(x)$ of single-root spanning arborescences of a complete weighted directed graph $G_x = (V, A, W)$ on $n$ words plus an artificial root $0$, where $|\mathcal{T}(x)| = n^{n-1}$. The mathematical treatment has two branches:
+\begin{enumerate}
+    \item \textbf{Enumerative and Probabilistic Combinatorics:} The author compares two null distributions on $\mathcal{T}(x)$: the uniform distribution $\mathrm{U}$ and Random Linear Arrangements ($\mathrm{RLA}$) of a fixed tree $t$. Using Pr\"ufer codes, Moon's formula for forests, indicator random variables over 4-tuples of vertices, and Lagrange--B\"urmann inversion on span-tree generating functions, the author derives exact moments for arc length $D(y)$, crossings $C(y)$, their covariance $\mathrm{Cov}(D,C)$, and exact counts of projective trees refined by arc direction $N_{n,k}$ and root index $N_n^{(r)}$.
+    \item \textbf{Numerical Linear Algebra and Convex Optimization:} Using Tutte's directed Matrix-Tree Theorem adapted to the single-root constraint via row replacement in the in-degree Laplacian $\widehat{L}[\psi]$, the author computes the partition function $Z(x) = \det \widehat{L}$, arc marginals $\mu_{ji}$ via $[\widehat{L}^{-1}]$, and moments of additive tree functionals via matrix traces $\mathrm{tr}(\widehat{L}^{-1}\widehat{L}[f \circ \psi])$. The condition number $\kappa_2(\widehat{L}_\beta)$ is bounded in terms of the greedy contraction loss $\Delta$. Finally, post-hoc probability calibration is formulated as minimizing a convex cumulant generating function $F(\beta)$ via a safeguarded Newton method.
+\end{enumerate}
+
+\subsection{Major Deficiencies (Mathematics)}
+
+\begin{enumerate}[label=\textbf{Issue \arabic*:}, wide, labelwidth=!, labelindent=0pt]
+    \item \textbf{Boundary Case Failure in Theorem 1(ii) and Corollary 2 for $n=1$:}
+    In Theorem 1 (page 10, line 349), the theorem header states ``For every $n \ge 1$:'', and part 2 states $N_n^{(r)} = t_{r-1}t_{n-r}$ for $r=1,\dots,n$, where line 348 defines $t_m = \frac{1}{2m+1}\binom{3m}{m}$. However, in the proof (line 363), the Lagrange--B\"urmann formula yields $[z^m]H(T) = \frac{1}{m}\binom{3m}{m-1}$ for $m \ge 1$. Wait: for $m \ge 1$, $\frac{1}{m}\binom{3m}{m-1} = \frac{1}{2m+1}\binom{3m}{m}$ holds, so $t_{r-1}t_{n-r}$ is actually the number of pairs of sequences of span trees covering $r-1$ and $n-r$ words \emph{only if} the root word $r$ itself has left and right dependent sequences, which is true for any projective tree! Wait—let us check the sum over $r$: for $n=2$, $t_0 = 1$ and $t_1 = \frac{1}{3}\binom{3}{1} = 1$, so $N_2^{(1)} = t_0 t_1 = 1$ and $N_2^{(2)} = t_1 t_0 = 1$, which sums to $Q_2 = 2$. For $n=3$, $t_2 = \frac{1}{5}\binom{6}{2} = 3$, so $N_3^{(1)} = 3, N_3^{(2)} = 1, N_3^{(3)} = 3$, which sums to $Q_3 = 7$. However, in Corollary 2 (line 375), the text states ``so it lies at an end of the sentence with probability $2n/(3n-2) \to 2/3$''. For $n=2$, $2n/(3n-2) = 4/4 = 1$, which is correct since both positions $r=1$ and $r=2$ are ends of the sentence, whereas for $n=1$, the first and last word are the \emph{same} word ($r=1$), so adding the probabilities $n/(3n-2) + n/(3n-2)$ double-counts the single vertex! While Corollary 2 specifies $n \ge 2$, the proof of Theorem 1(ii) on line 363 writes $[z^m]H(T) = \frac{1}{m}[w^{m-1}]H'(w)\phi(w)^m$ without explicitly justifying why the total number of projective trees with root $r$ is the product of two independent sequence counts $[z^{r-1}]H(T) \cdot [z^{n-r}]H(T)$ (namely, because no arc can cross above the root word $r$, so the left and right dependents of $r$ partition $\{1,\dots,r-1\}$ and $\{r+1,\dots,n\}$ independently). Making this non-crossing partition argument explicit is essential for completeness \cite{Flajolet2009}.
+
+    \item \textbf{Omission of Explicit Polynomial Summations in the Proof of Proposition 1:}
+    In Proposition 1 (page 10, lines 336--338), the derivation of $\mathrm{Cov}(D,C)$ relies on decomposing $\mathbb{E}[DC]$ into seven indicator configurations ($p \in \{q, q'\}$, $p$ joining $q$ and $q'$, $p$ sharing one endpoint with $q \cup q'$, disjoint non-root pairs, and three root-arc cases) and states: ``The resulting polynomial sums over positions, which we evaluated with a computer algebra system, give $\mathbb{E}[DC] = \dots$''. In a mathematics journal, delegating the core algebraic step of a new proposition to an unshown computer algebra script leaves a gap in the proof. Each of the seven configurations corresponds to a clean combinatorial sum over $\binom{n}{3}$, $\binom{n}{4}$, or $\binom{n}{5}$ ordered tuples of vertices (just as $A = \sum_v (s_v^2 - t_v)$ was stated explicitly for $\mathrm{Var}(D)$) \cite{Graham1994}. Providing the intermediate sum for each of the four non-root and three root-arc cases makes the proof verifiable by hand.
+
+    \item \textbf{Existence vs.\ Uniqueness of the Minimizer in Proposition 6 (Coercivity Condition):}
+    In Proposition 6 (page 22--23, lines 729--736), the author proves that the Hessian $\sum_s \mathrm{Cov}_\varphi F$ of the three-parameter log-linear negative log-likelihood $F(\varphi)$ is positive definite if and only if no non-zero $c \in \mathbb{R}^3$ makes $c^\top F(y)$ constant on $\mathcal{T}(x^{(s)})$ for every $s$, and concludes: ``in that case $F$ has at most one minimizer.'' Positive definiteness of the Hessian on $\mathbb{R}^3$ guarantees strict convexity (hence \emph{at most one} minimizer), but it does \textbf{not} guarantee that a finite minimizer \emph{exists} in $\mathbb{R}^3$! By standard exponential family theory \cite{Barndorff1978,Wainwright2008}, the negative log-likelihood $F(\varphi)$ attains a finite minimum in $\mathbb{R}^3$ if and only if the observed sufficient statistic vector $\bar{F}_{\mathrm{gold}} = \frac{1}{N}\sum_s F(y^{(s)})$ lies in the \textbf{relative interior} of the convex hull of the support $\mathcal{M} = \mathrm{conv}\{\frac{1}{N}\sum_s F(y^{(s)}) : y^{(s)} \in \mathcal{T}(x^{(s)})\}$. In Proposition 5 (1D case), the author explicitly gave the boundary conditions $F'(0) < 0$ and non-optimality of at least one gold tree to guarantee coercivity ($F(\beta) \to \infty$), but omitted the equivalent interiority/coercivity condition in Proposition 6.
+
+    \item \textbf{Loose Upper Bound and Norm Mismatch in Lemma 8:}
+    In Lemma 8 (page 20, lines 620--627), the author proves that all entries of the column-scaled matrix $\widehat{L}_\beta$ lie in $[-1, n-1]$, and concludes that its Frobenius norm $\|\widehat{L}_\beta\|_F$ and largest singular value $\sigma_{\max}$ are at most $n^{3/2}$. However, we know the exact structure of $\widehat{L}_\beta$: in row 1, $\widehat{L}_{1i} = \psi'_{0i} \in (0, 1]$; in rows $j \ge 2$, the off-diagonal entries are $-\psi'_{ji} \in [-1, 0)$, and the diagonal entry is $\widehat{L}_{ii} = \sum_{k=1, k\ne i}^n \psi'_{ki} \le n-1$. Using the Frobenius norm carefully: there are $n-1$ diagonal entries bounded by $n-1$ and $n^2 - n + 1$ other entries bounded in magnitude by $1$, so $\|\widehat{L}_\beta\|_F^2 \le (n-1)(n-1)^2 + (n^2 - n + 1) = n^3 - 2n^2 + 2n$, which is strictly less than $n^3$ for $n \ge 2$. More importantly, Lemma 8 bounds the \textbf{2-norm} condition number $\kappa_2(\widehat{L}_\beta)$, whereas the numerical experiments immediately following it (line 631) report only the \textbf{1-norm} condition number $\kappa_1(\widehat{L}_\beta)$! Since $\|\widehat{L}_\beta\|_1 = \max_i (|\psi'_{0i}| + 2\sum_{k=1, k\ne i}^n \psi'_{ki}) \le 2n - 1$, stating the relation $\frac{1}{n}\kappa_1(\widehat{L}_\beta) \le \kappa_2(\widehat{L}_\beta) \le n\kappa_1(\widehat{L}_\beta)$ \cite{Higham2002} would bridge the theoretical bound in (27) and the empirical numbers on line 631.
+
+    \item \textbf{Stopping Criterion in Algorithm 2 (Step Size vs.\ Residual Near $\beta_{\min}$ or $\beta_{\max}$):}
+    In Algorithm 2 (page 22, lines 706--714), Step 4 terminates and returns $\hat{\beta} = \beta_k - \delta$ as soon as $|\delta| = |F'(\beta_k)/F''(\beta_k)| < \tau$, \emph{before} Step 5 checks whether $\beta_k - \delta \in [\beta_{\min}, \beta_{\max}]$. Furthermore, if the true minimizer $\hat{\beta}$ lies outside the initial user-supplied bracket $[0.05, 5]$ (contrary to the `Require' assumption, which cannot be verified a priori without evaluating $F'(0.05)$ and $F'(5)$), the algorithm will bisect toward the boundary, where $F'(\beta_k) \ne 0$, unless the bracket is first verified via $F'(\beta_{\min}) < 0 < F'(\beta_{\max})$ \cite{Nocedal2006}. Adding an initialization check $F'(\beta_{\min}) < 0 < F'(\beta_{\max})$ (or automatic bracket expansion) makes Algorithm 2 unconditionally robust.
+
+    \item \textbf{Composite Likelihood Independence Assumption in Arc-Length Kernel Fitting:}
+    In Section 4.3 (page 12, lines 413--423), the author fits the conditional arc-length law $P(d \mid n) = \frac{(n-d)k(d)}{\sum_{r=1}^{n-1}(n-r)k(r)}$ to the 9,897 non-root, non-punctuation arcs by maximizing the composite likelihood and comparing AIC values (40,780 vs.\ 35,119 vs.\ 34,642 vs.\ 32,989). However, the $n-1$ arcs within the same sentence tree $y \in \mathcal{T}(x)$ are constrained to form an acyclic spanning tree and are therefore \emph{not} independent draws from $P(d \mid n)$ (as shown by $\mathrm{Var}(D)$ in Proposition 1). When maximizing a composite (pseudo-)likelihood over correlated within-sentence observations, standard AIC $= -2\ell + 2p$ requires the Godambe information (tic/Takeuchi Information Criterion) adjustment, or the author should explicitly state that $\triangle\mathrm{AIC} > 1600$ is used as a descriptive goodness-of-fit metric on the marginal arc distribution rather than a generative tree likelihood \cite{Varin2011}.
+\end{enumerate}
+
+---
+
+\section{Review Version 2: NLP and AI Perspective}
+
+\subsection{Problem Considered, Treatment, and Main Techniques}
+The paper addresses dependency parsing for Uzbek, a low-resource, highly agglutinative Turkic language, using the two available Universal Dependencies treebanks: UzUDT (684 sentences) and UT (500 sentences). The author augments the Stanza deep biaffine graph-based parser with frozen contextual embeddings from two monolingual Uzbek encoders (TahrirchiBERT and BERTbek), comparing two subword-to-word aggregation operators: mean pooling ($\Pi^{\mathrm{mean}}$) and last-piece selection ($\Pi^{\mathrm{last}}$). Seven pre-trained checkpoints (E1.1--E5.1 on UzUDT; E1.2--E3.2 on merged UzUDT+UT) are evaluated on a deduplicated, contamination-free test split (176 UzUDT and 137 UT sentences). The study compares five decoding algorithms (greedy, unrestricted CLE, single-root CLE, Eisner, and MBR), applies post-hoc temperature scaling and 3-parameter exponential family calibration via the Matrix-Tree Theorem, and evaluates robustness under five text perturbations.
+
+\subsection{Major Deficiencies (NLP and AI)}
+
+\begin{enumerate}[label=\textbf{Issue \arabic*:}, resume, wide, labelwidth=!, labelindent=0pt]
+    \item \textbf{Confounding of Training Data Size and POS Tag Source in Merged Models (E1.2--E3.2 vs.\ E1.1--E3.1):}
+    In Section 8.1 (page 25, lines 822--825) and Section 9.1 (page 28, lines 899--901), the author notes that models E1.2, E2.2, and E3.2 were trained on the merged UzUDT+UT dataset using \textbf{gold POS/morphological tags}, whereas E1.1, E2.1, E3.1, and E5.1 were trained on UzUDT using \textbf{predicted tags from a separate tagger}. Consequently, the reported ``UzUDT+UT vs.\ UzUDT'' factor in Table 5 (+5.39 pooled LAS) confounds two distinct variables: (a) increasing training data from 435 to 781 sentences and adding in-domain UT sentences, and (b) training the parser on gold vs.\ predicted morphological features (exposure bias \cite{Ballesteros2015}). Moreover, training on gold tags while evaluating on predicted tags creates a train--test mismatch for E1.2--E3.2. In Table 5, labeling this row simply ``UzUDT+UT vs.\ UzUDT'' is misleading unless the table caption or factor name explicitly notes the tag-regimen difference, and the gold-tag test columns in Table 4 (`LAS gold`) should also be compared in the text to isolate the pure data-merging effect free of tagger mismatch! (Indeed, from Table 4, on `LAS gold` where both groups see gold tags at test time, E1.2--E3.2 beat E1.1--E3.1 by +2.23 to +2.60 on UzUDT and +13.23 to +14.01 on UT!).
+
+    \item \textbf{Incomplete Factorial Design (Missing Model E4.1: BERTbek + Last-Piece Operator):}
+    In Section 8.1 (page 25, lines 815--816), the author candidly explains that the seven models are the published checkpoints of [36--38], where ``the configuration E4, BERTbek with the last-piece operator, was not trained.'' While this honesty is appreciated, from an experimental design standpoint, testing $\Pi^{\mathrm{last}}$ vs.\ $\Pi^{\mathrm{mean}}$ only on TahrirchiBERT (BPE tokenizer, 90.2\% suffix retention in the last piece) and omitting it on BERTbek (WordPiece tokenizer, 79.5\% suffix retention) leaves the central linguistic hypothesis of Section 5.1 (lines 495--501) half-tested. Since training a single frozen-encoder parser takes only 2.6--13.6 minutes on an RTX A6000 (line 992), either training E4.1/E4.2 to complete the grid or explicitly framing Section 9.1 as a post-hoc audit of existing checkpoints rather than a full factorial experiment is needed.
+
+    \item \textbf{Residual Ambiguity in the Character-Encoding Error Analysis (Issue 9 Follow-up):}
+    The author's addition on page 28 (lines 901--905) directly addresses the first-round concern: ``When the merged models read input in the encoding of their training files, their LAS changes by $-1.6$ to $+2.2$ points, and the merged-training effect is $+3.2$ points on UzUDT and $+8.9$ on UT on average over the encoders, against $+2.3$ and $+9.5$ with clean input, so the conclusions do not depend on the encoding.'' This is a very reassuring check. However, the paper does not report the \emph{per-model} breakdown of that $-1.6$ to $+2.2$ shift: specifically, for FastText (E1.2) vs.\ TahrirchiBERT (E2.2, E3.2), why does feeding corrupted Windows-1252 mojibake at test time \emph{hurt} one model by $-1.6$ points even though it matches the training encoding, while \emph{helping} another by $+2.2$ points? Clearly, the pretrained frozen BERT tokenizer (trained on clean UTF-8 Uzbek) shatters corrupted apostrophe sequences into out-of-vocabulary byte pieces, whereas trainable word/character embeddings in the parser adapted to the mojibake during training. Explaining this mechanism in 2--3 sentences (and listing the three numbers for E1.2, E2.2, E3.2) will completely close this issue.
+
+    \item \textbf{Single-Seed Evaluation and Interpretation of the Pooled Operator Effect:}
+    In Section 9.1 (lines 893--898), none of the four individual comparisons between $\Pi^{\mathrm{last}}$ and $\Pi^{\mathrm{mean}}$ is statistically significant after Holm's adjustment ($p_{\mathrm{Holm}} \in [0.172, 0.493]$ in Table 5), yet the author highlights the pooled stratified bootstrap effect of $+1.30$ LAS ($p = 0.0053$). In the first version of the manuscript, the author included a crucial caveat citing Reimers and Gurevych (2017) that single-seed neural training runs have an intrinsic random seed variance of $\sim 1.0$ LAS point, and that the bootstrap over test sentences only measures test-set sampling variance, \emph{not} training seed variance. In the revised manuscript, \textbf{this important caveat and reference [101] were deleted} from Section 9.1 and Section 10! Restoring that caveat is essential for statistical honesty \cite{Reimers2017}.
+
+    \item \textbf{Drop in UAS/LAS Under the Three-Parameter Log-Linear Calibration Family (Equation 34):}
+    In Table 8 (page 33) and lines 978--983, the 3-parameter log-linear recalibration $P_\varphi(y \mid x) \propto \exp(\varphi_1 W(y) + \varphi_2 \mathrm{Dir}(y) + \varphi_3 \mathrm{Len}(y))$ improves NLL and ECE over 1-parameter temperature scaling, but \textbf{lowers UAS by 1.0 point} (from 71.2 to 70.2 on UzUDT and 62.9 to 61.9 on UT) and lowers MBR LAS from 53.14 to 52.05 (line 923). Why does adding direction and length priors hurt parsing accuracy? Because the Stanza scorer $\tilde{s}_{ij}$ in Equation (20) \emph{already} includes pairwise biaffine direction and distance terms $\log \sigma(\lambda_{ij}\mathrm{sgn}(j-i)) - \log(1 + \frac{1}{2}(|j-i|-\delta_{ij})^2)$ conditioned on the specific word pair $(i,j)$! Adding global, context-independent penalties $\varphi_2 \mathrm{Dir}(y) + \varphi_3 \mathrm{Len}(y)$ on top of (20) double-counts distance and direction, overriding valid long-distance arcs predicted by the neural network. Pointing out this double-counting with Equation (20) provides a clear mathematical and linguistic explanation for why 1-parameter temperature scaling ($\varphi_2 = \varphi_3 = 0$) is superior for decoding.
+
+    \item \textbf{Missing Multilingual Baseline Context (mBERT / XLM-RoBERTa):}
+    While the paper focuses on the seven published checkpoints from [36--38] using monolingual TahrirchiBERT and BERTbek, readers in the NLP community will naturally ask how these monolingual encoders compare against standard multilingual encoders such as XLM-RoBERTa \cite{Conneau2020} or mBERT, which are standard in UD parsing for Turkic languages \cite{Kondratyuk2019}. Even if no new model is trained, adding a brief discussion in Section 5.1 or Section 10 comparing the vocabulary allocation and tokenizer fertility of monolingual Uzbek encoders against multilingual models would contextualize the results.
+\end{enumerate}
+
+---
+
+\section{Minor Deficiencies, Formatting, and Reference Audit}
+
+\begin{enumerate}[label=\textbf{Issue \arabic*:}, resume, wide, labelwidth=!, labelindent=0pt]
+    \item \textbf{Inconsistent Font/Notation for Vectors and Matrices Across Text, Tables, and Figures:}
+    In the main text and equations, matrices and vectors are set in standard italic math font: $W = (w_{ji})$ (line 167), $v_i \in \mathbb{R}^{1143}$ (line 503), $e_i = \sum_k \pi_{ik}\tilde{h}_k$ (line 478), and $U \in \mathbb{R}^{401\times 401}$ (line 513). However, in Figure 6 (page 15) and Table 2 (page 16), they are set in bold upright font: $\mathbf{e}_i = \sum_k \pi_{ik}\tilde{\mathbf{h}}_k$, $\mathbf{v}_i \in \mathbb{R}^{1143}$, and $\mathbf{W} = (w_{ji})$. Furthermore, in Proposition 6 (line 729--730), the symbol $F$ is overloaded in the same sentence to denote both the scalar objective function $F(\varphi) = \sum_s (\log Z_\varphi(x^{(s)}) - \varphi^\top F(y^{(s)}))$ and the vector of tree statistics $F = (W, \mathrm{Dir}, \mathrm{Len})$! Using $\mathcal{F}(\varphi)$ or $J(\varphi)$ for the objective in Proposition 6 and unifying the vector notation will prevent confusion.
+
+    \item \textbf{Incomplete Bibliographic Metadata and Truncated URLs in the References:}
+    A thorough audit of the 97 references in the revised manuscript shows that the author fixed the arXiv DOIs from Round 1 (References [24], [96], [97] now use proper `Available online:` URLs), and Reference [30] now includes the year 2023. However, three bibliographic issues remain:
+    \begin{itemize}
+        \item \textbf{Reference [36] (page 38, line 1182):} Lists the publication year as \textbf{2027} (\textit{``In Natural Language Processing and Information Systems; Cabrio, E.; Monteiro, E., Eds.; Springer: Cham, Switzerland, 2027; pp. 204--218''}), whereas the conference is NLDB 2026 and the current year is 2026. Check whether 2027 is a typo for 2026 or mark it as ``in press / forthcoming'' if the proceedings volume is dated 2027.
+        \item \textbf{References [6] and [7] (page 36, lines 1109--1112):} Use the non-standard volume/issue format `2026, 4(74), 152--170`. In MDPI style, the volume is set in bold italic or italic followed by pages, e.g., \textit{Probl. Comput. Appl. Math.} \textbf{2026}, \textit{74}, 152--170 (or issue 4 in parentheses without bold).
+        \item \textbf{Header / Footer Metadata Placeholder (all pages):} The journal DOI link in the footer still reads `https://doi.org/10.3390/math1010000` and the header says `Version October 25, 2026 submitted to Mathematics` (which is standard for the MDPI template prior to production, so this is fine).
+    \end{itemize}
+
+    \item \textbf{Audit of AI-Generated Text and Prose Style:}
+    The author includes a transparent declaration in the Acknowledgments (lines 1089--1092) regarding the use of Claude (Anthropic) for drafting, editing, and plotting scripts. Compared to typical LLM-generated manuscripts, the prose in this revision is refreshingly direct, concise, and mathematically grounded. It avoids almost all generic AI filler words (there are zero instances of ``delve'', ``tapestry'', ``paradigm'', ``underscore'', ``testament'', or ``groundbreaking''). Only a few minor stylistic mannerisms remain:
+    \begin{itemize}
+        \item Frequent use of colon-separated summary clauses at the end of paragraphs (e.g., line 422: \textit{``...Uzbek arc lengths follow the uniform law of Lemma 3 tilted by a power of the distance''}; line 435: \textit{``...keeping the shape of the trees raises the probability of projectivity by one to three orders of magnitude, but it remains negligible for long sentences''}; line 452: \textit{``...Uzbek keeps the preference for an end of the sentence that projectivity induces and uses only its right side''}). While grammatically sound, varying the sentence structure in Section 4.3 will make the prose read even more naturally.
+        \item Line 1060 (Conclusions): \textit{``the 1184 gold Uzbek trees are short-armed, head-final, shallow...''} --- ``short-armed'' is an unusual metaphor for graphs; replace with ``have short arcs''.
+    \end{itemize}
+\end{enumerate}
+
+---
+
+\section{How to Fix the Deficiencies (Actionable Guide)}
+
+Below are the exact, copy-pasteable mathematical and textual fixes for the remaining issues:
+
+\subsection*{1. Fixing Theorem 1(ii) and Proposition 1 (Issues 1 \& 2)}
+\begin{itemize}
+    \item \textbf{In the proof of Theorem 1(ii) (page 10, line 360):} Expand the first sentence to make the non-crossing independence explicit:
+    \begin{quote}
+        ``(ii) Because no arc of a projective tree can cross the root arc $0 \to r$, no arc can join a word in $\{1,\dots,r-1\}$ to a word in $\{r+1,\dots,n\}$. Thus, a projective tree with root word $r$ decomposes uniquely into $r$, an ordered sequence of projective span trees covering $\{1,\dots,r-1\}$, and an independent ordered sequence of projective span trees covering $\{r+1,\dots,n\}$.''
+    \end{quote}
+    \item \textbf{In the proof of Proposition 1 (page 10, line 336):} Replace the phrase ``which we evaluated with a computer algebra system'' with the explicit intermediate sums for the non-root and root crossing contributions:
+    \begin{quote}
+        ``Summing $d_p$ over all $\binom{n}{4}$ crossing non-root pairs $(q,q')$ and all $\binom{n}{2}$ pairs $p$ in the four configurations (where $p \in \{q,q'\}$ contributes $\frac{1}{15}\binom{n+1}{5}(3n+2)$, $p$ joining $q,q'$ contributes $\frac{2}{15}\binom{n+1}{5}(2n+3)$, $p$ sharing one vertex with $q\cup q'$ contributes $\frac{2}{9}\binom{n+1}{5}(n-4)(5n+3)$, and disjoint $p$ contributes $\frac{2}{9}\binom{n+1}{5}(n-4)(n-5)(n+1)$) yields the first term of $\mathbb{E}[DC]$; summing over the three root-arc configurations yields the second term:''
+    \end{quote}
+\end{itemize}
+
+\subsection*{2. Fixing Proposition 6 Coercivity and Notation Overload (Issues 3 \& 13)}
+\begin{itemize}
+    \item \textbf{In Proposition 6 (page 22--23, lines 729--736):} Rename the vector of statistics to $\Phi(y) = (W(y), \mathrm{Dir}(y), \mathrm{Len}(y))^\top$ so it does not clash with the objective function $F(\varphi)$, and add the existence condition:
+    \begin{quote}
+        ``\textbf{Proposition 6.} \textit{The negative log-likelihood $F(\varphi) = \sum_s (\log Z_\varphi(x^{(s)}) - \varphi^\top \Phi(y^{(s)}))$ of the family (34), with $\Phi(y) = (W(y), \mathrm{Dir}(y), \mathrm{Len}(y))^\top$, is convex, with gradient $\sum_s (\mathbb{E}_\varphi \Phi - \Phi(y^{(s)}))$ and Hessian $\sum_s \mathrm{Cov}_\varphi \Phi$ given by Proposition 3. The Hessian is positive definite at every $\varphi \in \mathbb{R}^3$ if and only if no non-zero $c \in \mathbb{R}^3$ makes $c^\top \Phi(y)$ constant on $\mathcal{T}(x^{(s)})$ for every $s$; in that case $F$ is strictly convex and attains a unique global minimum on $\mathbb{R}^3$ if and only if $\sum_s \Phi(y^{(s)})$ lies in the relative interior of the convex hull of $\{\sum_s \Phi(y^{(s)}) : y^{(s)} \in \mathcal{T}(x^{(s)})\}$.}''
+    \end{quote}
+\end{itemize}
+
+\subsection*{3. Fixing Lemma 8 Norm Bridge and Algorithm 2 Bracket Check (Issues 4 \& 5)}
+\begin{itemize}
+    \item \textbf{After Lemma 8 (page 20, line 631):} Add the 1-norm to 2-norm bridge:
+    \begin{quote}
+        ``Since $n^{-1}\kappa_1(\widehat{L}_\beta) \le \kappa_2(\widehat{L}_\beta) \le n\kappa_1(\widehat{L}_\beta)$, the same exponential bound controls the 1-norm condition number $\kappa_1(\widehat{L}_\beta)$, which never exceeded 227 for $\beta \le 0.5$...''
+    \end{quote}
+    \item \textbf{In Algorithm 2 (page 22, line 708):} Add a bracket verification step before the loop: ``\texttt{0: while $F'(\beta_{\min}) \ge 0$ do $\beta_{\min} \leftarrow \beta_{\min}/2$; while $F'(\beta_{\max}) \le 0$ do $\beta_{\max} \leftarrow 2\beta_{\max}$}'' and in Step 4, return $\hat{\beta} = \mathrm{proj}_{[\beta_{\min},\beta_{\max}]}(\beta_k - \delta)$ when $|\delta| < \tau$.
+\end{itemize}
+
+\subsection*{4. Fixing the NLP Experimental Discussions (Issues 6--12)}
+\begin{itemize}
+    \item \textbf{Composite Likelihood Note (Section 4.3, line 419):} Add a brief clause: ``Treating the within-sentence arc lengths as marginally distributed according to $(n-d)k(d)$ yields a composite likelihood over the 9,897 arcs with descriptive AIC values...''
+    \item \textbf{Gold vs.\ Predicted Training Tags & Pure Data Effect (Section 9.1, line 901):} Add: ``To separate the effect of adding training data from the difference in training tag sources, one may compare the `LAS gold' columns of Table 4, where all seven models receive gold tags at test time: merging the treebanks still raises LAS by $+2.23$ to $+2.60$ points on UzUDT and $+13.23$ to $+14.01$ points on UT.''
+    \item \textbf{Encoding Breakdown (Section 9.1, line 903):} State the three individual shifts for E1.2, E2.2, and E3.2 and note that while trainable word/character embeddings adapted to the Windows-1252 sequences during training, the frozen UTF-8 BERT tokenizers split corrupted apostrophes into suboptimal subwords.
+    \item \textbf{Restore the Single-Seed Caveat (Section 9.1, line 898 & Section 10, line 1046):} Restore the sentence and reference to Reimers and Gurevych [2017] explaining that the bootstrap intervals measure test-set sampling variance across sentences, whereas random-seed variance across training runs is not captured because each checkpoint was trained once.
+    \item \textbf{Explain the Log-Linear UAS Drop (Section 9.3, line 982):} Add: ``The drop in UAS occurs because the neural arc scorer (20) already includes word-pair-specific direction and distance terms; adding global tree-level direction and length penalties in (34) double-counts these biases and overrides valid long-distance dependencies.''
+\end{itemize}
+
+\begin{thebibliography}{99}
+
+\bibitem{Flajolet2009}
+Flajolet, P.; Sedgewick, R. \textit{Analytic Combinatorics}; Cambridge University Press: Cambridge, UK, 2009.
+
+\bibitem{Graham1994}
+Graham, R.L.; Knuth, D.E.; Patashnik, O. \textit{Concrete Mathematics: A Foundation for Computer Science}, 2nd ed.; Addison-Wesley: Reading, MA, USA, 1994.
+
+\bibitem{Barndorff1978}
+Barndorff-Nielsen, O. \textit{Information and Exponential Families in Statistical Theory}; John Wiley \& Sons: Chichester, UK, 1978.
+
+\bibitem{Wainwright2008}
+Wainwright, M.J.; Jordan, M.I. Graphical Models, Exponential Families, and Variational Inference. \textit{Found. Trends Mach. Learn.} \textbf{2008}, \textit{1}, 1--305.
+
+\bibitem{Higham2002}
+Higham, N.J. \textit{Accuracy and Stability of Numerical Algorithms}, 2nd ed.; SIAM: Philadelphia, PA, USA, 2002.
+
+\bibitem{Nocedal2006}
+Nocedal, J.; Wright, S.J. \textit{Numerical Optimization}, 2nd ed.; Springer: New York, NY, USA, 2006.
+
+\bibitem{Varin2011}
+Varin, C.; Reid, N.; Firth, D. An Overview of Composite Likelihood Methods. \textit{Stat. Sin.} \textbf{2011}, \textit{21}, 5--42.
+
+\bibitem{Ballesteros2015}
+Ballesteros, M.; Bohnet, B.; Mille, S.; Wanner, L. Data-Driven Sentence Generation with Non-Isomorphic Trees. In Proceedings of the 2015 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT), Denver, CO, USA, 2015; pp. 387--397.
+
+\bibitem{Reimers2017}
+Reimers, N.; Gurevych, I. Reporting Score Distributions Makes a Difference: Performance Study of LSTM-Networks for Sequence Tagging. In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing (EMNLP), Copenhagen, Denmark, 2017; pp. 338--348.
+
+\bibitem{Conneau2020}
+Conneau, A.; Khandelwal, K.; Goyal, N.; Chaudhary, V.; Wenzek, G.; Guzm\'an, F.; Grave, E.; Ott, M.; Zettlemoyer, L.; Stoyanov, V. Unsupervised Cross-Lingual Representation Learning at Scale. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL), Online, 2020; pp. 8440--8451.
+
+\bibitem{Kondratyuk2019}
+Kondratyuk, D.; Straka, M. 75 Languages, 1 Model: Parsing Universal Dependencies Universally. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP-IJCNLP), Hong Kong, China, 2019; pp. 2779--2795.
+
+\end{thebibliography}
+
+\end{document}

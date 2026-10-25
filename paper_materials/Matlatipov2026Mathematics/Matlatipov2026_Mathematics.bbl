@@ -1,0 +1,771 @@
+\begin{thebibliography}{999}
+
+\bibitem[de~Marneffe et~al.(2021)de~Marneffe, Manning, Nivre, and
+  Zeman]{deMarneffe2021}
+de~Marneffe, M.C.; Manning, C.D.; Nivre, J.; Zeman, D.
+\newblock Universal {D}ependencies.
+\newblock {\em Comput. Linguist.} {\bf 2021}, {\em 47},~255--308.
+\newblock {\url{https://doi.org/10.1162/coli_a_00402}}.
+
+\bibitem[Chen et~al.(2023)Chen, Qiu, Liu, Xue, and Cai]{Chen2023DualGCN}
+Chen, J.; Qiu, Z.; Liu, J.; Xue, Y.; Cai, Q.
+\newblock Syntactic Structure-Enhanced Dual Graph Convolutional Network for
+  Aspect-Level Sentiment Classification.
+\newblock {\em Mathematics} {\bf 2023}, {\em 11},~3877.
+\newblock {\url{https://doi.org/10.3390/math11183877}}.
+
+\bibitem[Yang et~al.(2022)Yang, Dai, Xue, Zeng, and Liu]{Yang2022DepPOS}
+Yang, J.; Dai, A.; Xue, Y.; Zeng, B.; Liu, X.
+\newblock Syntactically Enhanced Dependency-POS Weighted Graph Convolutional
+  Network for Aspect-Based Sentiment Analysis.
+\newblock {\em Mathematics} {\bf 2022}, {\em 10},~3353.
+\newblock {\url{https://doi.org/10.3390/math10183353}}.
+
+\bibitem[{Qing-dao-er-ji} et~al.(2022){Qing-dao-er-ji}, Cheng, and
+  Pang]{Qingdaoerji2022Mongolian}
+{Qing-dao-er-ji}, R.; Cheng, K.; Pang, R.
+\newblock Research on Traditional Mongolian-Chinese Neural Machine Translation
+  Based on Dependency Syntactic Information and Transformer Model.
+\newblock {\em Appl. Sci.} {\bf 2022}, {\em 12},~10074.
+\newblock {\url{https://doi.org/10.3390/app121910074}}.
+
+\bibitem[Donaj and Sepesy~Maučec(2022)]{Donaj2022MSD}
+Donaj, G.; Sepesy~Maučec, M.
+\newblock On the Use of Morpho-Syntactic Description Tags in Neural Machine
+  Translation with Small and Large Training Corpora.
+\newblock {\em Mathematics} {\bf 2022}, {\em 10},~1608.
+\newblock {\url{https://doi.org/10.3390/math10091608}}.
+
+\bibitem[Nazirova et~al.(2026)Nazirova, Madetbayeva, Mirzayeva, and
+  Islomova]{Nazirova2026}
+Nazirova, E.{\relax Sh}.; Madetbayeva, N.B.; Mirzayeva, F.{\relax Sh}.;
+  Islomova, M.B.
+\newblock A Mathematical Model for the Automatic Extraction of Idioms in
+  {T}urkic Languages.
+\newblock {\em Probl. Comput. Appl. Math.} {\bf 2026}, {\em 74},~152--170.
+\newblock {\url{https://doi.org/10.71310/pcam.4_74.2026.10}}.
+
+\bibitem[Akhmedjanova(2026)]{Akhmedjanova2026}
+Akhmedjanova, D.A.
+\newblock A Semantic Linking Model for {T}urkic Languages: A
+  Fairness-Constrained Cross-Lingual Approach for Low-Resource Settings.
+\newblock {\em Probl. Comput. Appl. Math.} {\bf 2026}, {\em 74},~171--181.
+\newblock {\url{https://doi.org/10.71310/pcam.4_74.2026.11}}.
+
+\bibitem[McDonald et~al.(2005)McDonald, Pereira, Ribarov, and
+  Haji{\v{c}}]{McDonald2005}
+McDonald, R.; Pereira, F.; Ribarov, K.; Haji{\v{c}}, J.
+\newblock Non-Projective Dependency Parsing Using Spanning Tree Algorithms.
+\newblock In Proceedings of the Human Language Technology Conference and
+  Conference on Empirical Methods in Natural Language Processing, Vancouver,
+  BC, Canada,  2005; pp. 523--530.
+\newblock Available online: \url{https://aclanthology.org/H05-1066/} (accessed
+  on 24 October 2026).
+
+\bibitem[Wang et~al.(2023)Wang, Ouyang, Wang, Liang, and Huang]{Wang2023DMST}
+Wang, Z.; Ouyang, D.; Wang, Y.; Liang, Q.; Huang, Z.
+\newblock Efficient and Effective Directed Minimum Spanning Tree Queries.
+\newblock {\em Mathematics} {\bf 2023}, {\em 11},~2200.
+\newblock {\url{https://doi.org/10.3390/math11092200}}.
+
+\bibitem[Abdelmaguid(2018)]{Abdelmaguid2018MST}
+Abdelmaguid, T.F.
+\newblock An Efficient Mixed Integer Linear Programming Model for the Minimum
+  Spanning Tree Problem.
+\newblock {\em Mathematics} {\bf 2018}, {\em 6},~183.
+\newblock {\url{https://doi.org/10.3390/math6100183}}.
+
+\bibitem[Luo et~al.(2024)Luo, Qin, Wu, Xiong, Xia, and Ke]{Luo2024MST}
+Luo, M.; Qin, H.; Wu, X.; Xiong, C.; Xia, D.; Ke, Y.
+\newblock Efficient Maintenance of Minimum Spanning Trees in Dynamic Weighted
+  Undirected Graphs.
+\newblock {\em Mathematics} {\bf 2024}, {\em 12},~1021.
+\newblock {\url{https://doi.org/10.3390/math12071021}}.
+
+\bibitem[Hosseini(2024)]{Hosseini2024MST}
+Hosseini, A.
+\newblock Uncertainty Modeling and Stability Assessment of Minimum Spanning
+  Trees in Network Design.
+\newblock {\em Mathematics} {\bf 2024}, {\em 12},~3812.
+\newblock {\url{https://doi.org/10.3390/math12233812}}.
+
+\bibitem[Chu and Liu(1965)]{ChuLiu1965}
+Chu, Y.J.; Liu, T.H.
+\newblock On the Shortest Arborescence of a Directed Graph.
+\newblock {\em Sci. Sin.} {\bf 1965}, {\em 14},~1396--1400.
+
+\bibitem[Edmonds(1967)]{Edmonds1967}
+Edmonds, J.
+\newblock Optimum Branchings.
+\newblock {\em J. Res. Natl. Bur. Stand. Sect. B Math. Math. Phys.} {\bf 1967},
+  {\em 71B},~233--240.
+\newblock {\url{https://doi.org/10.6028/jres.071B.032}}.
+
+\bibitem[Tarjan(1977)]{Tarjan1977}
+Tarjan, R.E.
+\newblock Finding Optimum Branchings.
+\newblock {\em Networks} {\bf 1977}, {\em 7},~25--35.
+\newblock {\url{https://doi.org/10.1002/net.3230070103}}.
+
+\bibitem[Zmigrod et~al.(2020)Zmigrod, Vieira, and Cotterell]{Zmigrod2020}
+Zmigrod, R.; Vieira, T.; Cotterell, R.
+\newblock Please Mind the Root: Decoding Arborescences for Dependency Parsing.
+\newblock In Proceedings of the 2020 Conference on Empirical Methods in Natural
+  Language Processing (EMNLP), Online,  2020; pp. 4809--4819.
+\newblock {\url{https://doi.org/10.18653/v1/2020.emnlp-main.390}}.
+
+\bibitem[Stanojevi{\'c} and Cohen(2021)]{Stanojevic2021}
+Stanojevi{\'c}, M.; Cohen, S.B.
+\newblock A Root of a Problem: Optimizing Single-Root Dependency Parsing.
+\newblock In Proceedings of the 2021 Conference on Empirical Methods in Natural
+  Language Processing, Online and Punta Cana, Dominican Republic,  2021; pp.
+  10540--10557.
+\newblock {\url{https://doi.org/10.18653/v1/2021.emnlp-main.823}}.
+
+\bibitem[Kirchhoff(1847)]{Kirchhoff1847}
+Kirchhoff, G.
+\newblock Ueber die {A}ufl{\"o}sung der {G}leichungen, auf welche man bei der
+  {U}ntersuchung der linearen {V}ertheilung galvanischer {S}tr{\"o}me
+  gef{\"u}hrt wird.
+\newblock {\em Ann. Phys.} {\bf 1847}, {\em 148},~497--508.
+\newblock {\url{https://doi.org/10.1002/andp.18471481202}}.
+
+\bibitem[Tutte(1948)]{Tutte1948}
+Tutte, W.T.
+\newblock The Dissection of Equilateral Triangles into Equilateral Triangles.
+\newblock {\em Math. Proc. Camb. Philos. Soc.} {\bf 1948}, {\em 44},~463--482.
+\newblock {\url{https://doi.org/10.1017/S030500410002449X}}.
+
+\bibitem[Koo et~al.(2007)Koo, Globerson, Carreras, and Collins]{Koo2007}
+Koo, T.; Globerson, A.; Carreras, X.; Collins, M.
+\newblock Structured Prediction Models via the Matrix-Tree Theorem.
+\newblock In Proceedings of the 2007 Joint Conference on Empirical Methods in
+  Natural Language Processing and Computational Natural Language Learning
+  (EMNLP-CoNLL), Prague, Czech Republic,  2007; pp. 141--150.
+\newblock Available online: \url{https://aclanthology.org/D07-1015/} (accessed
+  on 24 October 2026).
+
+\bibitem[Smith and Smith(2007)]{SmithSmith2007}
+Smith, D.A.; Smith, N.A.
+\newblock Probabilistic Models of Nonprojective Dependency Trees.
+\newblock In Proceedings of the 2007 Joint Conference on Empirical Methods in
+  Natural Language Processing and Computational Natural Language Learning
+  (EMNLP-CoNLL), Prague, Czech Republic,  2007; pp. 132--140.
+\newblock Available online: \url{https://aclanthology.org/D07-1014/} (accessed
+  on 24 October 2026).
+
+\bibitem[McDonald and Satta(2007)]{McDonaldSatta2007}
+McDonald, R.; Satta, G.
+\newblock On the Complexity of Non-Projective Data-Driven Dependency Parsing.
+\newblock In Proceedings of the Tenth International Conference on Parsing
+  Technologies (IWPT), Prague, Czech Republic,  2007; pp. 121--132.
+\newblock {\url{https://doi.org/10.3115/1621410.1621426}}.
+
+\bibitem[Zmigrod et~al.(2021)Zmigrod, Vieira, and Cotterell]{Zmigrod2021}
+Zmigrod, R.; Vieira, T.; Cotterell, R.
+\newblock Efficient Computation of Expectations under Spanning Tree
+  Distributions.
+\newblock {\em Trans. Assoc. Comput. Linguist.} {\bf 2021}, {\em 9},~675--690.
+\newblock {\url{https://doi.org/10.1162/tacl_a_00391}}.
+
+\bibitem[Dozat and Manning(2017)]{Dozat2017}
+Dozat, T.; Manning, C.D.
+\newblock Deep Biaffine Attention for Neural Dependency Parsing.
+\newblock In Proceedings of the 5th International Conference on Learning
+  Representations (ICLR), Toulon, France,  2017.
+\newblock Available online: \url{https://arxiv.org/abs/1611.01734} (accessed on
+  25 October 2026).
+
+\bibitem[Qi et~al.(2020)Qi, Zhang, Zhang, Bolton, and Manning]{Qi2020}
+Qi, P.; Zhang, Y.; Zhang, Y.; Bolton, J.; Manning, C.D.
+\newblock Stanza: A {P}ython Natural Language Processing Toolkit for Many Human
+  Languages.
+\newblock In Proceedings of the 58th Annual Meeting of the Association for
+  Computational Linguistics: System Demonstrations, Online,  2020; pp.
+  101--108.
+\newblock {\url{https://doi.org/10.18653/v1/2020.acl-demos.14}}.
+
+\bibitem[Akhundjanova and Talamo(2025)]{Akhundjanova2025}
+Akhundjanova, A.; Talamo, L.
+\newblock Universal {D}ependencies Treebank for {U}zbek.
+\newblock In Proceedings of the 3rd Workshop on Resources and Representations
+  for Under-Resourced Languages and Domains (RESOURCEFUL-2025), Tallinn,
+  Estonia,  2025; pp. 1--6.
+\newblock Available online:
+  \url{https://aclanthology.org/2025.resourceful-1.1/} (accessed on 24 October
+  2026).
+
+\bibitem[Matlatipov et~al.(2026)Matlatipov, Aripov, Bobokandov, and
+  Matlatipov]{MatlatipovDiB2026}
+Matlatipov, S.; Aripov, M.; Bobokandov, M.; Matlatipov, G.
+\newblock Annotated {U}niversal {D}ependencies Dataset for Literary and
+  Educational {U}zbek Texts.
+\newblock {\em Data Brief} {\bf 2026}, {\em 66},~112857.
+\newblock {\url{https://doi.org/10.1016/j.dib.2026.112857}}.
+
+\bibitem[Matlatipov and Aripov(2026)]{MatlatipovLREC2026}
+Matlatipov, S.; Aripov, M.
+\newblock {UzUDT}: {U}zbek {U}niversal {D}ependencies Treebank.
+\newblock In Proceedings of the 15th Language Resources and Evaluation
+  Conference (LREC 2026), Palma de Mallorca, Spain,  2026; pp. 11642--11649.
+\newblock {\url{https://doi.org/10.63317/2uedjqezjxn5}}.
+
+\bibitem[Matlatipov and Kurbanova(2026)]{MatlatipovUSBEREIT2026a}
+Matlatipov, S.; Kurbanova, M.
+\newblock A Gold-Standard Dependency Treebank for the {U}zbek Language.
+\newblock In Proceedings of the 2026 IEEE Ural-Siberian Conference on
+  Biomedical Engineering, Radioelectronics and Information Technology
+  (USBEREIT), Yekaterinburg, Russia,  2026; pp. 1--3.
+\newblock {\url{https://doi.org/10.1109/USBEREIT70063.2026.11580531}}.
+
+\bibitem[Mamasaidov and Shopulatov(2023)]{Mamasaidov2023}
+Mamasaidov, M.; Shopulatov, A.
+\newblock {TahrirchiBERT} Base: A Pretrained Language Model for {U}zbek.
+\newblock Hugging Face model repository,  2023.
+\newblock Available online:
+  \url{https://huggingface.co/tahrirchi/tahrirchi-bert-base} (accessed on 25
+  October 2026).
+
+\bibitem[Kuriyozov et~al.(2024)Kuriyozov, Vilares, and
+  G{\'o}mez-Rodr{\'i}guez]{Kuriyozov2024}
+Kuriyozov, E.; Vilares, D.; G{\'o}mez-Rodr{\'i}guez, C.
+\newblock {BERTbek}: A Pretrained Language Model for {U}zbek.
+\newblock In Proceedings of the 3rd Annual Meeting of the Special Interest
+  Group on Under-Resourced Languages @ LREC-COLING 2024, Torino, Italy,  2024;
+  pp. 33--44.
+\newblock Available online: \url{https://aclanthology.org/2024.sigul-1.5/}
+  (accessed on 24 October 2026).
+
+\bibitem[Salaev(2024)]{Salaev2024}
+Salaev, U.
+\newblock {UzMorphAnalyser}: A Morphological Analysis Model for the {U}zbek
+  Language Using Inflectional Endings.
+\newblock {\em AIP Conf. Proc.} {\bf 2024}, {\em 3244},~030058.
+\newblock {\url{https://doi.org/10.1063/5.0241461}}.
+
+\bibitem[Mengliev et~al.(2021)Mengliev, Barakhnin, and
+  Abdurakhmonova]{Mengliev2021Uzbek}
+Mengliev, D.; Barakhnin, V.; Abdurakhmonova, N.
+\newblock Development of Intellectual Web System for Morph Analyzing of Uzbek
+  Words.
+\newblock {\em Appl. Sci.} {\bf 2021}, {\em 11},~9117.
+\newblock {\url{https://doi.org/10.3390/app11199117}}.
+
+\bibitem[Madatov et~al.(2025)Madatov, Sattarova, and Vičič]{Madatov2025Uzbek}
+Madatov, K.; Sattarova, S.; Vičič, J.
+\newblock TF-IDF-Based Classification of Uzbek Educational Texts.
+\newblock {\em Appl. Sci.} {\bf 2025}, {\em 15},~10808.
+\newblock {\url{https://doi.org/10.3390/app151910808}}.
+
+\bibitem[Saidov et~al.(2026)Saidov, Barakhnin, Saparbaev, Narmuratov, Manzura,
+  Zilolakhon, and Atajanova]{Saidov2026Uzbek}
+Saidov, B.; Barakhnin, V.; Saparbaev, R.; Narmuratov, Z.; Manzura, R.;
+  Zilolakhon, R.; Atajanova, A.
+\newblock A Hybrid NER–Sentiment Model for Uzbek Texts: Integrating Lexical,
+  Deep Learning, and Entity-Based Approaches.
+\newblock {\em Big Data Cogn. Comput.} {\bf 2026}, {\em 10},~92.
+\newblock {\url{https://doi.org/10.3390/bdcc10030092}}.
+
+\bibitem[Matlatipov(2026)]{MatlatipovNLDB2027}
+Matlatipov, S.
+\newblock Towards Robust {U}zbek Neural Dependency Parsing: Cross-Treebank
+  Training. In {\em Natural Language Processing and Information Systems};
+  Cabrio, E.; Monteiro, E., Eds.; Springer: Cham, Switzerland,  2026; pp.
+  204--218.
+\newblock {\url{https://doi.org/10.1007/978-3-032-29532-3_15}}.
+
+\bibitem[Matlatipov et~al.(2026)Matlatipov, Ismoilova, and
+  Aripov]{MatlatipovEDM2026}
+Matlatipov, S.; Ismoilova, M.; Aripov, M.
+\newblock Graph-Based vs Transition-Based Dependency Parsing for {U}zbek.
+\newblock In Proceedings of the 2026 IEEE 27th International Conference of
+  Young Professionals in Electron Devices and Materials (EDM), Altai, Russia,
+  2026; pp. 1--6.
+\newblock {\url{https://doi.org/10.1109/EDM69524.2026.11632281}}.
+
+\bibitem[Matlatipov(2026)]{MatlatipovUSBEREIT2026b}
+Matlatipov, S.
+\newblock Neural Morphosyntactic Tagging and Dependency Parsing for {U}zbek.
+\newblock In Proceedings of the 2026 IEEE Ural-Siberian Conference on
+  Biomedical Engineering, Radioelectronics and Information Technology
+  (USBEREIT), Yekaterinburg, Russia,  2026; pp. 1--4.
+\newblock {\url{https://doi.org/10.1109/USBEREIT70063.2026.11580890}}.
+
+\bibitem[Ferrer-i Cancho(2004)]{FerreriCancho2004}
+Ferrer-i Cancho, R.
+\newblock Euclidean Distance between Syntactically Linked Words.
+\newblock {\em Phys. Rev. E} {\bf 2004}, {\em 70},~056135.
+\newblock {\url{https://doi.org/10.1103/PhysRevE.70.056135}}.
+
+\bibitem[Ferrer-i Cancho et~al.(2018)Ferrer-i Cancho, G{\'o}mez-Rodr{\'i}guez,
+  and Esteban]{FerreriCancho2018}
+Ferrer-i Cancho, R.; G{\'o}mez-Rodr{\'i}guez, C.; Esteban, J.L.
+\newblock Are Crossing Dependencies Really Scarce?
+\newblock {\em Phys. A} {\bf 2018}, {\em 493},~311--329.
+\newblock {\url{https://doi.org/10.1016/j.physa.2017.10.048}}.
+
+\bibitem[Ferrer-i Cancho et~al.(2022)Ferrer-i Cancho, G{\'o}mez-Rodr{\'i}guez,
+  Esteban, and Alemany-Puig]{FerreriCancho2022}
+Ferrer-i Cancho, R.; G{\'o}mez-Rodr{\'i}guez, C.; Esteban, J.L.; Alemany-Puig,
+  L.
+\newblock Optimality of Syntactic Dependency Distances.
+\newblock {\em Phys. Rev. E} {\bf 2022}, {\em 105},~014308.
+\newblock {\url{https://doi.org/10.1103/PhysRevE.105.014308}}.
+
+\bibitem[Dell'Amico et~al.(2024)Dell'Amico, Jamal, and
+  Montemanni]{DellAmico2024Arborescence}
+Dell'Amico, M.; Jamal, J.; Montemanni, R.
+\newblock Compact Models to Solve the Precedence-Constrained Minimum-Cost
+  Arborescence Problem with Waiting Times.
+\newblock {\em Algorithms} {\bf 2024}, {\em 17},~12.
+\newblock {\url{https://doi.org/10.3390/a17010012}}.
+
+\bibitem[Pr{\"u}fer(1918)]{Prufer1918}
+Pr{\"u}fer, H.
+\newblock Neuer {B}eweis eines {S}atzes {\"u}ber {P}ermutationen.
+\newblock {\em Arch. Math. Phys.} {\bf 1918}, {\em 27},~742--744.
+
+\bibitem[Moon(1970)]{Moon1970}
+Moon, J.W.
+\newblock {\em Counting Labelled Trees}; Vol.~1, {\em Canadian Mathematical
+  Monographs}, Canadian Mathematical Congress: Montreal, QC, Canada,  1970.
+
+\bibitem[Pitman(1999)]{Pitman1999}
+Pitman, J.
+\newblock Coalescent Random Forests.
+\newblock {\em J. Comb. Theory Ser. A} {\bf 1999}, {\em 85},~165--193.
+\newblock {\url{https://doi.org/10.1006/jcta.1998.2919}}.
+
+\bibitem[Flajolet and Sedgewick(2009)]{FlajoletSedgewick2009}
+Flajolet, P.; Sedgewick, R.
+\newblock {\em Analytic Combinatorics}; Cambridge University Press: Cambridge,
+  UK,  2009.
+\newblock {\url{https://doi.org/10.1017/CBO9780511801655}}.
+
+\bibitem[Flajolet and Noy(1999)]{FlajoletNoy1999}
+Flajolet, P.; Noy, M.
+\newblock Analytic Combinatorics of Non-Crossing Configurations.
+\newblock {\em Discrete Math.} {\bf 1999}, {\em 204},~203--229.
+\newblock {\url{https://doi.org/10.1016/S0012-365X(98)00372-0}}.
+
+\bibitem[{OEIS Foundation Inc}()]{OEIS_A006013}
+{OEIS Foundation Inc}.
+\newblock Sequence {A006013}, a(n) = binomial(3n+1, n)/(n+1), The On-Line
+  Encyclopedia of Integer Sequences.
+\newblock Available online: \url{https://oeis.org/A006013} (accessed on 25
+  October 2026).
+
+\bibitem[Kuhlmann(2013)]{Kuhlmann2013}
+Kuhlmann, M.
+\newblock Mildly Non-Projective Dependency Grammar.
+\newblock {\em Comput. Linguist.} {\bf 2013}, {\em 39},~355--387.
+\newblock {\url{https://doi.org/10.1162/COLI_a_00125}}.
+
+\bibitem[Qi and Cerone(2018)]{Qi2018FussCatalan}
+Qi, F.; Cerone, P.
+\newblock Some Properties of the Fuss–Catalan Numbers.
+\newblock {\em Mathematics} {\bf 2018}, {\em 6},~277.
+\newblock {\url{https://doi.org/10.3390/math6120277}}.
+
+\bibitem[Selim et~al.(2025)Selim, Saracevic, Stosic, Aydin, and
+  Zajmović]{Selim2025Angulations}
+Selim, A.; Saracevic, M.; Stosic, L.; Aydin, O.; Zajmović, M.
+\newblock Bidirectional Algorithms for Polygon Triangulations and (m +
+  2)-Angulations via Fuss–Catalan Numbers.
+\newblock {\em Mathematics} {\bf 2025}, {\em 13},~3837.
+\newblock {\url{https://doi.org/10.3390/math13233837}}.
+
+\bibitem[Selim et~al.(2026)Selim, Saracevic, and Susuri]{Selim2026CFG}
+Selim, A.; Saracevic, M.; Susuri, A.
+\newblock Limiting the Number of Possible CFG Derivative Trees During Grammar
+  Induction with Catalan Numbers.
+\newblock {\em Mathematics} {\bf 2026}, {\em 14},~249.
+\newblock {\url{https://doi.org/10.3390/math14020249}}.
+
+\bibitem[R{\'e}nyi and Szekeres(1967)]{Renyi1967}
+R{\'e}nyi, A.; Szekeres, G.
+\newblock On the Height of Trees.
+\newblock {\em J. Aust. Math. Soc.} {\bf 1967}, {\em 7},~497--507.
+\newblock {\url{https://doi.org/10.1017/S1446788700004432}}.
+
+\bibitem[Huillet(2025)]{Huillet2025Binomial}
+Huillet, T.E.
+\newblock Statistical Aspects of Two Classes of Random Binomial Trees and
+  Forests.
+\newblock {\em Mathematics} {\bf 2025}, {\em 13},~291.
+\newblock {\url{https://doi.org/10.3390/math13020291}}.
+
+\bibitem[Ferrer-i Cancho(2019)]{FerreriCancho2019}
+Ferrer-i Cancho, R.
+\newblock The Sum of Edge Lengths in Random Linear Arrangements.
+\newblock {\em J. Stat. Mech.} {\bf 2019}, {\em 2019},~053401.
+\newblock {\url{https://doi.org/10.1088/1742-5468/ab11e2}}.
+
+\bibitem[G{\'o}mez-Rodr{\'i}guez and Ferrer-i Cancho(2017)]{GomezRodriguez2017}
+G{\'o}mez-Rodr{\'i}guez, C.; Ferrer-i Cancho, R.
+\newblock Scarcity of Crossing Dependencies: A Direct Outcome of a Specific
+  Constraint?
+\newblock {\em Phys. Rev. E} {\bf 2017}, {\em 96},~062304.
+\newblock {\url{https://doi.org/10.1103/PhysRevE.96.062304}}.
+
+\bibitem[Alemany-Puig and Ferrer-i Cancho(2022)]{AlemanyPuig2022}
+Alemany-Puig, L.; Ferrer-i Cancho, R.
+\newblock Linear-Time Calculation of the Expected Sum of Edge Lengths in Random
+  Projective Linearizations of Trees.
+\newblock {\em Comput. Linguist.} {\bf 2022}, {\em 48},~491--516.
+\newblock {\url{https://doi.org/10.1162/coli_a_00442}}.
+
+\bibitem[Li and Liu(2025)]{Li2025Directionality}
+Li, W.; Liu, H.
+\newblock Interactions Among Morphology, Word Order, and Syntactic
+  Directionality: Evidence from 55 Languages.
+\newblock {\em Entropy} {\bf 2025}, {\em 27},~1128.
+\newblock {\url{https://doi.org/10.3390/e27111128}}.
+
+\bibitem[Wu(2017)]{Wu2017Transformed}
+Wu, F.
+\newblock Dependency Parsing with Transformed Feature.
+\newblock {\em Information} {\bf 2017}, {\em 8},~13.
+\newblock {\url{https://doi.org/10.3390/info8010013}}.
+
+\bibitem[Li et~al.(2022)Li, Fan, Sataer, Gao, and Gui]{Li2022SemanticDP}
+Li, B.; Fan, Y.; Sataer, Y.; Gao, Z.; Gui, Y.
+\newblock Improving Semantic Dependency Parsing with Higher-Order Information
+  Encoded by Graph Neural Networks.
+\newblock {\em Appl. Sci.} {\bf 2022}, {\em 12},~4089.
+\newblock {\url{https://doi.org/10.3390/app12084089}}.
+
+\bibitem[Li et~al.(2023)Li, Shu, Wang, Liu, Li, and Peng]{Li2023DATMT}
+Li, R.; Shu, S.; Wang, S.; Liu, Y.; Li, Y.; Peng, M.
+\newblock DAT-MT Accelerated Graph Fusion Dependency Parsing Model for Small
+  Samples in Professional Fields.
+\newblock {\em Entropy} {\bf 2023}, {\em 25},~1444.
+\newblock {\url{https://doi.org/10.3390/e25101444}}.
+
+\bibitem[Zhang et~al.(2020)Zhang, Li, and Zhang]{Zhang2020TreeCRF}
+Zhang, Y.; Li, Z.; Zhang, M.
+\newblock Efficient Second-Order {TreeCRF} for Neural Dependency Parsing.
+\newblock In Proceedings of the 58th Annual Meeting of the Association for
+  Computational Linguistics, Online,  2020; pp. 3295--3305.
+\newblock {\url{https://doi.org/10.18653/v1/2020.acl-main.302}}.
+
+\bibitem[Eisner(1996)]{Eisner1996}
+Eisner, J.M.
+\newblock Three New Probabilistic Models for Dependency Parsing: An
+  Exploration.
+\newblock In Proceedings of the 16th International Conference on Computational
+  Linguistics (COLING), Copenhagen, Denmark,  1996; pp. 340--345.
+\newblock Available online: \url{https://aclanthology.org/C96-1058/} (accessed
+  on 24 October 2026).
+
+\bibitem[Yang and Tu(2022)]{Yang2022}
+Yang, S.; Tu, K.
+\newblock Headed-Span-Based Projective Dependency Parsing.
+\newblock In Proceedings of the 60th Annual Meeting of the Association for
+  Computational Linguistics (Volume 1: Long Papers), Dublin, Ireland,  2022;
+  pp. 2188--2200.
+\newblock {\url{https://doi.org/10.18653/v1/2022.acl-long.155}}.
+
+\bibitem[Amini et~al.(2023)Amini, Liu, and Cotterell]{Amini2023}
+Amini, A.; Liu, T.; Cotterell, R.
+\newblock Hexatagging: Projective Dependency Parsing as Tagging.
+\newblock In Proceedings of the 61st Annual Meeting of the Association for
+  Computational Linguistics (Volume 2: Short Papers), Toronto, ON, Canada,
+  2023; pp. 1453--1464.
+\newblock {\url{https://doi.org/10.18653/v1/2023.acl-short.124}}.
+
+\bibitem[Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova]{Devlin2019}
+Devlin, J.; Chang, M.W.; Lee, K.; Toutanova, K.
+\newblock {BERT}: Pre-Training of Deep Bidirectional Transformers for Language
+  Understanding.
+\newblock In Proceedings of the 2019 Conference of the North American Chapter
+  of the Association for Computational Linguistics: Human Language Technologies
+  (NAACL-HLT), Minneapolis, MN, USA,  2019; pp. 4171--4186.
+\newblock {\url{https://doi.org/10.18653/v1/N19-1423}}.
+
+\bibitem[Al-Ghamdi et~al.(2023)Al-Ghamdi, Al-Khalifa, and
+  Al-Salman]{AlGhamdi2023Arabic}
+Al-Ghamdi, S.; Al-Khalifa, H.; Al-Salman, A.
+\newblock Fine-Tuning BERT-Based Pre-Trained Models for Arabic Dependency
+  Parsing.
+\newblock {\em Appl. Sci.} {\bf 2023}, {\em 13},~4225.
+\newblock {\url{https://doi.org/10.3390/app13074225}}.
+
+\bibitem[T{\"u}rk et~al.(2022)T{\"u}rk, Atmaca, {\"O}zate{\c{s}}, Berk, Bedir,
+  K{\"o}ksal, {\"O}zt{\"u}rk~Ba{\c{s}}aran, G{\"u}ng{\"o}r, and
+  {\"O}zg{\"u}r]{Turk2022}
+T{\"u}rk, U.; Atmaca, F.; {\"O}zate{\c{s}}, {\c{S}}.B.; Berk, G.; Bedir, S.T.;
+  K{\"o}ksal, A.; {\"O}zt{\"u}rk~Ba{\c{s}}aran, B.; G{\"u}ng{\"o}r, T.;
+  {\"O}zg{\"u}r, A.
+\newblock Resources for {T}urkish Dependency Parsing: Introducing the {BOUN}
+  Treebank and the {BoAT} Annotation Tool.
+\newblock {\em Lang. Resour. Eval.} {\bf 2022}, {\em 56},~259--307.
+\newblock {\url{https://doi.org/10.1007/s10579-021-09558-0}}.
+
+\bibitem[Martín~Arista(2024)]{MartinArista2024UD}
+Martín~Arista, J.
+\newblock Toward a Universal Dependencies Treebank of Old English: Representing
+  the Morphological Relatedness of Un-Derivatives.
+\newblock {\em Languages} {\bf 2024}, {\em 9},~76.
+\newblock {\url{https://doi.org/10.3390/languages9030076}}.
+
+\bibitem[Rust et~al.(2021)Rust, Pfeiffer, Vuli{\'c}, Ruder, and
+  Gurevych]{Rust2021}
+Rust, P.; Pfeiffer, J.; Vuli{\'c}, I.; Ruder, S.; Gurevych, I.
+\newblock How Good is Your Tokenizer? {O}n the Monolingual Performance of
+  Multilingual Language Models.
+\newblock In Proceedings of the 59th Annual Meeting of the Association for
+  Computational Linguistics and the 11th International Joint Conference on
+  Natural Language Processing (Volume 1: Long Papers), Online,  2021; pp.
+  3118--3135.
+\newblock {\url{https://doi.org/10.18653/v1/2021.acl-long.243}}.
+
+\bibitem[Tukeyev and Rysbek(2026)]{Tukeyev2026CSE}
+Tukeyev, U.; Rysbek, B.
+\newblock Morphology-Aware Segmentation and Tokenization for Turkic Languages:
+  A CSE-Guided Framework (The Kazakh Case).
+\newblock {\em Information} {\bf 2026}, {\em 17},~128.
+\newblock {\url{https://doi.org/10.3390/info17020128}}.
+
+\bibitem[Ibiyev(2026)]{Ibiyev2026Segmentation}
+Ibiyev, K.
+\newblock Cross-Family Stem-Suffix Boundary Segmentation in Turkic and Uralic
+  Languages: A ByT5 Study of Azerbaijani, Turkish, Hungarian, and Finnish.
+\newblock {\em Information} {\bf 2026}, {\em 17},~745.
+\newblock {\url{https://doi.org/10.3390/info17080745}}.
+
+\bibitem[Mussakhojayeva et~al.(2023)Mussakhojayeva, Dauletbek, Yeshpanov, and
+  Varol]{Mussakhojayeva2023Turkic}
+Mussakhojayeva, S.; Dauletbek, K.; Yeshpanov, R.; Varol, H.A.
+\newblock Multilingual Speech Recognition for Turkic Languages.
+\newblock {\em Information} {\bf 2023}, {\em 14},~74.
+\newblock {\url{https://doi.org/10.3390/info14020074}}.
+
+\bibitem[Kadyrbek et~al.(2025)Kadyrbek, Tuimebayev, Mansurova, and
+  Viegas]{Kadyrbek2025Kazakh}
+Kadyrbek, N.; Tuimebayev, Z.; Mansurova, M.; Viegas, V.
+\newblock The Development of Small-Scale Language Models for Low-Resource
+  Languages, with a Focus on Kazakh and Direct Preference Optimization.
+\newblock {\em Big Data Cogn. Comput.} {\bf 2025}, {\em 9},~137.
+\newblock {\url{https://doi.org/10.3390/bdcc9050137}}.
+
+\bibitem[Maimaiti et~al.(2017)Maimaiti, Wumaier, Abiderexiti, and
+  Yibulayin]{Maimaiti2017Uyghur}
+Maimaiti, M.; Wumaier, A.; Abiderexiti, K.; Yibulayin, T.
+\newblock Bidirectional Long Short-Term Memory Network with a Conditional
+  Random Field Layer for Uyghur Part-Of-Speech Tagging.
+\newblock {\em Information} {\bf 2017}, {\em 8},~157.
+\newblock {\url{https://doi.org/10.3390/info8040157}}.
+
+\bibitem[Sel and Hanbay(2024)]{Sel2024Adaptation}
+Sel, I.; Hanbay, D.
+\newblock Efficient Adaptation: Enhancing Multilingual Models for Low-Resource
+  Language Translation.
+\newblock {\em Mathematics} {\bf 2024}, {\em 12},~3149.
+\newblock {\url{https://doi.org/10.3390/math12193149}}.
+
+\bibitem[Guo et~al.(2017)Guo, Pleiss, Sun, and Weinberger]{Guo2017}
+Guo, C.; Pleiss, G.; Sun, Y.; Weinberger, K.Q.
+\newblock On Calibration of Modern Neural Networks.
+\newblock In Proceedings of the 34th International Conference on Machine
+  Learning (ICML); Precup, D.; Teh, Y.W., Eds., Sydney, Australia,  2017;
+  Vol.~70, {\em Proceedings of Machine Learning Research}, pp. 1321--1330.
+\newblock Available online: \url{https://proceedings.mlr.press/v70/guo17a.html}
+  (accessed on 24 October 2026).
+
+\bibitem[Cao et~al.(2024)Cao, Li, Kim, and Shin]{Cao2024SWA}
+Cao, Z.; Li, Y.; Kim, D.H.; Shin, B.S.
+\newblock Deep Neural Network Confidence Calibration from Stochastic Weight
+  Averaging.
+\newblock {\em Electronics} {\bf 2024}, {\em 13},~503.
+\newblock {\url{https://doi.org/10.3390/electronics13030503}}.
+
+\bibitem[Zadrozny and Elkan(2002)]{Zadrozny2002}
+Zadrozny, B.; Elkan, C.
+\newblock Transforming Classifier Scores into Accurate Multiclass Probability
+  Estimates.
+\newblock In Proceedings of the Eighth {ACM} {SIGKDD} International Conference
+  on Knowledge Discovery and Data Mining, Edmonton, AB, Canada,  2002; pp.
+  694--699.
+\newblock {\url{https://doi.org/10.1145/775047.775151}}.
+
+\bibitem[Brier(1950)]{Brier1950}
+Brier, G.W.
+\newblock Verification of Forecasts Expressed in Terms of Probability.
+\newblock {\em Mon. Weather Rev.} {\bf 1950}, {\em 78},~1--3.
+\newblock
+  {\url{https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2}}.
+
+\bibitem[Kompa et~al.(2021)Kompa, Snoek, and Beam]{Kompa2021Coverage}
+Kompa, B.; Snoek, J.; Beam, A.L.
+\newblock Empirical Frequentist Coverage of Deep Learning Uncertainty
+  Quantification Procedures.
+\newblock {\em Entropy} {\bf 2021}, {\em 23},~1608.
+\newblock {\url{https://doi.org/10.3390/e23121608}}.
+
+\bibitem[Nguyen and O'Connor(2015)]{NguyenOConnor2015}
+Nguyen, K.; O'Connor, B.
+\newblock Posterior Calibration and Exploratory Analysis for Natural Language
+  Processing Models.
+\newblock In Proceedings of the 2015 Conference on Empirical Methods in Natural
+  Language Processing, Lisbon, Portugal,  2015; pp. 1587--1598.
+\newblock {\url{https://doi.org/10.18653/v1/D15-1182}}.
+
+\bibitem[Kuleshov and Liang(2015)]{KuleshovLiang2015}
+Kuleshov, V.; Liang, P.
+\newblock Calibrated Structured Prediction.
+\newblock In Proceedings of the Advances in Neural Information Processing
+  Systems 28 (NIPS 2015), Montreal, QC, Canada,  2015.
+\newblock Available online:
+  \url{https://papers.nips.cc/paper/5658-calibrated-structured-prediction}
+  (accessed on 25 October 2026).
+
+\bibitem[Jagannatha and Yu(2020)]{JagannathaYu2020}
+Jagannatha, A.; Yu, H.
+\newblock Calibrating Structured Output Predictors for Natural Language
+  Processing.
+\newblock In Proceedings of the 58th Annual Meeting of the Association for
+  Computational Linguistics, Online,  2020; pp. 2078--2092.
+\newblock {\url{https://doi.org/10.18653/v1/2020.acl-main.188}}.
+
+\bibitem[Burr and Skurikhin(2015)]{Burr2015CRF}
+Burr, T.; Skurikhin, A.
+\newblock Conditional Random Fields for Pattern Recognition Applied to
+  Structured Data.
+\newblock {\em Algorithms} {\bf 2015}, {\em 8},~466--483.
+\newblock {\url{https://doi.org/10.3390/a8030466}}.
+
+\bibitem[Smith and Eisner(2006)]{SmithEisner2006}
+Smith, D.A.; Eisner, J.
+\newblock Minimum Risk Annealing for Training Log-Linear Models.
+\newblock In Proceedings of the {COLING/ACL} 2006 Main Conference Poster
+  Sessions, Sydney, Australia,  2006; pp. 787--794.
+\newblock Available online: \url{https://aclanthology.org/P06-2101/} (accessed
+  on 25 October 2026).
+
+\bibitem[Wainwright and Jordan(2008)]{WainwrightJordan2008}
+Wainwright, M.J.; Jordan, M.I.
+\newblock Graphical Models, Exponential Families, and Variational Inference.
+\newblock {\em Found. Trends Mach. Learn.} {\bf 2008}, {\em 1},~1--305.
+\newblock {\url{https://doi.org/10.1561/2200000001}}.
+
+\bibitem[Jin et~al.(2022)Jin, Ding, and Zhou]{Jin2022Metamorphic}
+Jin, L.; Ding, Z.; Zhou, H.
+\newblock Evaluation of Chinese Natural Language Processing System Based on
+  Metamorphic Testing.
+\newblock {\em Mathematics} {\bf 2022}, {\em 10},~1276.
+\newblock {\url{https://doi.org/10.3390/math10081276}}.
+
+\bibitem[Berg-Kirkpatrick et~al.(2012)Berg-Kirkpatrick, Burkett, and
+  Klein]{BergKirkpatrick2012}
+Berg-Kirkpatrick, T.; Burkett, D.; Klein, D.
+\newblock An Empirical Investigation of Statistical Significance in {NLP}.
+\newblock In Proceedings of the 2012 Joint Conference on Empirical Methods in
+  Natural Language Processing and Computational Natural Language Learning, Jeju
+  Island, Republic of Korea,  2012; pp. 995--1005.
+\newblock Available online: \url{https://aclanthology.org/D12-1091/} (accessed
+  on 24 October 2026).
+
+\bibitem[Holm(1979)]{Holm1979}
+Holm, S.
+\newblock A Simple Sequentially Rejective Multiple Test Procedure.
+\newblock {\em Scand. J. Stat.} {\bf 1979}, {\em 6},~65--70.
+
+\bibitem[Cayley(1889)]{Cayley1889}
+Cayley, A.
+\newblock A Theorem on Trees.
+\newblock {\em Q. J. Pure Appl. Math.} {\bf 1889}, {\em 23},~376--378.
+
+\bibitem[Graham et~al.(1994)Graham, Knuth, and Patashnik]{Graham1994}
+Graham, R.L.; Knuth, D.E.; Patashnik, O.
+\newblock {\em Concrete Mathematics: A Foundation for Computer Science}, 2nd
+  ed.; Addison-Wesley: Reading, MA, USA,  1994.
+
+\bibitem[{OEIS Foundation Inc}({\natexlab{a}})]{OEIS_A001764}
+{OEIS Foundation Inc}.
+\newblock Sequence {A001764}, a(n) = binomial(3n, n)/(2n + 1), The On-Line
+  Encyclopedia of Integer Sequences.
+\newblock Available online: \url{https://oeis.org/A001764} (accessed on 25
+  October 2026).
+
+\bibitem[{OEIS Foundation Inc}({\natexlab{b}})]{OEIS_A371395}
+{OEIS Foundation Inc}.
+\newblock Sequence {A371395}, Triangle read by rows: T(n, k) = binomial(n + k,
+  k) binomial(2n - k, n - k)/(n + 1), The On-Line Encyclopedia of Integer
+  Sequences.
+\newblock Available online: \url{https://oeis.org/A371395} (accessed on 25
+  October 2026).
+
+\bibitem[Clauset et~al.(2009)Clauset, Shalizi, and Newman]{Clauset2009}
+Clauset, A.; Shalizi, C.R.; Newman, M.E.J.
+\newblock Power-Law Distributions in Empirical Data.
+\newblock {\em SIAM Rev.} {\bf 2009}, {\em 51},~661--703.
+\newblock {\url{https://doi.org/10.1137/070710111}}.
+
+\bibitem[Varin et~al.(2011)Varin, Reid, and Firth]{Varin2011}
+Varin, C.; Reid, N.; Firth, D.
+\newblock An Overview of Composite Likelihood Methods.
+\newblock {\em Stat. Sin.} {\bf 2011}, {\em 21},~5--42.
+
+\bibitem[Qi et~al.(2018)Qi, Dozat, Zhang, and Manning]{Qi2018}
+Qi, P.; Dozat, T.; Zhang, Y.; Manning, C.D.
+\newblock Universal Dependency Parsing from Scratch.
+\newblock In Proceedings of the {CoNLL} 2018 Shared Task: Multilingual Parsing
+  from Raw Text to {U}niversal {D}ependencies, Brussels, Belgium,  2018; pp.
+  160--170.
+\newblock {\url{https://doi.org/10.18653/v1/K18-2016}}.
+
+\bibitem[Conneau et~al.(2020)Conneau, Khandelwal, Goyal, Chaudhary, Wenzek,
+  Guzm{\'a}n, Grave, Ott, Zettlemoyer, and Stoyanov]{Conneau2020}
+Conneau, A.; Khandelwal, K.; Goyal, N.; Chaudhary, V.; Wenzek, G.; Guzm{\'a}n,
+  F.; Grave, E.; Ott, M.; Zettlemoyer, L.; Stoyanov, V.
+\newblock Unsupervised Cross-Lingual Representation Learning at Scale.
+\newblock In Proceedings of the 58th Annual Meeting of the Association for
+  Computational Linguistics, Online,  2020; pp. 8440--8451.
+\newblock {\url{https://doi.org/10.18653/v1/2020.acl-main.747}}.
+
+\bibitem[Higham(2002)]{Higham2002}
+Higham, N.J.
+\newblock {\em Accuracy and Stability of Numerical Algorithms}, 2nd ed.;
+  Society for Industrial and Applied Mathematics: Philadelphia, PA, USA,  2002.
+\newblock {\url{https://doi.org/10.1137/1.9780898718027}}.
+
+\bibitem[Nocedal and Wright(2006)]{Nocedal2006}
+Nocedal, J.; Wright, S.J.
+\newblock {\em Numerical Optimization}, 2nd ed.; Springer: New York, NY, USA,
+  2006.
+\newblock {\url{https://doi.org/10.1007/978-0-387-40065-5}}.
+
+\bibitem[Barndorff-Nielsen(1978)]{BarndorffNielsen1978}
+Barndorff-Nielsen, O.
+\newblock {\em Information and Exponential Families in Statistical Theory};
+  John Wiley \& Sons: Chichester, UK,  1978.
+
+\bibitem[Kingma and Ba(2015)]{Kingma2015}
+Kingma, D.P.; Ba, J.
+\newblock Adam: A Method for Stochastic Optimization.
+\newblock In Proceedings of the 3rd International Conference on Learning
+  Representations (ICLR), San Diego, CA, USA,  2015.
+\newblock Available online: \url{https://arxiv.org/abs/1412.6980} (accessed on
+  25 October 2026).
+
+\bibitem[Reddi et~al.(2018)Reddi, Kale, and Kumar]{Reddi2018}
+Reddi, S.J.; Kale, S.; Kumar, S.
+\newblock On the Convergence of {A}dam and Beyond.
+\newblock In Proceedings of the 6th International Conference on Learning
+  Representations (ICLR), Vancouver, BC, Canada,  2018.
+\newblock Available online: \url{https://openreview.net/forum?id=ryQu7f-RZ}
+  (accessed on 25 October 2026).
+
+\bibitem[Zeman et~al.(2018)Zeman, Haji{\v{c}}, Popel, Potthast, Straka, Ginter,
+  Nivre, and Petrov]{Zeman2018}
+Zeman, D.; Haji{\v{c}}, J.; Popel, M.; Potthast, M.; Straka, M.; Ginter, F.;
+  Nivre, J.; Petrov, S.
+\newblock {CoNLL} 2018 Shared Task: Multilingual Parsing from Raw Text to
+  {U}niversal {D}ependencies.
+\newblock In Proceedings of the {CoNLL} 2018 Shared Task: Multilingual Parsing
+  from Raw Text to {U}niversal {D}ependencies, Brussels, Belgium,  2018; pp.
+  1--21.
+\newblock {\url{https://doi.org/10.18653/v1/K18-2001}}.
+
+\end{thebibliography}
