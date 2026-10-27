@@ -213,7 +213,3 @@ wordvec/uz/pretrain/fasttext_cc_uz_300.pt
 wordvec/uz/fasttext/cc.uz.300.vec.gz
 wordvec/uz/fasttext/cc.uz.300.vec
 paper_materials/UzUDT_DiB_Revised_Clean.docx
-
-# Conference presentations (kept locally, not tracked)
-paper_materials/EDM_presentation/
-paper_materials/NLDB_presentation/
