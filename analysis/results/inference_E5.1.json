@@ -1,0 +1,253 @@
+{
+ "model": "E5.1",
+ "tagger": "uz_uzudt_E5.1_tagger.pt",
+ "parser": "uz_uzudt_E5.1_parser.pt",
+ "parser_config": {
+  "bert_model": "elmurod1202/bertbek-news-big-cased",
+  "bert_pooling": "mean",
+  "pretrain": false,
+  "train_file": "data/depparse/uz_uzudt.train.in.conllu"
+ },
+ "tagger_config": {
+  "bert_model": "elmurod1202/bertbek-news-big-cased",
+  "bert_pooling": "mean",
+  "pretrain": false,
+  "train_file": "data/pos/uz_uzudt.train.in.conllu"
+ },
+ "load_time_s": 3.6216293330071494,
+ "dev_check": {
+  "UPOS": 100.0,
+  "XPOS": 100.0,
+  "UFeats": 100.0,
+  "UAS": 73.76,
+  "LAS": 60.56,
+  "CLAS": 57.56,
+  "MLAS": 54.87,
+  "BLEX": 57.56
+ },
+ "dev_logged_best_LAS": 60.56,
+ "results": {
+  "uzudt.clean.gold_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 0.007454416016116738,
+   "scoring_time_s": 1.623125624959357,
+   "decoders": {
+    "greedy": {
+     "UAS": 75.96310363537711,
+     "LAS": 60.173629951166575,
+     "valid_tree_share": 94.88636363636364,
+     "projective_share": 83.52272727272727,
+     "ms_per_sentence": 0.0029448446267369118
+    },
+    "cle_one_root": {
+     "UAS": 76.01736299511666,
+     "LAS": 60.28214867064569,
+     "valid_tree_share": 100.0,
+     "projective_share": 86.36363636363636,
+     "ms_per_sentence": 0.056948176114184956
+    },
+    "cle_multi_root": {
+     "UAS": 76.01736299511666,
+     "LAS": 60.28214867064569,
+     "valid_tree_share": 99.43181818181817,
+     "projective_share": 85.79545454545455,
+     "ms_per_sentence": 0.05260890677825294
+    },
+    "eisner": {
+     "UAS": 75.90884427563755,
+     "LAS": 60.11937059142702,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2657064383542589
+    },
+    "mbr": {
+     "UAS": 76.12588171459576,
+     "LAS": 60.33640803038524,
+     "valid_tree_share": 100.0,
+     "projective_share": 86.93181818181817,
+     "ms_per_sentence": 0.1211420775772157
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 76.02,
+    "LAS": 60.28,
+    "CLAS": 54.58,
+    "MLAS": 52.28,
+    "BLEX": 54.58
+   }
+  },
+  "uzudt.clean.pred_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 1.4331111250212416,
+   "scoring_time_s": 1.6681217919103801,
+   "decoders": {
+    "greedy": {
+     "UAS": 73.19587628865979,
+     "LAS": 54.74769397721107,
+     "valid_tree_share": 92.61363636363636,
+     "projective_share": 84.0909090909091,
+     "ms_per_sentence": 0.003043734812474048
+    },
+    "cle_one_root": {
+     "UAS": 73.03309820944114,
+     "LAS": 54.63917525773196,
+     "valid_tree_share": 100.0,
+     "projective_share": 89.77272727272727,
+     "ms_per_sentence": 0.05899243445707146
+    },
+    "cle_multi_root": {
+     "UAS": 73.03309820944114,
+     "LAS": 54.63917525773196,
+     "valid_tree_share": 98.86363636363636,
+     "projective_share": 88.63636363636364,
+     "ms_per_sentence": 0.05295596135759049
+    },
+    "eisner": {
+     "UAS": 72.97883884970157,
+     "LAS": 54.5849158979924,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2645620360536586
+    },
+    "mbr": {
+     "UAS": 73.08735756918068,
+     "LAS": 54.63917525773196,
+     "valid_tree_share": 100.0,
+     "projective_share": 89.77272727272727,
+     "ms_per_sentence": 0.12200896625555205
+    }
+   },
+   "tagging": {
+    "UPOS": 85.34997287032013,
+    "XPOS": 84.86163863266414,
+    "UFeats": 66.14215952251763
+   },
+   "official_cle_one_root": {
+    "UPOS": 85.35,
+    "XPOS": 84.86,
+    "UFeats": 68.58,
+    "UAS": 73.03,
+    "LAS": 54.64,
+    "CLAS": 48.9,
+    "MLAS": 28.14,
+    "BLEX": 48.9
+   }
+  },
+  "ut.clean.gold_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 0.005538541940040886,
+   "scoring_time_s": 1.2066946669947356,
+   "decoders": {
+    "greedy": {
+     "UAS": 65.58761435608726,
+     "LAS": 52.07600281491907,
+     "valid_tree_share": 94.8905109489051,
+     "projective_share": 88.32116788321169,
+     "ms_per_sentence": 0.0030073026249552294
+    },
+    "cle_one_root": {
+     "UAS": 65.51724137931035,
+     "LAS": 51.93525686136523,
+     "valid_tree_share": 100.0,
+     "projective_share": 92.7007299270073,
+     "ms_per_sentence": 0.056148431073520744
+    },
+    "cle_multi_root": {
+     "UAS": 65.51724137931035,
+     "LAS": 51.93525686136523,
+     "valid_tree_share": 100.0,
+     "projective_share": 92.7007299270073,
+     "ms_per_sentence": 0.05257542221297096
+    },
+    "eisner": {
+     "UAS": 65.58761435608726,
+     "LAS": 52.005629838142156,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.22795769797270968
+    },
+    "mbr": {
+     "UAS": 65.58761435608726,
+     "LAS": 51.93525686136523,
+     "valid_tree_share": 100.0,
+     "projective_share": 91.97080291970804,
+     "ms_per_sentence": 0.1130684764960604
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 65.52,
+    "LAS": 51.94,
+    "CLAS": 50.26,
+    "MLAS": 48.21,
+    "BLEX": 50.26
+   }
+  },
+  "ut.clean.pred_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 1.0671028340002522,
+   "scoring_time_s": 1.1825444999849424,
+   "decoders": {
+    "greedy": {
+     "UAS": 63.3356790992259,
+     "LAS": 47.501759324419425,
+     "valid_tree_share": 95.62043795620438,
+     "projective_share": 86.86131386861314,
+     "ms_per_sentence": 0.0028938418730114495
+    },
+    "cle_one_root": {
+     "UAS": 63.54679802955665,
+     "LAS": 47.71287825475017,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.51094890510949,
+     "ms_per_sentence": 0.0555319354672284
+    },
+    "cle_multi_root": {
+     "UAS": 63.47642505277973,
+     "LAS": 47.64250527797326,
+     "valid_tree_share": 99.27007299270073,
+     "projective_share": 89.78102189781022,
+     "ms_per_sentence": 0.049652334601774706
+    },
+    "eisner": {
+     "UAS": 64.109781843772,
+     "LAS": 48.2054890921886,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.22566576325164658
+    },
+    "mbr": {
+     "UAS": 63.54679802955665,
+     "LAS": 47.71287825475017,
+     "valid_tree_share": 100.0,
+     "projective_share": 91.24087591240875,
+     "ms_per_sentence": 0.1145221631171821
+    }
+   },
+   "tagging": {
+    "UPOS": 82.33638282899366,
+    "XPOS": 0.28149190710767064,
+    "UFeats": 36.734693877551024
+   },
+   "official_cle_one_root": {
+    "UPOS": 82.34,
+    "XPOS": 0.28,
+    "UFeats": 38.0,
+    "UAS": 63.55,
+    "LAS": 47.71,
+    "CLAS": 45.83,
+    "MLAS": 10.06,
+    "BLEX": 45.83
+   }
+  }
+ }
+}

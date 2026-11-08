@@ -1,0 +1,331 @@
+{
+ "tokenizers": {
+  "TahrirchiBERT": {
+   "words": 13512,
+   "mean_pieces": 1.9017169923031378,
+   "share_single_piece": 0.4258436944937833,
+   "share_3plus": 0.26124925991711073,
+   "max_pieces": 7,
+   "inflected_words": 5620,
+   "last_piece_inside_suffix": 0.3806049822064057,
+   "last_piece_contains_whole_suffix": 0.902491103202847,
+   "mean_weight_on_last_piece_under_mean_pooling": 0.6643766387549691
+  },
+  "BERTbek": {
+   "words": 13512,
+   "mean_pieces": 1.5471432800473652,
+   "share_single_piece": 0.6810242747187685,
+   "share_3plus": 0.1512729425695678,
+   "max_pieces": 8,
+   "inflected_words": 5620,
+   "last_piece_inside_suffix": 0.41548042704626337,
+   "last_piece_contains_whole_suffix": 0.7946619217081851,
+   "mean_weight_on_last_piece_under_mean_pooling": 0.809528831514844
+  },
+  "mBERT": {
+   "words": 13512,
+   "mean_pieces": 2.3236382474837183,
+   "share_single_piece": 0.3425843694493783,
+   "share_3plus": 0.41429840142095914,
+   "max_pieces": 9,
+   "inflected_words": 5620,
+   "last_piece_inside_suffix": 0.7695729537366548,
+   "last_piece_contains_whole_suffix": 0.5724199288256228,
+   "mean_weight_on_last_piece_under_mean_pooling": 0.5842381434022197
+  },
+  "XLM-R": {
+   "words": 13512,
+   "mean_pieces": 2.0731941977501482,
+   "share_single_piece": 0.32830076968620486,
+   "share_3plus": 0.27760509177027826,
+   "max_pieces": 9,
+   "inflected_words": 5620,
+   "last_piece_inside_suffix": 0.6103202846975089,
+   "last_piece_contains_whole_suffix": 0.7868327402135231,
+   "mean_weight_on_last_piece_under_mean_pooling": 0.608677413140113
+  }
+ },
+ "examples": {
+  "TahrirchiBERT": [
+   [
+    "sahnangda",
+    [
+     "sa",
+     "hna",
+     "ngda"
+    ]
+   ],
+   [
+    "o'ynatib",
+    [
+     "'",
+     "'",
+     "yna",
+     "tib"
+    ]
+   ],
+   [
+    "o'ynatasan",
+    [
+     "'",
+     "'",
+     "ynat",
+     "a",
+     "san"
+    ]
+   ],
+   [
+    "kirgizib",
+    [
+     "kir",
+     "gi",
+     "zib"
+    ]
+   ],
+   [
+    "chizasan",
+    [
+     "chi",
+     "za",
+     "san"
+    ]
+   ],
+   [
+    "zamondoshlaringni",
+    [
+     "zamon",
+     "doshlari",
+     "ngni"
+    ]
+   ],
+   [
+    "oʻtkazib",
+    [
+     "ʻ",
+     "ʻ",
+     "tkazib"
+    ]
+   ],
+   [
+    "boʻlgan",
+    [
+     "boʻ",
+     "ʻ",
+     "lgan"
+    ]
+   ]
+  ],
+  "BERTbek": [
+   [
+    "sahnangda",
+    [
+     "sahna",
+     "ng",
+     "da"
+    ]
+   ],
+   [
+    "o'ynatib",
+    [
+     "o",
+     "'",
+     "yna",
+     "tib"
+    ]
+   ],
+   [
+    "o'ynatasan",
+    [
+     "o",
+     "'",
+     "yna",
+     "ta",
+     "san"
+    ]
+   ],
+   [
+    "kirgizib",
+    [
+     "kir",
+     "giz",
+     "ib"
+    ]
+   ],
+   [
+    "zamondoshlaringni",
+    [
+     "zamon",
+     "doshlari",
+     "ng",
+     "ni"
+    ]
+   ],
+   [
+    "oʻtkazib",
+    [
+     "oʻ",
+     "t",
+     "kaz",
+     "ib"
+    ]
+   ],
+   [
+    "soʻzlatasan",
+    [
+     "so",
+     "ʻ",
+     "z",
+     "lat",
+     "asan"
+    ]
+   ],
+   [
+    "qayg'ularning",
+    [
+     "qayg",
+     "'",
+     "ularning"
+    ]
+   ]
+  ],
+  "mBERT": [
+   [
+    "hayotining",
+    [
+     "hay",
+     "oti",
+     "ning"
+    ]
+   ],
+   [
+    "sahnangda",
+    [
+     "sah",
+     "nang",
+     "da"
+    ]
+   ],
+   [
+    "odamlarni",
+    [
+     "oda",
+     "mlar",
+     "ni"
+    ]
+   ],
+   [
+    "o'ynatib",
+    [
+     "o",
+     "'",
+     "yn",
+     "ati",
+     "b"
+    ]
+   ],
+   [
+    "yurakni",
+    [
+     "yu",
+     "rak",
+     "ni"
+    ]
+   ],
+   [
+    "larzaga",
+    [
+     "lar",
+     "zag",
+     "a"
+    ]
+   ],
+   [
+    "o'ynatasan",
+    [
+     "o",
+     "'",
+     "yn",
+     "atas",
+     "an"
+    ]
+   ],
+   [
+    "yashagan",
+    [
+     "ya",
+     "sha",
+     "gan"
+    ]
+   ]
+  ],
+  "XLM-R": [
+   [
+    "sahnangda",
+    [
+     "sah",
+     "nang",
+     "da"
+    ]
+   ],
+   [
+    "o'ynatib",
+    [
+     "o",
+     "'",
+     "yna",
+     "tib"
+    ]
+   ],
+   [
+    "yurakni",
+    [
+     "y",
+     "ura",
+     "kni"
+    ]
+   ],
+   [
+    "larzaga",
+    [
+     "la",
+     "rza",
+     "ga"
+    ]
+   ],
+   [
+    "o'ynatasan",
+    [
+     "o",
+     "'",
+     "y",
+     "nata",
+     "san"
+    ]
+   ],
+   [
+    "yashagan",
+    [
+     "ya",
+     "sha",
+     "gan"
+    ]
+   ],
+   [
+    "kirgizib",
+    [
+     "kir",
+     "gi",
+     "zib"
+    ]
+   ],
+   [
+    "chizasan",
+    [
+     "chi",
+     "za",
+     "san"
+    ]
+   ]
+  ]
+ }
+}

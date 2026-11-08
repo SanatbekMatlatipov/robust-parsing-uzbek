@@ -92,7 +92,7 @@ print("\n")
 
 
 # ---------------------------------------------------------
-# 3. GENERATE FIGURE 1: UPOS DISTRIBUTION
+# 3. UPOS DISTRIBUTION
 # ---------------------------------------------------------
 tags = {}
 for tag in root.findall("./tags/tag"):
@@ -115,13 +115,13 @@ centre_circle = plt.Circle((0,0),0.70,fc='white')
 plt.gcf().gca().add_artist(centre_circle)
 plt.title('Distribution of Universal POS Tags', fontsize=14, fontweight='bold')
 plt.tight_layout()
-plt.savefig('Figure1_UPOS_Distribution.png', dpi=300)
-print("Generated Figure1_UPOS_Distribution.png")
+plt.savefig('upos_distribution.png', dpi=300)
+print("Generated upos_distribution.png")
 plt.show()
 
 
 # ---------------------------------------------------------
-# 4. GENERATE FIGURE 2: DEPENDENCY RELATIONS
+# 4. DEPENDENCY RELATIONS
 # ---------------------------------------------------------
 deps = {}
 for dep in root.findall("./deps/dep"):
@@ -145,13 +145,13 @@ for bar in bars:
     plt.text(bar.get_x() + bar.get_width()/2., height + 5, f'{int(height)}', ha='center', va='bottom', fontsize=8)
 
 plt.tight_layout()
-plt.savefig('Figure2_DepRel_Frequency.png', dpi=300)
-print("Generated Figure2_DepRel_Frequency.png")
+plt.savefig('deprel_frequency.png', dpi=300)
+print("Generated deprel_frequency.png")
 plt.show()
 
 
 # ---------------------------------------------------------
-# 5. GENERATE FIGURE 3: TOP MORPHOLOGICAL FEATURES
+# 5. TOP MORPHOLOGICAL FEATURES
 # ---------------------------------------------------------
 feats = {}
 for feat in root.findall("./feats/feat"):
@@ -174,6 +174,6 @@ plt.xlabel('Frequency')
 plt.grid(axis='x', linestyle='--', alpha=0.7, zorder=0)
 
 plt.tight_layout()
-plt.savefig('Figure3_Morph_Features.png', dpi=300)
-print("Generated Figure3_Morph_Features.png")
+plt.savefig('morph_features.png', dpi=300)
+print("Generated morph_features.png")
 plt.show()

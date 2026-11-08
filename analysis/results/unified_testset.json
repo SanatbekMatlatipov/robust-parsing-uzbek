@@ -1,0 +1,22 @@
+{
+ "uzudt": {
+  "official_test": 188,
+  "shared_with_old_test": 178,
+  "after_exact_filter": 177,
+  "near_duplicates_removed": 1,
+  "final_sentences": 176,
+  "final_words": 1843,
+  "removed_ids": [
+   "s130"
+  ]
+ },
+ "ut": {
+  "official_test": 137,
+  "after_exact_filter": 137,
+  "near_duplicates_removed": 0,
+  "final_sentences": 137,
+  "final_words": 1421,
+  "removed_ids": []
+ },
+ "jaccard_threshold": 0.8
+}

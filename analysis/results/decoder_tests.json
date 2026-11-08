@@ -1,0 +1,140 @@
+{
+ "brute_force": [
+  {
+   "n": 2,
+   "trials": 200,
+   "count_ok": 200,
+   "cle_ok": 200,
+   "cle_multi_ok": 200,
+   "eisner_ok": 200,
+   "logZ_max_abs_err": 4.440892098500626e-16,
+   "mu_max_abs_err": 3.3306690738754696e-16,
+   "entropy_max_abs_err": 7.771561172376096e-16,
+   "mbr_ok": 200
+  },
+  {
+   "n": 3,
+   "trials": 200,
+   "count_ok": 200,
+   "cle_ok": 200,
+   "cle_multi_ok": 200,
+   "eisner_ok": 200,
+   "logZ_max_abs_err": 6.661338147750939e-16,
+   "mu_max_abs_err": 5.551115123125783e-16,
+   "entropy_max_abs_err": 1.1102230246251565e-15,
+   "mbr_ok": 200
+  },
+  {
+   "n": 4,
+   "trials": 200,
+   "count_ok": 200,
+   "cle_ok": 200,
+   "cle_multi_ok": 200,
+   "eisner_ok": 200,
+   "logZ_max_abs_err": 1.3322676295501878e-15,
+   "mu_max_abs_err": 8.881784197001252e-16,
+   "entropy_max_abs_err": 1.3322676295501878e-15,
+   "mbr_ok": 200
+  },
+  {
+   "n": 5,
+   "trials": 200,
+   "count_ok": 200,
+   "cle_ok": 200,
+   "cle_multi_ok": 200,
+   "eisner_ok": 200,
+   "logZ_max_abs_err": 1.1102230246251565e-15,
+   "mu_max_abs_err": 1.1102230246251565e-15,
+   "entropy_max_abs_err": 2.6645352591003757e-15,
+   "mbr_ok": 200
+  },
+  {
+   "n": 6,
+   "trials": 40,
+   "count_ok": 40,
+   "cle_ok": 40,
+   "cle_multi_ok": 40,
+   "eisner_ok": 40,
+   "logZ_max_abs_err": 6.661338147750939e-16,
+   "mu_max_abs_err": 2.1094237467877974e-15,
+   "entropy_max_abs_err": 2.6645352591003757e-15,
+   "mbr_ok": 40
+  },
+  {
+   "n": 7,
+   "trials": 40,
+   "count_ok": 40,
+   "cle_ok": 40,
+   "cle_multi_ok": 40,
+   "eisner_ok": 40,
+   "logZ_max_abs_err": 1.3322676295501878e-15,
+   "mu_max_abs_err": 9.103828801926284e-15,
+   "entropy_max_abs_err": 3.552713678800501e-15,
+   "mbr_ok": 40
+  }
+ ],
+ "unit_weight_determinant": [
+  {
+   "n": 1,
+   "det": 1,
+   "n^(n-1)": 1
+  },
+  {
+   "n": 2,
+   "det": 2,
+   "n^(n-1)": 2
+  },
+  {
+   "n": 3,
+   "det": 9,
+   "n^(n-1)": 9
+  },
+  {
+   "n": 4,
+   "det": 64,
+   "n^(n-1)": 64
+  },
+  {
+   "n": 5,
+   "det": 625,
+   "n^(n-1)": 625
+  },
+  {
+   "n": 6,
+   "det": 7776,
+   "n^(n-1)": 7776
+  },
+  {
+   "n": 7,
+   "det": 117649,
+   "n^(n-1)": 117649
+  },
+  {
+   "n": 8,
+   "det": 2097152,
+   "n^(n-1)": 2097152
+  },
+  {
+   "n": 9,
+   "det": 43046721,
+   "n^(n-1)": 43046721
+  },
+  {
+   "n": 10,
+   "det": 1000000000,
+   "n^(n-1)": 1000000000
+  },
+  {
+   "n": 11,
+   "det": 25937424601,
+   "n^(n-1)": 25937424601
+  },
+  {
+   "n": 12,
+   "det": 743008370688,
+   "n^(n-1)": 743008370688
+  }
+ ],
+ "gradient_check_max_abs_err": 4.4081735484091666e-10,
+ "all_passed": true
+}

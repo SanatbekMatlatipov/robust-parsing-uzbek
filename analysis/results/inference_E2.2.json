@@ -1,0 +1,475 @@
+{
+ "model": "E2.2",
+ "tagger": "uz_combined_E2.2_tagger.pt",
+ "parser": "uz_combined_E2.2_parser.pt",
+ "parser_config": {
+  "bert_model": "tahrirchi/tahrirchi-bert-base",
+  "bert_pooling": "last",
+  "pretrain": false,
+  "train_file": "data/depparse/merged/uz_combined.train.in.conllu"
+ },
+ "tagger_config": {
+  "bert_model": "tahrirchi/tahrirchi-bert-base",
+  "bert_pooling": "last",
+  "pretrain": false,
+  "train_file": "data/pos/merged/uz_combined.train.in.conllu"
+ },
+ "load_time_s": 3.6141386249801144,
+ "dev_check": {
+  "UPOS": 100.0,
+  "XPOS": 100.0,
+  "UFeats": 100.0,
+  "UAS": 72.39,
+  "LAS": 63.81,
+  "CLAS": 60.82,
+  "MLAS": 58.25,
+  "BLEX": 60.82
+ },
+ "dev_logged_best_LAS": 63.81,
+ "results": {
+  "uzudt.clean.gold_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 0.009257333003915846,
+   "scoring_time_s": 1.836752666044049,
+   "decoders": {
+    "greedy": {
+     "UAS": 74.06402604449268,
+     "LAS": 60.44492674986435,
+     "valid_tree_share": 87.5,
+     "projective_share": 81.81818181818183,
+     "ms_per_sentence": 0.002945768673353913
+    },
+    "cle_one_root": {
+     "UAS": 74.22680412371135,
+     "LAS": 60.44492674986435,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.9090909090909,
+     "ms_per_sentence": 0.07395500473318284
+    },
+    "cle_multi_root": {
+     "UAS": 74.33532284319045,
+     "LAS": 60.66196418882257,
+     "valid_tree_share": 94.88636363636364,
+     "projective_share": 87.5,
+     "ms_per_sentence": 0.05912851603087884
+    },
+    "eisner": {
+     "UAS": 74.06402604449268,
+     "LAS": 60.33640803038524,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2672431225867265
+    },
+    "mbr": {
+     "UAS": 74.2810634834509,
+     "LAS": 60.44492674986435,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.3409090909091,
+     "ms_per_sentence": 0.12185177580580453
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 74.23,
+    "LAS": 60.44,
+    "CLAS": 54.74,
+    "MLAS": 53.33,
+    "BLEX": 54.74
+   }
+  },
+  "uzudt.clean.pred_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 1.5812058750307187,
+   "scoring_time_s": 1.7336523329140618,
+   "decoders": {
+    "greedy": {
+     "UAS": 73.03309820944114,
+     "LAS": 56.10417797069994,
+     "valid_tree_share": 90.3409090909091,
+     "projective_share": 85.22727272727273,
+     "ms_per_sentence": 0.0029192901406945152
+    },
+    "cle_one_root": {
+     "UAS": 73.08735756918068,
+     "LAS": 55.995659251220836,
+     "valid_tree_share": 100.0,
+     "projective_share": 93.18181818181817,
+     "ms_per_sentence": 0.06880942105040462
+    },
+    "cle_multi_root": {
+     "UAS": 73.08735756918068,
+     "LAS": 56.10417797069994,
+     "valid_tree_share": 97.1590909090909,
+     "projective_share": 91.47727272727273,
+     "ms_per_sentence": 0.05628549446224827
+    },
+    "eisner": {
+     "UAS": 73.35865436787846,
+     "LAS": 56.21269669017906,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.26257791019319976
+    },
+    "mbr": {
+     "UAS": 73.14161692892024,
+     "LAS": 55.995659251220836,
+     "valid_tree_share": 100.0,
+     "projective_share": 92.61363636363636,
+     "ms_per_sentence": 0.12006629549432546
+    }
+   },
+   "tagging": {
+    "UPOS": 87.30330982094411,
+    "XPOS": 82.8540423223006,
+    "UFeats": 65.7080846446012
+   },
+   "official_cle_one_root": {
+    "UPOS": 87.3,
+    "XPOS": 82.85,
+    "UFeats": 68.69,
+    "UAS": 73.09,
+    "LAS": 56.0,
+    "CLAS": 50.28,
+    "MLAS": 28.53,
+    "BLEX": 50.28
+   }
+  },
+  "uzudt.matched.gold_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 0.007154959021136165,
+   "scoring_time_s": 1.8821486249798909,
+   "decoders": {
+    "greedy": {
+     "UAS": 74.11828540423222,
+     "LAS": 60.60770482908302,
+     "valid_tree_share": 88.06818181818183,
+     "projective_share": 83.52272727272727,
+     "ms_per_sentence": 0.0029003256878984925
+    },
+    "cle_one_root": {
+     "UAS": 74.00976668475312,
+     "LAS": 60.66196418882257,
+     "valid_tree_share": 100.0,
+     "projective_share": 93.75,
+     "ms_per_sentence": 0.06975264246152206
+    },
+    "cle_multi_root": {
+     "UAS": 74.06402604449268,
+     "LAS": 60.77048290830168,
+     "valid_tree_share": 95.45454545454545,
+     "projective_share": 89.77272727272727,
+     "ms_per_sentence": 0.05616239584262737
+    },
+    "eisner": {
+     "UAS": 74.22680412371135,
+     "LAS": 60.71622354856213,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.26425137713720853
+    },
+    "mbr": {
+     "UAS": 74.06402604449268,
+     "LAS": 60.66196418882257,
+     "valid_tree_share": 100.0,
+     "projective_share": 92.61363636363636,
+     "ms_per_sentence": 0.11932480265386403
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 74.01,
+    "LAS": 60.66,
+    "CLAS": 54.75,
+    "MLAS": 53.49,
+    "BLEX": 54.75
+   }
+  },
+  "uzudt.matched.pred_tags": {
+   "sentences": 176,
+   "words": 1843,
+   "tagging_time_s": 1.7654932090081275,
+   "scoring_time_s": 1.9126959579298273,
+   "decoders": {
+    "greedy": {
+     "UAS": 72.38198589256646,
+     "LAS": 55.88714053174173,
+     "valid_tree_share": 90.3409090909091,
+     "projective_share": 85.79545454545455,
+     "ms_per_sentence": 0.0030208367124115202
+    },
+    "cle_one_root": {
+     "UAS": 72.43624525230602,
+     "LAS": 55.88714053174173,
+     "valid_tree_share": 100.0,
+     "projective_share": 91.47727272727273,
+     "ms_per_sentence": 0.07548037551301108
+    },
+    "cle_multi_root": {
+     "UAS": 72.49050461204558,
+     "LAS": 56.04991861096039,
+     "valid_tree_share": 96.02272727272727,
+     "projective_share": 88.63636363636364,
+     "ms_per_sentence": 0.0579188073805364
+    },
+    "eisner": {
+     "UAS": 72.65328269126424,
+     "LAS": 55.94139989148128,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.26361079984450375
+    },
+    "mbr": {
+     "UAS": 72.16494845360825,
+     "LAS": 55.83288117200217,
+     "valid_tree_share": 100.0,
+     "projective_share": 91.47727272727273,
+     "ms_per_sentence": 0.12057984118159353
+    }
+   },
+   "tagging": {
+    "UPOS": 87.95442213781877,
+    "XPOS": 82.63700488334237,
+    "UFeats": 65.81660336408031
+   },
+   "official_cle_one_root": {
+    "UPOS": 87.95,
+    "XPOS": 82.64,
+    "UFeats": 68.91,
+    "UAS": 72.44,
+    "LAS": 55.89,
+    "CLAS": 49.98,
+    "MLAS": 28.48,
+    "BLEX": 49.98
+   }
+  },
+  "ut.clean.gold_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 0.005953832995146513,
+   "scoring_time_s": 1.2298902500187978,
+   "decoders": {
+    "greedy": {
+     "UAS": 71.00633356790992,
+     "LAS": 59.39479239971851,
+     "valid_tree_share": 79.56204379562044,
+     "projective_share": 74.45255474452554,
+     "ms_per_sentence": 0.0028932665943773124
+    },
+    "cle_one_root": {
+     "UAS": 71.07670654468684,
+     "LAS": 59.32441942294159,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.51094890510949,
+     "ms_per_sentence": 0.07448153125027018
+    },
+    "cle_multi_root": {
+     "UAS": 71.00633356790992,
+     "LAS": 59.39479239971851,
+     "valid_tree_share": 92.7007299270073,
+     "projective_share": 84.67153284671532,
+     "ms_per_sentence": 0.0601842945074513
+    },
+    "eisner": {
+     "UAS": 71.49894440534834,
+     "LAS": 59.7466572836031,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2264328127604549
+    },
+    "mbr": {
+     "UAS": 70.86558761435609,
+     "LAS": 59.11330049261084,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.51094890510949,
+     "ms_per_sentence": 0.11457693525148134
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 71.08,
+    "LAS": 59.32,
+    "CLAS": 57.57,
+    "MLAS": 55.32,
+    "BLEX": 57.57
+   }
+  },
+  "ut.clean.pred_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 1.063134166994132,
+   "scoring_time_s": 1.1865472499048337,
+   "decoders": {
+    "greedy": {
+     "UAS": 67.98029556650246,
+     "LAS": 54.046446164672766,
+     "valid_tree_share": 79.56204379562044,
+     "projective_share": 73.72262773722628,
+     "ms_per_sentence": 0.0029327543316422585
+    },
+    "cle_one_root": {
+     "UAS": 67.90992258972554,
+     "LAS": 53.83532723434201,
+     "valid_tree_share": 100.0,
+     "projective_share": 88.32116788321169,
+     "ms_per_sentence": 0.07623964648720992
+    },
+    "cle_multi_root": {
+     "UAS": 68.05066854327939,
+     "LAS": 54.046446164672766,
+     "valid_tree_share": 90.51094890510949,
+     "projective_share": 81.75182481751825,
+     "ms_per_sentence": 0.05786525710982127
+    },
+    "eisner": {
+     "UAS": 68.61365235749473,
+     "LAS": 54.11681914144968,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2264832860253153
+    },
+    "mbr": {
+     "UAS": 67.98029556650246,
+     "LAS": 53.764954257565094,
+     "valid_tree_share": 100.0,
+     "projective_share": 88.32116788321169,
+     "ms_per_sentence": 0.11795163273566613
+    }
+   },
+   "tagging": {
+    "UPOS": 86.91062631949332,
+    "XPOS": 93.24419422941591,
+    "UFeats": 74.59535538353272
+   },
+   "official_cle_one_root": {
+    "UPOS": 86.91,
+    "XPOS": 93.24,
+    "UFeats": 75.37,
+    "UAS": 67.91,
+    "LAS": 53.84,
+    "CLAS": 52.55,
+    "MLAS": 35.65,
+    "BLEX": 52.55
+   }
+  },
+  "ut.matched.gold_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 0.00542920792941004,
+   "scoring_time_s": 1.2864350409945473,
+   "decoders": {
+    "greedy": {
+     "UAS": 69.95073891625616,
+     "LAS": 58.33919774806474,
+     "valid_tree_share": 81.02189781021897,
+     "projective_share": 77.37226277372264,
+     "ms_per_sentence": 0.0029094092357550227
+    },
+    "cle_one_root": {
+     "UAS": 69.95073891625616,
+     "LAS": 58.268824771287825,
+     "valid_tree_share": 100.0,
+     "projective_share": 91.24087591240875,
+     "ms_per_sentence": 0.07387197637644997
+    },
+    "cle_multi_root": {
+     "UAS": 69.7396199859254,
+     "LAS": 58.19845179451091,
+     "valid_tree_share": 91.97080291970804,
+     "projective_share": 85.40145985401459,
+     "ms_per_sentence": 0.05710673990938133
+    },
+    "eisner": {
+     "UAS": 70.02111189303308,
+     "LAS": 58.47994370161858,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.2263041083993268
+    },
+    "mbr": {
+     "UAS": 70.30260380014074,
+     "LAS": 58.5503166783955,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.51094890510949,
+     "ms_per_sentence": 0.11717032787328872
+    }
+   },
+   "official_cle_one_root": {
+    "UPOS": 100.0,
+    "XPOS": 100.0,
+    "UFeats": 100.0,
+    "UAS": 69.95,
+    "LAS": 58.27,
+    "CLAS": 56.7,
+    "MLAS": 54.25,
+    "BLEX": 56.7
+   }
+  },
+  "ut.matched.pred_tags": {
+   "sentences": 137,
+   "words": 1421,
+   "tagging_time_s": 1.172780790948309,
+   "scoring_time_s": 1.3138257910031825,
+   "decoders": {
+    "greedy": {
+     "UAS": 67.83954961294863,
+     "LAS": 53.62420830401126,
+     "valid_tree_share": 78.1021897810219,
+     "projective_share": 72.26277372262774,
+     "ms_per_sentence": 0.003338494868337238
+    },
+    "cle_one_root": {
+     "UAS": 67.90992258972554,
+     "LAS": 53.69458128078818,
+     "valid_tree_share": 100.0,
+     "projective_share": 90.51094890510949,
+     "ms_per_sentence": 0.07552561438540473
+    },
+    "cle_multi_root": {
+     "UAS": 67.83954961294863,
+     "LAS": 53.69458128078818,
+     "valid_tree_share": 91.97080291970804,
+     "projective_share": 83.94160583941606,
+     "ms_per_sentence": 0.059861601432309536
+    },
+    "eisner": {
+     "UAS": 67.83954961294863,
+     "LAS": 53.62420830401126,
+     "valid_tree_share": 100.0,
+     "projective_share": 100.0,
+     "ms_per_sentence": 0.22819861990610393
+    },
+    "mbr": {
+     "UAS": 67.76917663617171,
+     "LAS": 53.69458128078818,
+     "valid_tree_share": 100.0,
+     "projective_share": 89.78102189781022,
+     "ms_per_sentence": 0.12056752070648609
+    }
+   },
+   "tagging": {
+    "UPOS": 86.69950738916256,
+    "XPOS": 97.46657283603096,
+    "UFeats": 77.12878254750176
+   },
+   "official_cle_one_root": {
+    "UPOS": 86.7,
+    "XPOS": 97.47,
+    "UFeats": 77.34,
+    "UAS": 67.91,
+    "LAS": 53.69,
+    "CLAS": 52.37,
+    "MLAS": 37.14,
+    "BLEX": 52.37
+   }
+  }
+ }
+}

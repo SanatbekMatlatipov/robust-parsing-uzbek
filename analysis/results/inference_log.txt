@@ -1,0 +1,47 @@
+E1.1 dev 55.28 logged 55.28
+E1.1 uzudt.clean.gold_tags {'greedy': 55.07, 'cle_one_root': 54.91, 'cle_multi_root': 55.07, 'eisner': 54.96, 'mbr': 54.96} official 54.91
+E1.1 uzudt.clean.pred_tags {'greedy': 49.48, 'cle_one_root': 49.38, 'cle_multi_root': 49.48, 'eisner': 49.65, 'mbr': 49.38} official 49.38
+E1.1 ut.clean.gold_tags {'greedy': 43.42, 'cle_one_root': 43.49, 'cle_multi_root': 43.56, 'eisner': 43.28, 'mbr': 43.35} official 43.49
+E1.1 ut.clean.pred_tags {'greedy': 41.03, 'cle_one_root': 41.17, 'cle_multi_root': 41.24, 'eisner': 41.17, 'mbr': 41.17} official 41.17
+E2.1 dev 58.23 logged 58.23
+E2.1 uzudt.clean.gold_tags {'greedy': 58.0, 'cle_one_root': 58.11, 'cle_multi_root': 58.11, 'eisner': 58.17, 'mbr': 57.95} official 58.11
+E2.1 uzudt.clean.pred_tags {'greedy': 52.96, 'cle_one_root': 53.07, 'cle_multi_root': 53.01, 'eisner': 53.61, 'mbr': 52.96} official 53.07
+E2.1 ut.clean.gold_tags {'greedy': 46.8, 'cle_one_root': 46.73, 'cle_multi_root': 46.87, 'eisner': 47.01, 'mbr': 46.66} official 46.73
+E2.1 ut.clean.pred_tags {'greedy': 44.05, 'cle_one_root': 43.98, 'cle_multi_root': 44.12, 'eisner': 44.05, 'mbr': 44.41} official 43.98
+E3.1 dev 55.9 logged 55.9
+E3.1 uzudt.clean.gold_tags {'greedy': 57.89, 'cle_one_root': 57.84, 'cle_multi_root': 57.79, 'eisner': 57.84, 'mbr': 57.73} official 57.84
+E3.1 uzudt.clean.pred_tags {'greedy': 53.01, 'cle_one_root': 53.01, 'cle_multi_root': 53.01, 'eisner': 52.9, 'mbr': 52.9} official 53.01
+E3.1 ut.clean.gold_tags {'greedy': 46.02, 'cle_one_root': 46.09, 'cle_multi_root': 46.16, 'eisner': 46.16, 'mbr': 46.38} official 46.09
+E3.1 ut.clean.pred_tags {'greedy': 41.94, 'cle_one_root': 42.15, 'cle_multi_root': 42.15, 'eisner': 42.08, 'mbr': 42.22} official 42.15
+E5.1 dev 60.56 logged 60.56
+E5.1 uzudt.clean.gold_tags {'greedy': 60.17, 'cle_one_root': 60.28, 'cle_multi_root': 60.28, 'eisner': 60.12, 'mbr': 60.34} official 60.28
+E5.1 uzudt.clean.pred_tags {'greedy': 54.75, 'cle_one_root': 54.64, 'cle_multi_root': 54.64, 'eisner': 54.58, 'mbr': 54.64} official 54.64
+E5.1 ut.clean.gold_tags {'greedy': 52.08, 'cle_one_root': 51.94, 'cle_multi_root': 51.94, 'eisner': 52.01, 'mbr': 51.94} official 51.94
+E5.1 ut.clean.pred_tags {'greedy': 47.5, 'cle_one_root': 47.71, 'cle_multi_root': 47.64, 'eisner': 48.21, 'mbr': 47.71} official 47.71
+E1.2 dev 62.87 logged 62.87
+E1.2 uzudt.clean.gold_tags {'greedy': 57.51, 'cle_one_root': 57.51, 'cle_multi_root': 57.46, 'eisner': 57.62, 'mbr': 57.41} official 57.51
+E1.2 uzudt.clean.pred_tags {'greedy': 51.33, 'cle_one_root': 51.38, 'cle_multi_root': 51.44, 'eisner': 51.6, 'mbr': 51.22} official 51.38
+E1.2 uzudt.matched.gold_tags {'greedy': 58.6, 'cle_one_root': 58.49, 'cle_multi_root': 58.49, 'eisner': 58.87, 'mbr': 58.55} official 58.49
+E1.2 uzudt.matched.pred_tags {'greedy': 53.61, 'cle_one_root': 53.61, 'cle_multi_root': 53.77, 'eisner': 53.61, 'mbr': 53.39} official 53.61
+E1.2 ut.clean.gold_tags {'greedy': 56.93, 'cle_one_root': 57.28, 'cle_multi_root': 57.14, 'eisner': 57.78, 'mbr': 57.21} official 57.28
+E1.2 ut.clean.pred_tags {'greedy': 50.67, 'cle_one_root': 50.6, 'cle_multi_root': 50.67, 'eisner': 51.3, 'mbr': 50.46} official 50.6
+E1.2 ut.matched.gold_tags {'greedy': 57.21, 'cle_one_root': 57.28, 'cle_multi_root': 57.28, 'eisner': 57.71, 'mbr': 57.14} official 57.28
+E1.2 ut.matched.pred_tags {'greedy': 48.7, 'cle_one_root': 48.98, 'cle_multi_root': 49.05, 'eisner': 49.75, 'mbr': 48.98} official 48.98
+E2.2 dev 63.81 logged 63.81
+E2.2 uzudt.clean.gold_tags {'greedy': 60.44, 'cle_one_root': 60.44, 'cle_multi_root': 60.66, 'eisner': 60.34, 'mbr': 60.44} official 60.44
+E2.2 uzudt.clean.pred_tags {'greedy': 56.1, 'cle_one_root': 56.0, 'cle_multi_root': 56.1, 'eisner': 56.21, 'mbr': 56.0} official 56.0
+E2.2 uzudt.matched.gold_tags {'greedy': 60.61, 'cle_one_root': 60.66, 'cle_multi_root': 60.77, 'eisner': 60.72, 'mbr': 60.66} official 60.66
+E2.2 uzudt.matched.pred_tags {'greedy': 55.89, 'cle_one_root': 55.89, 'cle_multi_root': 56.05, 'eisner': 55.94, 'mbr': 55.83} official 55.89
+E2.2 ut.clean.gold_tags {'greedy': 59.39, 'cle_one_root': 59.32, 'cle_multi_root': 59.39, 'eisner': 59.75, 'mbr': 59.11} official 59.32
+E2.2 ut.clean.pred_tags {'greedy': 54.05, 'cle_one_root': 53.84, 'cle_multi_root': 54.05, 'eisner': 54.12, 'mbr': 53.76} official 53.84
+E2.2 ut.matched.gold_tags {'greedy': 58.34, 'cle_one_root': 58.27, 'cle_multi_root': 58.2, 'eisner': 58.48, 'mbr': 58.55} official 58.27
+E2.2 ut.matched.pred_tags {'greedy': 53.62, 'cle_one_root': 53.69, 'cle_multi_root': 53.69, 'eisner': 53.62, 'mbr': 53.69} official 53.69
+E3.2 dev 65.22 logged None
+E3.2 uzudt.clean.gold_tags {'greedy': 60.07, 'cle_one_root': 60.07, 'cle_multi_root': 60.23, 'eisner': 60.12, 'mbr': 60.01} official 60.07
+E3.2 uzudt.clean.pred_tags {'greedy': 54.86, 'cle_one_root': 54.86, 'cle_multi_root': 54.86, 'eisner': 55.02, 'mbr': 54.91} official 54.86
+E3.2 uzudt.matched.gold_tags {'greedy': 60.82, 'cle_one_root': 60.72, 'cle_multi_root': 60.88, 'eisner': 60.66, 'mbr': 60.72} official 60.72
+E3.2 uzudt.matched.pred_tags {'greedy': 55.51, 'cle_one_root': 55.45, 'cle_multi_root': 55.4, 'eisner': 55.56, 'mbr': 55.4} official 55.45
+E3.2 ut.clean.gold_tags {'greedy': 60.17, 'cle_one_root': 60.1, 'cle_multi_root': 60.03, 'eisner': 60.45, 'mbr': 59.96} official 60.1
+E3.2 ut.clean.pred_tags {'greedy': 51.16, 'cle_one_root': 51.23, 'cle_multi_root': 51.23, 'eisner': 51.58, 'mbr': 51.23} official 51.23
+E3.2 ut.matched.gold_tags {'greedy': 59.04, 'cle_one_root': 59.04, 'cle_multi_root': 58.97, 'eisner': 59.39, 'mbr': 59.04} official 59.04
+E3.2 ut.matched.pred_tags {'greedy': 51.44, 'cle_one_root': 51.44, 'cle_multi_root': 51.37, 'eisner': 51.72, 'mbr': 51.51} official 51.44

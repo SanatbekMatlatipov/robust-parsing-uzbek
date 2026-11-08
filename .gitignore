@@ -205,11 +205,29 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-# Project-specific: Large model files
+# Project-specific: large model and vector files
 saved_models/**/*.pt
 saved_models/**/*.bin
 saved_models/spacy/
 wordvec/uz/pretrain/fasttext_cc_uz_300.pt
 wordvec/uz/fasttext/cc.uz.300.vec.gz
 wordvec/uz/fasttext/cc.uz.300.vec
-paper_materials/UzUDT_DiB_Revised_Clean.docx
+wordvec/uz/cc.uz.300.bin
+wordvec/uz/cc.uz.300.vec.gz
+wordvec/uz/cc.uz.300.vec
+
+# Local environments and caches
+.venv*/
+.cache/huggingface/
+
+# Local documents and notes (not part of the code base)
+paper_materials/
+*.tex
+*.bib
+*.bbl
+/*.md
+!/README.md
+/*.png
+
+# Run logs of the analysis scripts
+analysis/results/*.log
