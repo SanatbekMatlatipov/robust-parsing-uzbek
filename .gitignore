@@ -231,3 +231,7 @@ paper_materials/
 
 # Run logs of the analysis scripts
 analysis/results/*.log
+
+# JetBrains / Claude Code local settings
+.idea/
+.claude/
